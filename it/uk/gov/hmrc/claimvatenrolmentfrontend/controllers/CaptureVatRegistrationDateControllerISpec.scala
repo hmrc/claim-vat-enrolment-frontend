@@ -43,7 +43,7 @@ class CaptureVatRegistrationDateControllerISpec extends ComponentSpecHelper with
   }
 
   s"POST /$testJourneyId/vat-registration-date" should {
-    "redirect to CaptureBusinessPostcode if the date is valid" in new TestSetup {
+    "redirect to CaptureBusinessPostcode if the date is valid" in {
       stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
 
       await(journeyDataRepository.insertJourneyData(testJourneyId, testInternalId, testVatNumber))

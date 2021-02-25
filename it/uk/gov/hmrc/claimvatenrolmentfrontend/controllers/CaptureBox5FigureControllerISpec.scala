@@ -1,7 +1,6 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
-import akka.actor.TypedActor.dispatcher
 import play.api.test.Helpers._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.{testInternalId, testJourneyId, testVatNumber}
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
@@ -29,7 +28,7 @@ class CaptureBox5FigureControllerISpec extends ComponentSpecHelper with CaptureB
   }
 
   s"POST /$testJourneyId/box-5-figure" should {
-    "redirect to CaptureLastMonthSubmitted if the box 5 figure is valid" in new TestSetup {
+    "redirect to CaptureLastMonthSubmitted if the box 5 figure is valid" in {
       stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
 
       await(journeyDataRepository.insertJourneyData(testJourneyId, testInternalId, testVatNumber))
@@ -44,7 +43,7 @@ class CaptureBox5FigureControllerISpec extends ComponentSpecHelper with CaptureB
       )
     }
 
-    "redirect to CaptureLastMonthSubmitted if the box 5 figure is a negative value " in new TestSetup {
+    "redirect to CaptureLastMonthSubmitted if the box 5 figure is a negative value " in {
       stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
 
       await(journeyDataRepository.insertJourneyData(testJourneyId, testInternalId, testVatNumber))

@@ -71,7 +71,8 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
 
   override def beforeEach(): Unit = {
     resetWiremock()
-    journeyConfigRepository.drop
+    await(journeyConfigRepository.drop)
+    await(journeyDataRepository.drop)
     super.beforeEach()
   }
 
@@ -119,11 +120,4 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
     journeyConfigRepository.insertJourneyConfig(
       journeyId, JourneyConfig(continueUrl)
     )
-
-  class TestSetup {
-    await(journeyConfigRepository.drop)
-    await(journeyConfigRepository.ensureIndexes)
-    await(journeyDataRepository.drop)
-    await(journeyDataRepository.ensureIndexes)
-  }
 }

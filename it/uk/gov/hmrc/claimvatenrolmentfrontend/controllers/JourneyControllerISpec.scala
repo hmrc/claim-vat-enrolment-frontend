@@ -19,12 +19,11 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.Helpers.{OK, SEE_OTHER, await, defaultAwaitTimeout}
+import play.api.test.Helpers.{OK, SEE_OTHER}
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.{testContinueUrl, testInternalId, testJourneyId, testVatNumber}
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.JourneyIdGenerationService
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.{AuthStub, FakeJourneyIdGenerationService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class JourneyControllerISpec extends ComponentSpecHelper with AuthStub {
 
@@ -33,13 +32,8 @@ class JourneyControllerISpec extends ComponentSpecHelper with AuthStub {
     .configure(config)
     .build()
 
-  class Setup {
-    await(journeyDataRepository.drop)
-    await(journeyDataRepository.ensureIndexes)
-  }
-
   s"GET  /journey/$testVatNumber" should {
-    "redirect to the Capture VAT Registration Date page" in new Setup {
+    "redirect to the Capture VAT Registration Date page" in {
       stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
 
       lazy val result = get(s"/journey/$testVatNumber?continueUrl=$testContinueUrl")

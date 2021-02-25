@@ -21,6 +21,7 @@ import play.api.test.Helpers._
 import reactivemongo.api.commands.UpdateWriteResult
 import reactivemongo.core.errors.GenericDriverException
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.StoreSubmittedVatService
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.StoreSubmittedVatService.SubmittedVatKey
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.UnitSpec
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.helpers.TestConstants.{testInternalId, testJourneyId, testVatReturn}
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.repositories.mocks.MockJourneyDataRepository
@@ -37,7 +38,7 @@ class StoreSubmittedVatServiceSpec extends UnitSpec with MockJourneyDataReposito
     "successfully update the document in the database with the submitted vat answer" in {
       mockUpdateJourneyData(
         journeyId = testJourneyId,
-        dataKey = "submittedVatAnswer",
+        dataKey = SubmittedVatKey,
         data = Json.toJson(testVatReturn),
         authId = testInternalId
       )(Future.successful(mock[UpdateWriteResult]))
@@ -48,7 +49,7 @@ class StoreSubmittedVatServiceSpec extends UnitSpec with MockJourneyDataReposito
 
       verifyUpdateJourneyData(
         journeyId = testJourneyId,
-        dataKey = "submittedVatAnswer",
+        dataKey = SubmittedVatKey,
         data = Json.toJson(testVatReturn),
         authId = testInternalId
       )
@@ -58,7 +59,7 @@ class StoreSubmittedVatServiceSpec extends UnitSpec with MockJourneyDataReposito
       "updating the document fails" in {
         mockUpdateJourneyData(
           journeyId = testJourneyId,
-          dataKey = "submittedVatAnswer",
+          dataKey = SubmittedVatKey,
           data = Json.toJson(testVatReturn),
           authId = testInternalId
         )(response = Future.failed(GenericDriverException("failed to update")))
@@ -69,7 +70,7 @@ class StoreSubmittedVatServiceSpec extends UnitSpec with MockJourneyDataReposito
 
         verifyUpdateJourneyData(
           journeyId = testJourneyId,
-          dataKey = "submittedVatAnswer",
+          dataKey = SubmittedVatKey,
           data = Json.toJson(testVatReturn),
           authId = testInternalId
         )

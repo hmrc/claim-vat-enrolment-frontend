@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.views
 
+import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import play.api.libs.ws.WSResponse
@@ -26,9 +27,11 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ViewSpecHelper.ElementExtensi
 trait CaptureSubmittedVatReturnViewTests {
   this: ComponentSpecHelper =>
 
-  def testCaptureSubmittedVatReturnViewTests(result: => WSResponse): Unit = {
+  def testCaptureSubmittedVatReturnViewTests(result: => WSResponse,
+                                             authStub: => StubMapping): Unit = {
 
     lazy val doc: Document = {
+      authStub
       Jsoup.parse(result.body)
     }
 
@@ -53,9 +56,11 @@ trait CaptureSubmittedVatReturnViewTests {
 
   }
 
-  def testCaptureSubmittedVatReturnErrorViewTests(result: => WSResponse): Unit = {
+  def testCaptureSubmittedVatReturnErrorViewTests(result: => WSResponse,
+                                                  authStub: => StubMapping): Unit = {
 
     lazy val doc: Document = {
+      authStub
       Jsoup.parse(result.body)
     }
 

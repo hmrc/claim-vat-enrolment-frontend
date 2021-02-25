@@ -25,6 +25,7 @@ object TestConstants {
   val testVatRegDate: String = "1 January 2021"
   val testBusinessPostcode: String = "AA1 1AA"
   val testLastReturnMonth: String = "January"
+  val testVatReturn: String = "yes"
   val testBoxFive: String = "1000.00"
   val testJourneyId: String = UUID.randomUUID().toString
   val testInternalId: String = UUID.randomUUID().toString

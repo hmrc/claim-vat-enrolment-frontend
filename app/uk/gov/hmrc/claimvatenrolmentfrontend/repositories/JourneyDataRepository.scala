@@ -30,6 +30,7 @@ import uk.gov.hmrc.mongo.ReactiveRepository
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Success
 
 @Singleton
 class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoComponent,
@@ -75,14 +76,16 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
       multi = false
     ).filter(_.n == 1)
 
+  private val ttlIndexName = "ClaimVatEnrolmentDataExpires"
+
   private lazy val ttlIndex = Index(
     Seq(("creationTimestamp", IndexType.Ascending)),
-    name = Some("ClaimVatEnrolmentDataExpires"),
+    name = Some(ttlIndexName),
     options = BSONDocument("expireAfterSeconds" -> appConfig.timeToLiveSeconds)
   )
 
   private def setIndex(): Unit = {
-    collection.indexesManager.drop(ttlIndex.name.get) onComplete {
+    collection.indexesManager.drop(ttlIndexName) onComplete {
       _ => collection.indexesManager.ensure(ttlIndex)
     }
   }

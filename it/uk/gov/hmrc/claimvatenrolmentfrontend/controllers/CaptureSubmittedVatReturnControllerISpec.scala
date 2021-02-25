@@ -17,28 +17,39 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
 import play.api.test.Helpers._
-import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.testJourneyId
+import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.{testInternalId, testJourneyId, testVatNumber}
+import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.CaptureSubmittedVatReturnViewTests
 
-class CaptureSubmittedVatReturnControllerISpec extends ComponentSpecHelper with CaptureSubmittedVatReturnViewTests {
+class CaptureSubmittedVatReturnControllerISpec extends ComponentSpecHelper with CaptureSubmittedVatReturnViewTests with AuthStub {
 
   s"GET /$testJourneyId/submitted-vat-return" should {
     "return OK" in {
+      stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
       lazy val result = get(s"/$testJourneyId/submitted-vat-return")
 
       result.status mustBe OK
     }
+
     "return a view" should {
+      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
       lazy val result = get(s"/$testJourneyId/submitted-vat-return")
 
-      testCaptureSubmittedVatReturnViewTests(result)
+      testCaptureSubmittedVatReturnViewTests(result, authStub)
     }
   }
 
-  "POST /submitted-vat-return" should {
+  s"POST /$testJourneyId/submitted-vat-return" should {
     "redirect to CaptureBox5Figure" in {
-      lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "yes")
+      stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+      await(journeyDataRepository.insertJourneyData(testJourneyId, testInternalId, testVatNumber))
+
+      lazy val result = post(s"/$testJourneyId/submitted-vat-return")(
+        "vat_return" -> "yes")
 
       result must have(
         httpStatus(SEE_OTHER),
@@ -46,14 +57,19 @@ class CaptureSubmittedVatReturnControllerISpec extends ComponentSpecHelper with 
       )
     }
 
-    "return a BAD_REQUEST if the user has not given an answer and the correct errors" should {
-      lazy val result = post(s"/$testJourneyId/submitted-vat-return")(
-        "vat_return" -> ""
-      )
+    "when the user has submitted an empty form" should {
+      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      lazy val result = post(s"/$testJourneyId/submitted-vat-return")()
 
-      result.status mustBe BAD_REQUEST
-      testCaptureSubmittedVatReturnErrorViewTests(result)
+      testCaptureSubmittedVatReturnErrorViewTests(result, authStub)
+
+
+      "return a BAD_REQUEST" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        lazy val result = post(s"/$testJourneyId/vat-registration-date")()
+
+        result.status mustBe BAD_REQUEST
+      }
     }
   }
-
 }

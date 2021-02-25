@@ -21,29 +21,49 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureSubmittedVatReturnForm
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_submitted_vat_return_page
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.StoreSubmittedVatService
+
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CaptureSubmittedVatReturnController @Inject()(mcc: MessagesControllerComponents,
-                                                    view: capture_submitted_vat_return_page
-                                                   )(implicit val config: AppConfig) extends FrontendController(mcc) {
+                                                    view: capture_submitted_vat_return_page,
+                                                    storeSubmittedVatService: StoreSubmittedVatService,
+                                                    val authConnector: AuthConnector
+                                                   )(implicit val config: AppConfig, ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions {
 
   def show(journeyId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      Future.successful(Ok(view(routes.CaptureSubmittedVatReturnController.submit(journeyId), CaptureSubmittedVatReturnForm.form)))
+      authorised() {
+        Future.successful(
+          Ok(view(routes.CaptureSubmittedVatReturnController.submit(journeyId), CaptureSubmittedVatReturnForm.form))
+        )
+      }
   }
 
   def submit(journeyId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      CaptureSubmittedVatReturnForm.form.bindFromRequest.fold(
-        formWithErrors => Future.successful(
-          BadRequest(view(routes.CaptureSubmittedVatReturnController.submit(journeyId), formWithErrors))
-        ),
-        submittedReturn =>
-      Future.successful(Redirect(routes.CaptureBox5FigureController.show(journeyId).url))
-      )
+      authorised().retrieve(internalId) {
+        case Some(authId) =>
+          CaptureSubmittedVatReturnForm.form.bindFromRequest.fold(
+            formWithErrors => Future.successful(
+              BadRequest(view(routes.CaptureSubmittedVatReturnController.submit(journeyId), formWithErrors))
+            ),
+            submittedReturn =>
+              storeSubmittedVatService.storeStoreSubmittedVat(
+                journeyId,
+                submittedReturn,
+                authId
+              ).map {
+                _ => Redirect(routes.CaptureBox5FigureController.show(journeyId).url)
+              }
+          )
+        case None =>
+          Future.successful(Unauthorized)
+      }
   }
-
 }
+

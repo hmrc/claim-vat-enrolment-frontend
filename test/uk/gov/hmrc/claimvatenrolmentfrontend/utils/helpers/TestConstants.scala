@@ -24,6 +24,7 @@ object TestConstants {
   val testJourneyId: String = UUID.randomUUID().toString
   val testContinueUrl: String = "/test"
   val testVatRegDate: LocalDate = LocalDate.parse("2021-01-01")
+  val testVatReturn: Boolean = true
   val testInternalId: String = UUID.randomUUID().toString
   val testVatNumber: String = UUID.randomUUID().toString
   val testBoxFive: String = "1000.00"

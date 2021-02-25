@@ -17,7 +17,7 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
 import play.api.test.Helpers._
-import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.{testInternalId, testJourneyId}
+import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.{testInternalId, testJourneyId, testVatNumber}
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.CaptureVatRegistrationDateViewTests
@@ -43,8 +43,10 @@ class CaptureVatRegistrationDateControllerISpec extends ComponentSpecHelper with
   }
 
   s"POST /$testJourneyId/vat-registration-date" should {
-    "redirect to CaptureBusinessPostcode if the date is valid" in {
+    "redirect to CaptureBusinessPostcode if the date is valid" in new TestSetup {
       stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+      await(journeyDataRepository.insertJourneyData(testJourneyId, testInternalId, testVatNumber))
 
       lazy val result = post(s"/$testJourneyId/vat-registration-date")(
         "date.day" -> "1",
@@ -57,6 +59,7 @@ class CaptureVatRegistrationDateControllerISpec extends ComponentSpecHelper with
         redirectUri(routes.CaptureBusinessPostcodeController.show(testJourneyId).url)
       )
     }
+
 
     "when the user has submitted an empty form, the page" should {
       lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testInternalId)))

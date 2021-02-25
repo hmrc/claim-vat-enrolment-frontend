@@ -52,10 +52,11 @@ class CaptureBox5FigureController @Inject()(mcc: MessagesControllerComponents,
               Future.successful(
                 BadRequest(view(formWithErrors, routes.CaptureBox5FigureController.submit(journeyId)))
               ),
-            box5Figure =>
+            box5Figure => {
               storeBox5FigureService.storeBox5Figure(journeyId, box5Figure, authId).map {
                 _ => Redirect(routes.CaptureLastMonthSubmittedController.show(journeyId).url)
               }
+            }
           )
         case None =>
           Future.successful(Unauthorized)

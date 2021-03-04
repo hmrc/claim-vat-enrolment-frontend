@@ -41,6 +41,7 @@ class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
       journeyService.retrieveJourneyConfig(journeyId).map{
         journeyConfig => SeeOther(journeyConfig.continueUrl)
       }
+      Future(Redirect(routes.KnownFactsMismatchController.show(journeyId).url))
   }
 
 }

@@ -40,14 +40,12 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
   }
 
   s"POST /$testJourneyId/check-your-answers-vat" should {
-    "redirect to the continue url" in {
-      await(insertJourneyConfig(testJourneyId, testContinueUrl))
-
+    "redirect to Known Facts Mismatch " in {
       lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 
       result must have(
         httpStatus(SEE_OTHER),
-        redirectUri(testContinueUrl)
+        redirectUri(routes.KnownFactsMismatchController.show(testJourneyId).url)
       )
     }
   }

@@ -5,19 +5,19 @@ import sbt._
 object AppDependencies {
 
   val compile = Seq(
-    "uk.gov.hmrc" %% "bootstrap-frontend-play-27" % "3.3.0",
-    "uk.gov.hmrc" %% "bootstrap-backend-play-27" % "3.0.0",
-    "uk.gov.hmrc" %% "play-frontend-hmrc" % "0.38.0-play-27",
-    "uk.gov.hmrc" %% "play-frontend-govuk" % "0.60.0-play-27",
-    "uk.gov.hmrc" %% "play-language" % "4.10.0-play-27",
-    "uk.gov.hmrc" %% "simple-reactivemongo" % "7.31.0-play-27",
-    "uk.gov.hmrc" %% "auth-client" % "3.2.0-play-27"
+    "uk.gov.hmrc" %% "bootstrap-frontend-play-27" % "4.3.0",
+    "uk.gov.hmrc" %% "bootstrap-backend-play-27" % "4.0.0",
+    "uk.gov.hmrc" %% "play-frontend-hmrc" % "0.59.0-play-27",
+    "uk.gov.hmrc" %% "play-frontend-govuk" % "0.71.0-play-27",
+    "uk.gov.hmrc" %% "play-language" % "4.12.0-play-27",
+    "uk.gov.hmrc" %% "simple-reactivemongo" % "8.0.0-play-27",
+    "uk.gov.hmrc" %% "auth-client" % "5.2.0-play-27"
   )
 
   val sharedTestDependencies: Seq[ModuleID] = {
     val scope = "test, it"
     Seq(
-      "org.scalatest" %% "scalatest" % "3.2.3" % scope,
+      "org.scalatest" %% "scalatest" % "3.2.8" % scope,
       "org.jsoup" % "jsoup" % "1.13.1" % scope,
       "com.typesafe.play" %% "play-test" % current % scope,
       "com.vladsch.flexmark" % "flexmark-all" % "0.36.8" % scope,

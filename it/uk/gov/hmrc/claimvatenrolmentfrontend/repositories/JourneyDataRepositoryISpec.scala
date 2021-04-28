@@ -37,7 +37,7 @@ class JourneyDataRepositoryISpec extends ComponentSpecHelper {
 
   "insertJourneyVatNumber" should {
     "successfully insert the vatNumber" in {
-      repo.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber)
+      await(repo.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
       await(repo.findById(testJourneyId)) mustBe Some(JourneyDataModel(testJourneyId))
       await(repo.collection.find[JsObject, JsObject](
         Json.obj("_id" -> testJourneyId),

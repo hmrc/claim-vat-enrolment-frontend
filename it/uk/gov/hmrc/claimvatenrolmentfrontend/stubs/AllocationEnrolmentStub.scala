@@ -18,6 +18,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.stubs
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.libs.json.{JsObject, Json}
+import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.AllocateEnrolmentConnector.NullValue
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.ClaimVatEnrolmentModel
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.WireMockMethods
 
@@ -40,26 +41,27 @@ trait AllocationEnrolmentStub extends WireMockMethods {
           "key" -> "VATRegistrationDate",
           "value" -> claimVatEnrolmentInfo.vatRegistrationDate
         ),
-        claimVatEnrolmentInfo.optPostcode.map(postcode =>
-          Json.obj(
-            "key" -> "Postcode",
-            "value" -> postcode.sanitisedPostcode
-          )
+        Json.obj(
+          "key" -> "Postcode",
+          "value" -> (claimVatEnrolmentInfo.optPostcode match {
+            case Some(postcode) => postcode.sanitisedPostcode
+            case None => NullValue
+          })
         ),
-        claimVatEnrolmentInfo.optReturnsInformation.map(
-          returnsInformation =>
-            Json.obj(
-              "key" -> "BoxFiveValue",
-              "value" -> returnsInformation.boxFive
-            )
+        Json.obj(
+          "key" -> "BoxFiveValue",
+          "value" -> (claimVatEnrolmentInfo.optReturnsInformation match {
+            case Some(returnsInformation) => returnsInformation.boxFive
+            case None => NullValue
+          })
         ),
-        claimVatEnrolmentInfo.optReturnsInformation.map(
-          returnsInformation =>
-            Json.obj(
-              "key" -> "LastMonthLatestStagger",
-              "value" -> returnsInformation.lastReturnMonth
-            )
-        )
+        Json.obj(
+          "key" -> "LastMonthLatestStagger",
+          "value" -> (claimVatEnrolmentInfo.optReturnsInformation match {
+            case Some(returnsInformation) => returnsInformation.lastReturnMonth
+            case None => NullValue
+          })
+        ),
       )
     )
 

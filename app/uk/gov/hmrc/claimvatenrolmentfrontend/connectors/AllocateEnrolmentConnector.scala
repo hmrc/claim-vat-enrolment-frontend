@@ -18,6 +18,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.connectors
 
 import play.api.libs.json.{JsObject, Json, Writes}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
+import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.AllocateEnrolmentConnector.NullValue
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.AllocateEnrolmentResponseHttpParser.AllocateEnrolmentResponseReads
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.{AllocateEnrolmentResponse, ClaimVatEnrolmentModel}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
@@ -42,26 +43,27 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
           "key" -> "VATRegistrationDate",
           "value" -> claimVatEnrolmentInfo.vatRegistrationDate
         ),
-        claimVatEnrolmentInfo.optPostcode.map(postcode =>
-          Json.obj(
-            "key" -> "Postcode",
-            "value" -> postcode.sanitisedPostcode
-          )
+        Json.obj(
+          "key" -> "Postcode",
+          "value" -> (claimVatEnrolmentInfo.optPostcode match {
+            case Some(postcode) => postcode.sanitisedPostcode
+            case None => NullValue
+          })
         ),
-        claimVatEnrolmentInfo.optReturnsInformation.map(
-          returnsInformation =>
-            Json.obj(
-              "key" -> "BoxFiveValue",
-              "value" -> returnsInformation.boxFive
-            )
+        Json.obj(
+          "key" -> "BoxFiveValue",
+          "value" -> (claimVatEnrolmentInfo.optReturnsInformation match {
+            case Some(returnsInformation) => returnsInformation.boxFive
+            case None => NullValue
+          })
         ),
-        claimVatEnrolmentInfo.optReturnsInformation.map(
-          returnsInformation =>
-            Json.obj(
-              "key" -> "LastMonthLatestStagger",
-              "value" -> returnsInformation.lastReturnMonth
-            )
-        )
+        Json.obj(
+          "key" -> "LastMonthLatestStagger",
+          "value" -> (claimVatEnrolmentInfo.optReturnsInformation match {
+            case Some(returnsInformation) => returnsInformation.lastReturnMonth
+            case None => NullValue
+          })
+        ),
       )
     )
 
@@ -73,4 +75,8 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
       hc,
       ec)
   }
+}
+
+object AllocateEnrolmentConnector {
+  val NullValue: String = "NULL"
 }

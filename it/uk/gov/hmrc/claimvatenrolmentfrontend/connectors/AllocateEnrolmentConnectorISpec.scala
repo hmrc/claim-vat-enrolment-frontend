@@ -16,13 +16,10 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.connectors
 
-import java.time.LocalDate
-
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
-import uk.gov.hmrc.claimvatenrolmentfrontend.models._
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.{ClaimVatEnrolmentModel, EnrolmentSuccess, InvalidKnownFacts, ReturnsInformationModel}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.{ClaimVatEnrolmentModel, EnrolmentSuccess, InvalidKnownFacts, ReturnsInformationModel, _}
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AllocationEnrolmentStub
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
 import uk.gov.hmrc.http.HeaderCarrier
@@ -39,13 +36,45 @@ class AllocateEnrolmentConnectorISpec extends ComponentSpecHelper with Allocatio
 
 
   "allocateEnrolment" should {
-    "return EnrolmentSuccess" in {
-      stubAllocateEnrolment(testClaimVatEnrolmentModel, testCredentialId, testGroupId)(CREATED, Json.obj())
+    "return EnrolmentSuccess" when {
+      "enrolment store returns a success" when {
+        "all fields are populated" in {
+          stubAllocateEnrolment(testClaimVatEnrolmentModel, testCredentialId, testGroupId)(CREATED, Json.obj())
 
-      val result = await(allocateEnrolmentConnector.allocateEnrolment(testClaimVatEnrolmentModel, testCredentialId, testGroupId))
+          val result = await(allocateEnrolmentConnector.allocateEnrolment(testClaimVatEnrolmentModel, testCredentialId, testGroupId))
 
-      result mustBe EnrolmentSuccess
+          result mustBe EnrolmentSuccess
+        }
+        "the user is overseas and so has not provided a postcode" in {
+          val testClaimVatEnrolmentModelNoPostcode = testClaimVatEnrolmentModel.copy(optPostcode = None)
+
+          stubAllocateEnrolment(testClaimVatEnrolmentModelNoPostcode, testCredentialId, testGroupId)(CREATED, Json.obj())
+
+          val result = await(allocateEnrolmentConnector.allocateEnrolment(testClaimVatEnrolmentModelNoPostcode, testCredentialId, testGroupId))
+
+          result mustBe EnrolmentSuccess
+        }
+        "the user has not yet filed and so has not provided any returns information" in {
+          val testClaimVatEnrolmentModelNoReturnsInformation = testClaimVatEnrolmentModel.copy(optReturnsInformation = None)
+
+          stubAllocateEnrolment(testClaimVatEnrolmentModelNoReturnsInformation, testCredentialId, testGroupId)(CREATED, Json.obj())
+
+          val result = await(allocateEnrolmentConnector.allocateEnrolment(testClaimVatEnrolmentModelNoReturnsInformation, testCredentialId, testGroupId))
+
+          result mustBe EnrolmentSuccess
+        }
+        "the user is both overseas, and has not yet filed" in {
+          val testClaimVatEnrolmentModelNoReturnsInformationOrPostcode = testClaimVatEnrolmentModel.copy(optReturnsInformation = None, optPostcode = None)
+
+          stubAllocateEnrolment(testClaimVatEnrolmentModelNoReturnsInformationOrPostcode, testCredentialId, testGroupId)(CREATED, Json.obj())
+
+          val result = await(allocateEnrolmentConnector.allocateEnrolment(testClaimVatEnrolmentModelNoReturnsInformationOrPostcode, testCredentialId, testGroupId))
+
+          result mustBe EnrolmentSuccess
+        }
+      }
     }
+
 
     "return Multiple Enrolments Invalid" when {
       "tax enrolments returns a single error indicating multiple enrolments" in {

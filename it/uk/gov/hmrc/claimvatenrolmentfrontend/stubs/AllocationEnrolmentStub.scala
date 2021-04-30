@@ -61,7 +61,7 @@ trait AllocationEnrolmentStub extends WireMockMethods {
             case Some(returnsInformation) => returnsInformation.lastReturnMonth
             case None => NullValue
           })
-        ),
+        )
       )
     )
 

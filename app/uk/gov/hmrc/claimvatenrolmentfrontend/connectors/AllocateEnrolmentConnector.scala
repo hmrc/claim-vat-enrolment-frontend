@@ -63,7 +63,7 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
             case Some(returnsInformation) => returnsInformation.lastReturnMonth
             case None => NullValue
           })
-        ),
+        )
       )
     )
 

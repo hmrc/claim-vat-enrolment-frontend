@@ -18,11 +18,12 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.connectors
 
 import play.api.libs.json.{JsObject, Json, Writes}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
-import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.AllocateEnrolmentConnector.NullValue
+import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.AllocateEnrolmentConnector._
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.AllocateEnrolmentResponseHttpParser.AllocateEnrolmentResponseReads
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.{AllocateEnrolmentResponse, ClaimVatEnrolmentModel}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
+import java.time.format.DateTimeFormatter
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -41,7 +42,7 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
       "verifiers" -> Json.arr(
         Json.obj(
           "key" -> "VATRegistrationDate",
-          "value" -> claimVatEnrolmentInfo.vatRegistrationDate
+          "value" -> claimVatEnrolmentInfo.vatRegistrationDate.format(etmpDateFormat)
         ),
         Json.obj(
           "key" -> "Postcode",
@@ -79,4 +80,6 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
 
 object AllocateEnrolmentConnector {
   val NullValue: String = "NULL"
+
+  val etmpDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 }

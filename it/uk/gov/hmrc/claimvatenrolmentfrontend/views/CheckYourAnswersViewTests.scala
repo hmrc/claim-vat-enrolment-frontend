@@ -104,7 +104,7 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
         val lastReturnMonthRow = summaryListRows.last
 
         lastReturnMonthRow.getSummaryListQuestion mustBe messages.lastReturnMonthRow
-        lastReturnMonthRow.getSummaryListAnswer mustBe testLastReturnMonth
+        lastReturnMonthRow.getSummaryListAnswer mustBe "January"
         lastReturnMonthRow.getSummaryListChangeLink mustBe routes.CaptureLastMonthSubmittedController.show(testJourneyId).url
         lastReturnMonthRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.lastReturnMonthRow}"
       }
@@ -179,7 +179,7 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
         val lastReturnMonthRow = summaryListRows.last
 
         lastReturnMonthRow.getSummaryListQuestion mustBe messages.lastReturnMonthRow
-        lastReturnMonthRow.getSummaryListAnswer mustBe testLastReturnMonth
+        lastReturnMonthRow.getSummaryListAnswer mustBe "January"
         lastReturnMonthRow.getSummaryListChangeLink mustBe routes.CaptureLastMonthSubmittedController.show(testJourneyId).url
         lastReturnMonthRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.lastReturnMonthRow}"
       }

@@ -67,63 +67,63 @@
             items = Seq(
                 RadioItem(
                     id = Some("January"),
-                    content = Text(messages("capture-last-month-submitted.jan")),
-                    value = Some("January")
+                    content = Text(messages("capture-last-month-submitted.JANUARY")),
+                    value = Some("1")
                 ),
                 RadioItem(
                     id = Some("February"),
-                    content = Text(messages("capture-last-month-submitted.feb")),
-                    value = Some("February")
+                    content = Text(messages("capture-last-month-submitted.FEBRUARY")),
+                    value = Some("2")
                 ),
                 RadioItem(
                     id = Some("March"),
-                    content = Text(messages("capture-last-month-submitted.march")),
-                    value = Some("March")
+                    content = Text(messages("capture-last-month-submitted.MARCH")),
+                    value = Some("3")
                 ),
                 RadioItem(
                     id = Some("April"),
-                    content = Text(messages("capture-last-month-submitted.april")),
-                    value = Some("April")
+                    content = Text(messages("capture-last-month-submitted.APRIL")),
+                    value = Some("4")
                 ),
                 RadioItem(
                     id = Some("May"),
-                    content = Text(messages("capture-last-month-submitted.may")),
-                    value = Some("May")
+                    content = Text(messages("capture-last-month-submitted.MAY")),
+                    value = Some("5")
                 ),
                 RadioItem(
                     id = Some("June"),
-                    content = Text(messages("capture-last-month-submitted.june")),
-                    value = Some("June")
+                    content = Text(messages("capture-last-month-submitted.JUNE")),
+                    value = Some("6")
                 ),
                 RadioItem(
                     id = Some("July"),
-                    content = Text(messages("capture-last-month-submitted.july")),
-                    value = Some("July")
+                    content = Text(messages("capture-last-month-submitted.JULY")),
+                    value = Some("7")
                 ),
                 RadioItem(
                     id = Some("August"),
-                    content = Text(messages("capture-last-month-submitted.august")),
-                    value = Some("August")
+                    content = Text(messages("capture-last-month-submitted.AUGUST")),
+                    value = Some("8")
                 ),
                 RadioItem(
                     id = Some("September"),
-                    content = Text(messages("capture-last-month-submitted.september")),
-                    value = Some("September")
+                    content = Text(messages("capture-last-month-submitted.SEPTEMBER")),
+                    value = Some("9")
                 ),
                 RadioItem(
                     id = Some("October"),
-                    content = Text(messages("capture-last-month-submitted.october")),
-                    value = Some("October")
+                    content = Text(messages("capture-last-month-submitted.OCTOBER")),
+                    value = Some("10")
                 ),
                 RadioItem(
                     id = Some("November"),
-                    content = Text(messages("capture-last-month-submitted.november")),
-                    value = Some("November")
+                    content = Text(messages("capture-last-month-submitted.NOVEMBER")),
+                    value = Some("11")
                 ),
                 RadioItem(
                     id = Some("December"),
-                    content = Text(messages("capture-last-month-submitted.december")),
-                    value = Some("December")
+                    content = Text(messages("capture-last-month-submitted.DECEMBER")),
+                    value = Some("12")
                 )
             ),
             errorMessage = form("return_date").error.map(err => ErrorMessage(content = Text(messages(err.message, err.args:_*))))

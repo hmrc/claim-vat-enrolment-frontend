@@ -22,6 +22,8 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.CaptureLastMonthSubmittedViewTests
 
+import java.time.Month
+
 class CaptureLastMonthSubmittedControllerISpec extends ComponentSpecHelper with CaptureLastMonthSubmittedViewTests with AuthStub {
 
   s"GET /$testJourneyId/last-vat-return-date" should {
@@ -42,7 +44,7 @@ class CaptureLastMonthSubmittedControllerISpec extends ComponentSpecHelper with 
       stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
       await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
 
-      lazy val result = post(s"/$testJourneyId/last-vat-return-date")("return_date" -> "January")
+      lazy val result = post(s"/$testJourneyId/last-vat-return-date")("return_date" -> Month.JANUARY.getValue.toString)
       result must have(
         httpStatus(SEE_OTHER),
         redirectUri(routes.CheckYourAnswersController.show(testJourneyId).url)

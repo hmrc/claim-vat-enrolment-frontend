@@ -17,12 +17,12 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
 
-import javax.inject.{Inject, Singleton}
-import play.api.libs.json.Json
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.Month
+import play.api.libs.json.JsNumber
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.StoreLastMonthSubmittedService.LastMonthSubmittedKey
 
+import java.time.Month
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -35,7 +35,7 @@ class StoreLastMonthSubmittedService @Inject()(journeyDataRepository: JourneyDat
     journeyDataRepository.updateJourneyData(
       journeyId = journeyId,
       dataKey = LastMonthSubmittedKey,
-      data = Json.toJson(lastMonth),
+      data = JsNumber(lastMonth.getValue),
       authInternalId = authInternalId
     ).map{
       _ => Unit

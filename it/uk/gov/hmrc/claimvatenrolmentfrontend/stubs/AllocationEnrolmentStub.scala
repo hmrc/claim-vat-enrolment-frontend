@@ -18,7 +18,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.stubs
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.libs.json.{JsObject, Json}
-import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.AllocateEnrolmentConnector.NullValue
+import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.AllocateEnrolmentConnector._
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.ClaimVatEnrolmentModel
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.WireMockMethods
 
@@ -39,7 +39,7 @@ trait AllocationEnrolmentStub extends WireMockMethods {
       "verifiers" -> Json.arr(
         Json.obj(
           "key" -> "VATRegistrationDate",
-          "value" -> claimVatEnrolmentInfo.vatRegistrationDate
+          "value" ->  claimVatEnrolmentInfo.vatRegistrationDate.format(etmpDateFormat)
         ),
         Json.obj(
           "key" -> "Postcode",

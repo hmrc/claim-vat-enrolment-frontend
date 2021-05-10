@@ -34,7 +34,7 @@ class StoreBusinessPostcodeService @Inject()(journeyDataRepository: JourneyDataR
     journeyDataRepository.updateJourneyData(
       journeyId = journeyId,
       dataKey = vatRegPostcodeKey,
-      data = Json.toJson(vatRegPostcode.sanitisedPostcode),
+      data = Json.toJson(vatRegPostcode.stringValue),
       authInternalId = authInternalId
     ).map {
       _ => Unit

@@ -36,7 +36,7 @@ class StoreVatRegistrationPostcodeServiceSpec extends UnitSpec with MockJourneyD
       mockUpdateJourneyData(
         journeyId = testJourneyId,
         dataKey = "vatRegPostcode",
-        data = Json.toJson(testPostcode.sanitisedPostcode),
+        data = Json.toJson(testPostcode.stringValue),
         authId = testInternalId
       )(Future.successful(mock[UpdateWriteResult]))
 
@@ -47,7 +47,7 @@ class StoreVatRegistrationPostcodeServiceSpec extends UnitSpec with MockJourneyD
       verifyUpdateJourneyData(
         journeyId = testJourneyId,
         dataKey = "vatRegPostcode",
-        data = Json.toJson(testPostcode.sanitisedPostcode),
+        data = Json.toJson(testPostcode.stringValue),
         authId = testInternalId
       )
     }
@@ -67,7 +67,7 @@ class StoreVatRegistrationPostcodeServiceSpec extends UnitSpec with MockJourneyD
         verifyUpdateJourneyData(
           journeyId = testJourneyId,
           dataKey = "vatRegPostcode",
-          data = Json.toJson(testPostcode.sanitisedPostcode),
+          data = Json.toJson(testPostcode.stringValue),
           authId = testInternalId
         )
       }

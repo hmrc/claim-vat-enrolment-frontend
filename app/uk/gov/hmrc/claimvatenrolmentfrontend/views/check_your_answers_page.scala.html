@@ -56,7 +56,7 @@
             postcode =>
                 SummaryListRow(
                     key = Key(content = Text(messages("check-your-answers.business_postcode"))),
-                    value = Value(content = Text(postcode.checkYourAnswersFormat)),
+                    value = Value(content = Text(postcode.sanitisedPostcode)),
                     actions = Some(Actions(items = Seq(
                         ActionItem(
                             href = Routes.CaptureBusinessPostcodeController.show(journeyId).url,

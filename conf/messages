@@ -33,7 +33,6 @@ capture-business-postcode.heading                           = What is the UK pos
 capture-business-postcode.hint                              = For example, AB1 2YZ
 capture-business-postcode.link_text                         = The business does not have a UK postcode
 capture-business-postcode.error.emptyPostcode               = Enter the postcode where your business is registered for VAT
-capture-business-postcode.error.invalidPostcode             = Enter a UK postcode in the correct format
 
 # Submitted VAT Return Page
 capture-submitted-vat-return.title                          = Are you currently submitting VAT Returns?

@@ -27,7 +27,7 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.models.{ClaimVatEnrolmentModel, Jou
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository._
 import uk.gov.hmrc.mongo.ReactiveRepository
 
-import java.time.{Instant, LocalDate}
+import java.time.{Instant, LocalDate, Month}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -134,7 +134,7 @@ object JourneyDataRepository {
       optReturnsInformation <- if (submittedVatReturn) {
         for {
           boxFiveFigure <- (json \ Box5FigureKey).validate[String]
-          lastReturnMonth <- (json \ LastMonthSubmittedKey).validate[String]
+          lastReturnMonth <- (json \ LastMonthSubmittedKey).validate[Int].map(Month.of)
         } yield Some(ReturnsInformationModel(boxFiveFigure, lastReturnMonth))
       } else {
         JsSuccess(None)
@@ -151,7 +151,7 @@ object JourneyDataRepository {
         Json.obj(
           SubmittedVatReturnKey -> true,
           Box5FigureKey -> claimVatEnrolmentModel.optReturnsInformation.map(_.boxFive),
-          LastMonthSubmittedKey -> claimVatEnrolmentModel.optReturnsInformation.map(_.lastReturnMonth)
+          LastMonthSubmittedKey -> claimVatEnrolmentModel.optReturnsInformation.map(_.lastReturnMonth.getValue)
         )
       } else {
         Json.obj(SubmittedVatReturnKey -> false)

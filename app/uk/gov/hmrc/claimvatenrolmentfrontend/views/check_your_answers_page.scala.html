@@ -107,7 +107,7 @@
             returnsInformation =>
                 SummaryListRow(
                     key = Key(content = Text(messages("check-your-answers.last_return_month"))),
-                    value = Value(content = Text(returnsInformation.lastReturnMonth)),
+                    value = Value(content = Text(messages(s"capture-last-month-submitted.${returnsInformation.lastReturnMonth.toString}"))),
                     actions = Some(Actions(items = Seq(
                         ActionItem(
                             href = Routes.CaptureLastMonthSubmittedController.show(journeyId).url,

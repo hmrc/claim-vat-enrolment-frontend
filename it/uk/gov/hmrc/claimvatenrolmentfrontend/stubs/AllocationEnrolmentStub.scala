@@ -58,7 +58,7 @@ trait AllocationEnrolmentStub extends WireMockMethods {
         Json.obj(
           "key" -> "LastMonthLatestStagger",
           "value" -> (claimVatEnrolmentInfo.optReturnsInformation match {
-            case Some(returnsInformation) => returnsInformation.lastReturnMonth
+            case Some(returnsInformation) => returnsInformation.lastReturnMonth.getValue.toString
             case None => NullValue
           })
         )

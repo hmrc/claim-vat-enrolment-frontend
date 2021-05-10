@@ -21,7 +21,6 @@ import play.api.test.Helpers._
 import reactivemongo.api.commands.UpdateWriteResult
 import reactivemongo.core.errors.GenericDriverException
 import uk.gov.hmrc.claimvatenrolmentfrontend.helpers.TestConstants.{testInternalId, testJourneyId, testLastMonthSubmitted}
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.Month._
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.mocks.MockJourneyDataRepository
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.UnitSpec
 
@@ -37,7 +36,7 @@ class StoreLastMonthSubmittedServiceSpec extends UnitSpec with MockJourneyDataRe
       mockUpdateJourneyData(
         journeyId = testJourneyId,
         dataKey = "lastMonthSubmitted",
-        data = Json.toJson(testLastMonthSubmitted),
+        data = Json.toJson(testLastMonthSubmitted.getValue),
         authId = testInternalId
       )(Future.successful(mock[UpdateWriteResult]))
 
@@ -48,7 +47,7 @@ class StoreLastMonthSubmittedServiceSpec extends UnitSpec with MockJourneyDataRe
       verifyUpdateJourneyData(
         journeyId = testJourneyId,
         dataKey = "lastMonthSubmitted",
-        data = Json.toJson(testLastMonthSubmitted),
+        data = Json.toJson(testLastMonthSubmitted.getValue),
         authId = testInternalId
       )
     }
@@ -57,7 +56,7 @@ class StoreLastMonthSubmittedServiceSpec extends UnitSpec with MockJourneyDataRe
         mockUpdateJourneyData(
           journeyId = testJourneyId,
           dataKey = "lastMonthSubmitted",
-          data = Json.toJson(testLastMonthSubmitted),
+          data = Json.toJson(testLastMonthSubmitted.getValue),
           authId = testInternalId
         )(response = Future.failed(GenericDriverException("failed to update")))
 
@@ -67,7 +66,7 @@ class StoreLastMonthSubmittedServiceSpec extends UnitSpec with MockJourneyDataRe
         verifyUpdateJourneyData(
           journeyId = testJourneyId,
           dataKey = "lastMonthSubmitted",
-          data = Json.toJson(testLastMonthSubmitted),
+          data = Json.toJson(testLastMonthSubmitted.getValue),
           authId = testInternalId
         )
       }

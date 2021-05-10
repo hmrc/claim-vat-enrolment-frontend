@@ -19,7 +19,8 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.forms
 import play.api.data.Form
 import play.api.data.Forms._
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.utils.MonthMapping.monthMapping
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.Month
+
+import java.time.Month
 
 object CaptureLastMonthSubmittedForm {
 

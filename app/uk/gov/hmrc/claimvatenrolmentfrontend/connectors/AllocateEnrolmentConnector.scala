@@ -61,7 +61,7 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
         Json.obj(
           "key" -> "LastMonthLatestStagger",
           "value" -> (claimVatEnrolmentInfo.optReturnsInformation match {
-            case Some(returnsInformation) => returnsInformation.lastReturnMonth
+            case Some(returnsInformation) => returnsInformation.lastReturnMonth.getValue.toString
             case None => NullValue
           })
         )

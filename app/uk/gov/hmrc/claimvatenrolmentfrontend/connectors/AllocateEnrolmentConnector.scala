@@ -61,7 +61,7 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
         Json.obj(
           "key" -> "LastMonthLatestStagger",
           "value" -> (claimVatEnrolmentInfo.optReturnsInformation match {
-            case Some(returnsInformation) => returnsInformation.lastReturnMonth.getValue.toString
+            case Some(returnsInformation) => returnsInformation.lastReturnMonth.getValue.formatted("%02d")
             case None => NullValue
           })
         )
@@ -81,5 +81,5 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
 object AllocateEnrolmentConnector {
   val NullValue: String = "NULL"
 
-  val etmpDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+  val etmpDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 }

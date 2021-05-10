@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.models
 
+import uk.gov.hmrc.http.InternalServerException
+
 case class Postcode(stringValue: String) {
   import Postcode._
 
-  val sanitisedPostcode: String = stringValue.toUpperCase.filterNot(_.isWhitespace)
-
-  val checkYourAnswersFormat: String = sanitisedPostcode match {
+  val sanitisedPostcode: String = stringValue.toUpperCase.filterNot(_.isWhitespace) match {
     case standardPostcodeFormat(outwardCode, inwardCode) => outwardCode + " " + inwardCode
-    case other => other // should never happen as it is validated in the form
+    case other => throw new InternalServerException(s"Invalid postcode format: $other") // should never happen as it is validated in the form
   }
 
 }

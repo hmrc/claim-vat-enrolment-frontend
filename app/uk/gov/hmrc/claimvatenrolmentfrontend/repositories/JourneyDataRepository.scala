@@ -145,7 +145,7 @@ object JourneyDataRepository {
     (claimVatEnrolmentModel: ClaimVatEnrolmentModel) => Json.obj(
       VatNumberKey -> claimVatEnrolmentModel.vatNumber,
       VatRegistrationDateKey -> claimVatEnrolmentModel.vatRegistrationDate,
-      PostcodeKey -> claimVatEnrolmentModel.optPostcode.map(_.sanitisedPostcode)
+      PostcodeKey -> claimVatEnrolmentModel.optPostcode.map(_.stringValue)
     ) ++ {
       if (claimVatEnrolmentModel.optReturnsInformation.isDefined) {
         Json.obj(

@@ -20,8 +20,7 @@ object AppDependencies {
       "org.jsoup" % "jsoup" % "1.13.1" % scope,
       "com.typesafe.play" %% "play-test" % current % scope,
       "com.vladsch.flexmark" % "flexmark-all" % "0.36.8" % scope,
-      "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.3" % scope,
-      "org.scoverage" %% "scalac-scoverage-runtime" % "1.4.6" % scope
+      "org.scalatestplus.play" %% "scalatestplus-play" % "4.0.3" % scope
     )
   }
 

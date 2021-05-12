@@ -18,22 +18,23 @@
 @import uk.gov.hmrc.claimvatenrolmentfrontend.views.html._
 @import uk.gov.hmrc.claimvatenrolmentfrontend.controllers.routes._
 
-@this(
-    hmrcBanner: HmrcBanner,
+@this(hmrcBanner: HmrcBanner,
     govukLayout: GovukLayout,
     hmrcStandardFooter: HmrcStandardFooter,
     hmrcTimeoutDialog: HmrcTimeoutDialog,
+    hmrcTrackingConsentSnippet: HmrcTrackingConsentSnippet,
     languageSelect: language_select,
     siteHeader: siteHeader,
     phaseBanner: phaseBanner,
     govukBackLink: GovukBackLink
 )
 
-@(
-    pageTitle: Option[String] = None,
+@(pageTitle: Option[String] = None,
     showSignOut: Boolean = true,
     showBackLink: Boolean = true
 )(contentBlock: Html)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+
+@hmrcTrackingConsentSnippet()
 
 @headBlock = {
     <!--[if lte IE 8]><script src='@controllers.routes.Assets.versioned("javascripts/html5shiv.min.js")'></script><![endif]-->

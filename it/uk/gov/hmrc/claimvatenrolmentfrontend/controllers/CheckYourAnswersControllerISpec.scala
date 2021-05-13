@@ -16,23 +16,35 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
-import java.time.Instant
-
+import play.api.Application
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import reactivemongo.play.json._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.{routes => errorRoutes}
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.AllocateEnrolmentResponseHttpParser.MultipleEnrolmentsInvalidKey
-import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.claimVatEnrolmentModelWrites
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.vatKnownFactsWrites
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.{AllocationEnrolmentStub, AuthStub, EnrolmentStoreProxyStub}
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
+import uk.gov.hmrc.claimvatenrolmentfrontend.utils.WiremockHelper._
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.CheckYourAnswersViewTests
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
 class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYourAnswersViewTests with AuthStub with AllocationEnrolmentStub with EnrolmentStoreProxyStub {
+
+  def extraConfig = Map(
+    "auditing.enabled" -> "true",
+    "auditing.consumer.baseUri.host" -> mockHost,
+    "auditing.consumer.baseUri.port" -> mockPort
+  )
+
+  override lazy val app: Application = new GuiceApplicationBuilder()
+    .configure(config ++ extraConfig)
+    .build
 
   override def beforeEach(): Unit = {
     await(journeyDataRepository.drop)
@@ -40,16 +52,17 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
   }
 
   s"GET /$testJourneyId/check-your-answers-vat" when {
-    "there is a full ClaimVatEnrolmentModel stored in the database" should {
+    "there is a full VatKnownFacts stored in the database" should {
       lazy val result = {
         await(journeyDataRepository.collection.insert(true).one(
           Json.obj(
             "_id" -> testJourneyId,
             "authInternalId" -> testInternalId,
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-          ) ++ Json.toJsObject(testFullClaimVatEnrolmentModel)
+          ) ++ Json.toJsObject(testFullVatKnownFacts)
         ))
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAudit
         get(s"/$testJourneyId/check-your-answers-vat")
       }
       "return OK" in {
@@ -58,16 +71,17 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
       testCheckYourAnswersViewFull(result)
     }
 
-    "there is a ClaimVatEnrolmentModel with no postcode stored in the database" should {
+    "there is a VatKnownFacts with no postcode stored in the database" should {
       lazy val result = {
         await(journeyDataRepository.collection.insert(true).one(
           Json.obj(
             "_id" -> testJourneyId,
             "authInternalId" -> testInternalId,
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-          ) ++ Json.toJsObject(testClaimVatEnrolmentModelNoPostcode)
+          ) ++ Json.toJsObject(testVatKnownFactsNoPostcode)
         ))
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAudit
         get(s"/$testJourneyId/check-your-answers-vat")
       }
 
@@ -78,16 +92,17 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
       testCheckYourAnswersViewNoPostcode(result)
     }
 
-    "there is a ClaimVatEnrolmentModel with no returns stored in the database" should {
+    "there is a VatKnownFacts with no returns stored in the database" should {
       lazy val result = {
         await(journeyDataRepository.collection.insert(true).one(
           Json.obj(
             "_id" -> testJourneyId,
             "authInternalId" -> testInternalId,
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-          ) ++ Json.toJsObject(testClaimVatEnrolmentModelNoReturns)
+          ) ++ Json.toJsObject(testVatKnownFactsNoReturns)
         ))
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAudit
         get(s"/$testJourneyId/check-your-answers-vat")
       }
 
@@ -98,16 +113,17 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
       testCheckYourAnswersViewNoReturnsInformation(result)
     }
 
-    "there is a ClaimVatEnrolmentModel with no returns and no postcode stored in the database" should {
+    "there is a VatKnownFacts with no returns and no postcode stored in the database" should {
       lazy val result = {
         await(journeyDataRepository.collection.insert(true).one(
           Json.obj(
             "_id" -> testJourneyId,
             "authInternalId" -> testInternalId,
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-          ) ++ Json.toJsObject(testClaimVatEnrolmentModelNoReturnsNoPostcode)
+          ) ++ Json.toJsObject(testVatKnownFactsNoReturnsNoPostcode)
         ))
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAudit
         get(s"/$testJourneyId/check-your-answers-vat")
       }
 
@@ -127,10 +143,11 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
           "_id" -> testJourneyId,
           "authInternalId" -> testInternalId,
           "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-        ) ++ Json.toJsObject(testFullClaimVatEnrolmentModel)
+        ) ++ Json.toJsObject(testFullVatKnownFacts)
       ))
       await(insertJourneyConfig(testJourneyId, testContinueUrl))
-      stubAllocateEnrolment(testFullClaimVatEnrolmentModel, testCredentialId, testGroupId)(CREATED, Json.obj())
+      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(CREATED, Json.obj())
+      stubAudit
 
       lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 
@@ -138,6 +155,7 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
         httpStatus(SEE_OTHER),
         redirectUri(testContinueUrl)
       )
+      verifyAudit()
     }
 
     "redirect to UnmatchedUser if the user group already has a matching enrolment, but the user does not" in {
@@ -147,10 +165,11 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
           "_id" -> testJourneyId,
           "authInternalId" -> testInternalId,
           "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-        ) ++ Json.toJsObject(testFullClaimVatEnrolmentModel)
+        ) ++ Json.toJsObject(testFullVatKnownFacts)
       ))
       await(insertJourneyConfig(testJourneyId, testContinueUrl))
-      stubAllocateEnrolment(testFullClaimVatEnrolmentModel, testCredentialId, testGroupId)(CONFLICT, Json.obj("code" -> MultipleEnrolmentsInvalidKey))
+      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(CONFLICT, Json.obj("code" -> MultipleEnrolmentsInvalidKey))
+      stubAudit
 
       lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 
@@ -158,6 +177,7 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
         httpStatus(SEE_OTHER),
         redirectUri(errorRoutes.UnmatchedUserErrorController.show().url)
       )
+      verifyAudit()
     }
 
     "redirect to KnownFactsMismatch if the enrolment fails" in {
@@ -167,10 +187,11 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
           "_id" -> testJourneyId,
           "authInternalId" -> testInternalId,
           "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-        ) ++ Json.toJsObject(testFullClaimVatEnrolmentModel)
+        ) ++ Json.toJsObject(testFullVatKnownFacts)
       ))
       await(insertJourneyConfig(testJourneyId, testContinueUrl))
-      stubAllocateEnrolment(testFullClaimVatEnrolmentModel, testCredentialId, testGroupId)(BAD_REQUEST, Json.obj())
+      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(BAD_REQUEST, Json.obj())
+      stubAudit
 
       lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 
@@ -179,6 +200,7 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
         httpStatus(SEE_OTHER),
         redirectUri(errorRoutes.KnownFactsMismatchController.show().url)
       )
+      verifyAudit()
     }
 
     "redirect to EnrolmentAlreadyAllocated error page when enrolment fails " in {
@@ -188,12 +210,12 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
           "_id" -> testJourneyId,
           "authInternalId" -> testInternalId,
           "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-        ) ++ Json.toJsObject(testFullClaimVatEnrolmentModel)
+        ) ++ Json.toJsObject(testFullVatKnownFacts)
       ))
       await(insertJourneyConfig(testJourneyId, testContinueUrl))
-      stubAllocateEnrolment(testFullClaimVatEnrolmentModel, testCredentialId, testGroupId)(INTERNAL_SERVER_ERROR, Json.obj())
+      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(INTERNAL_SERVER_ERROR, Json.obj())
       stubGetUserIds(testVatNumber)(OK)
-
+      stubAudit
 
       lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 
@@ -201,6 +223,7 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
         httpStatus(SEE_OTHER),
         redirectUri(errorRoutes.EnrolmentAlreadyAllocatedController.show().url)
       )
+      verifyAudit()
     }
 
     "throw an exception when no userIds are connected with the vatNumber" in {
@@ -210,22 +233,25 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
           "_id" -> testJourneyId,
           "authInternalId" -> testInternalId,
           "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-        ) ++ Json.toJsObject(testFullClaimVatEnrolmentModel)
+        ) ++ Json.toJsObject(testFullVatKnownFacts)
       ))
       await(insertJourneyConfig(testJourneyId, testContinueUrl))
-      stubAllocateEnrolment(testFullClaimVatEnrolmentModel, testCredentialId, testGroupId)(INTERNAL_SERVER_ERROR, Json.obj())
+      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(INTERNAL_SERVER_ERROR, Json.obj())
       stubGetUserIds(testVatNumber)(NO_CONTENT)
+      stubAudit
 
       lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 
       result must have(
         httpStatus(INTERNAL_SERVER_ERROR)
       )
+      verifyAudit()
     }
 
 
     "return UNAUTHORISED when no credentials or groupId are retrieved from Auth" in {
       stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      stubAudit
 
       lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 

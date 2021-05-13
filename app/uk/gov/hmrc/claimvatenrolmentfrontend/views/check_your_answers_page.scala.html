@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.helpers._
 @import uk.gov.hmrc.claimvatenrolmentfrontend.controllers.{routes => Routes}
-@import uk.gov.hmrc.claimvatenrolmentfrontend.models.ClaimVatEnrolmentModel
+@import uk.gov.hmrc.claimvatenrolmentfrontend.models.VatKnownFacts
 @import java.time.format.DateTimeFormatter
 
 @this(layout: templates.layout,
@@ -27,7 +27,7 @@
         formWithCSRF: FormWithCSRF
 )
 
-@(formAction: Call, journeyId: String, claimVatEnrolmentModel: ClaimVatEnrolmentModel)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@(formAction: Call, journeyId: String, vatKnownFacts: VatKnownFacts)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 @layout(Some(titleNoForm(messages("check-your-answers.title")))) {
 
@@ -38,12 +38,12 @@
         rows = Seq(
             SummaryListRow(
                 key = Key(content = Text(messages("check-your-answers.vat_number"))),
-                value = Value(content = Text(claimVatEnrolmentModel.vatNumber)),
+                value = Value(content = Text(vatKnownFacts.vatNumber)),
                 actions = None
             ),
             SummaryListRow(
                 key = Key(content = Text(messages("check-your-answers.registration_date"))),
-                value = Value(content = Text(claimVatEnrolmentModel.vatRegistrationDate.format(DateTimeFormatter.ofPattern("d MMMM yyyy")))),
+                value = Value(content = Text(vatKnownFacts.vatRegistrationDate.format(DateTimeFormatter.ofPattern("d MMMM yyyy")))),
                 actions = Some(Actions(items = Seq(
                     ActionItem(
                         href = Routes.CaptureVatRegistrationDateController.show(journeyId).url,
@@ -52,7 +52,7 @@
                     )
                 )))
             )
-        ) ++ claimVatEnrolmentModel.optPostcode.map {
+        ) ++ vatKnownFacts.optPostcode.map {
             postcode =>
                 SummaryListRow(
                     key = Key(content = Text(messages("check-your-answers.business_postcode"))),
@@ -65,7 +65,7 @@
                         )
                     )))
                 )
-        } ++ (claimVatEnrolmentModel.optReturnsInformation match {
+        } ++ (vatKnownFacts.optReturnsInformation match {
             case Some(_) =>
                 Seq(SummaryListRow(
                     key = Key(content = Text(messages("check-your-answers.vat_returns"))),
@@ -90,7 +90,7 @@
                         )
                     )))
                 ))
-        }) ++ claimVatEnrolmentModel.optReturnsInformation.map {
+        }) ++ vatKnownFacts.optReturnsInformation.map {
             returnsInformation =>
                 SummaryListRow(
                     key = Key(content = Text(messages("check-your-answers.box_five"))),
@@ -103,7 +103,7 @@
                         )
                     )))
                 )
-        } ++ claimVatEnrolmentModel.optReturnsInformation.map {
+        } ++ vatKnownFacts.optReturnsInformation.map {
             returnsInformation =>
                 SummaryListRow(
                     key = Key(content = Text(messages("check-your-answers.last_return_month"))),

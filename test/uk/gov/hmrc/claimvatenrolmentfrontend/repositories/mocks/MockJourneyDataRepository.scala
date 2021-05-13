@@ -23,7 +23,7 @@ import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.libs.json.JsValue
 import reactivemongo.api.commands.UpdateWriteResult
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.ClaimVatEnrolmentModel
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.VatKnownFacts
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository
 
 import scala.concurrent.Future
@@ -50,7 +50,7 @@ trait MockJourneyDataRepository extends MockitoSugar with BeforeAndAfterEach {
 
   def mockGetJourneyData(journeyId: String,
                          authId: String
-                        )(response: Future[Option[ClaimVatEnrolmentModel]]): OngoingStubbing[_] =
+                        )(response: Future[Option[VatKnownFacts]]): OngoingStubbing[_] =
     when(mockJourneyDataRepository.getJourneyData(
       ArgumentMatchers.eq(journeyId),
       ArgumentMatchers.eq(authId)

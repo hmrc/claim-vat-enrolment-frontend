@@ -18,7 +18,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
 import javax.inject.{Inject, Singleton}
 import reactivemongo.api.commands.UpdateWriteResult
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.{ClaimVatEnrolmentModel, JourneyConfig}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.{VatKnownFacts, JourneyConfig}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{Box5FigureKey, LastMonthSubmittedKey, PostcodeKey}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.{JourneyConfigRepository, JourneyDataRepository}
 import uk.gov.hmrc.http.InternalServerException
@@ -47,7 +47,7 @@ class JourneyService @Inject()(journeyConfigRepository: JourneyConfigRepository,
         throw new InternalServerException(s"Journey config was not found for journey ID $journeyId")
     }
 
-  def retrieveJourneyData(journeyId: String, authInternalId: String): Future[ClaimVatEnrolmentModel] =
+  def retrieveJourneyData(journeyId: String, authInternalId: String): Future[VatKnownFacts] =
     journeyDataRepository.getJourneyData(journeyId, authInternalId).map {
       case Some(journeyData) =>
         journeyData

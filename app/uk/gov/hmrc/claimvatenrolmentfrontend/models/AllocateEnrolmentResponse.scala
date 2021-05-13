@@ -25,9 +25,13 @@ case object EnrolmentSuccess extends AllocateEnrolmentResponse
 
 case class EnrolmentFailure(errorMessage: String) extends AllocateEnrolmentResponse
 
-case object MultipleEnrolmentsInvalid extends AllocateEnrolmentResponse
+case object MultipleEnrolmentsInvalid extends AllocateEnrolmentResponse {
+  val message = "Only one MTDVAT enrolment can be applied to a credential, user attempted to claim a second."
+}
 
-case object InvalidKnownFacts extends AllocateEnrolmentResponse
+case object InvalidKnownFacts extends AllocateEnrolmentResponse {
+  val message = "The provided known facts do not match those held by the downstream service"
+}
 
 object AllocateEnrolmentResponseHttpParser {
 

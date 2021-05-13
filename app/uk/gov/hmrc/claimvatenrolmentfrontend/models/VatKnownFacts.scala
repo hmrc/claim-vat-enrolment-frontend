@@ -18,9 +18,9 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.models
 
 import java.time.{LocalDate, Month}
 
-case class ClaimVatEnrolmentModel(vatNumber: String,
-                                  optPostcode: Option[Postcode],
-                                  vatRegistrationDate: LocalDate,
-                                  optReturnsInformation: Option[ReturnsInformationModel])
+case class VatKnownFacts(vatNumber: String,
+                         optPostcode: Option[Postcode],
+                         vatRegistrationDate: LocalDate,
+                         optReturnsInformation: Option[ReturnsInformation])
 
-case class ReturnsInformationModel(boxFive: String, lastReturnMonth: Month)
+case class ReturnsInformation(boxFive: String, lastReturnMonth: Month)

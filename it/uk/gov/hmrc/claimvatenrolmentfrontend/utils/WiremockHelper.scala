@@ -51,6 +51,8 @@ object WiremockHelper extends Eventually with IntegrationPatience {
     verify(getRequestedFor(urlEqualTo(uri)))
   }
 
+  def verifyAudit(): Unit = verifyPost("/write/audit")
+
   def stubGet(url: String, status: Integer, body: String): StubMapping =
     stubFor(get(urlMatching(url))
       .willReturn(
@@ -95,6 +97,12 @@ object WiremockHelper extends Eventually with IntegrationPatience {
           withBody(responseBody)
       )
     )
+
+  def stubAudit: StubMapping = {
+    stubPost("/write/audit", 200, "{}")
+    stubPost("/write/audit/merged", 200, "{}")
+  }
+
 }
 
 trait WiremockHelper {

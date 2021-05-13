@@ -16,19 +16,19 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import reactivemongo.api.commands.UpdateWriteResult
 import reactivemongo.core.errors.GenericDriverException
-import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.mocks.MockJourneyDataRepository
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.StoreVatRegistrationDateService
 import uk.gov.hmrc.claimvatenrolmentfrontend.helpers.TestConstants.{testInternalId, testJourneyId, testVatRegDate}
-import uk.gov.hmrc.claimvatenrolmentfrontend.utils.UnitSpec
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.mocks.MockJourneyDataRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class StoreVatRegistrationDateServiceSpec extends UnitSpec with MockJourneyDataRepository {
+class StoreVatRegistrationDateServiceSpec extends AnyWordSpec with Matchers with MockJourneyDataRepository {
 
   object TestService extends StoreVatRegistrationDateService(mockJourneyDataRepository)
 

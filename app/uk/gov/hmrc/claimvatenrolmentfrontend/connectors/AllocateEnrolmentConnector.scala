@@ -20,7 +20,7 @@ import play.api.libs.json.{JsObject, Json, Writes}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.AllocateEnrolmentConnector._
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.AllocateEnrolmentResponseHttpParser.AllocateEnrolmentResponseReads
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.{AllocateEnrolmentResponse, ClaimVatEnrolmentModel}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.{AllocateEnrolmentResponse, VatKnownFacts}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import java.time.format.DateTimeFormatter
@@ -32,8 +32,8 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
                                            appConfig: AppConfig
                                           )(implicit ec: ExecutionContext) {
 
-  def allocateEnrolment(claimVatEnrolmentInfo: ClaimVatEnrolmentModel, credentialId: String, groupId: String)(implicit hc: HeaderCarrier): Future[AllocateEnrolmentResponse] = {
-    val enrolmentKey = s"HMRC-MTD-VAT~VRN~${claimVatEnrolmentInfo.vatNumber}"
+  def allocateEnrolment(vatKnownFacts: VatKnownFacts, credentialId: String, groupId: String)(implicit hc: HeaderCarrier): Future[AllocateEnrolmentResponse] = {
+    val enrolmentKey = s"HMRC-MTD-VAT~VRN~${vatKnownFacts.vatNumber}"
 
     val requestBody = Json.obj(
       "userId" -> credentialId,
@@ -42,25 +42,25 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
       "verifiers" -> Json.arr(
         Json.obj(
           "key" -> "VATRegistrationDate",
-          "value" -> claimVatEnrolmentInfo.vatRegistrationDate.format(etmpDateFormat)
+          "value" -> vatKnownFacts.vatRegistrationDate.format(etmpDateFormat)
         ),
         Json.obj(
           "key" -> "Postcode",
-          "value" -> (claimVatEnrolmentInfo.optPostcode match {
+          "value" -> (vatKnownFacts.optPostcode match {
             case Some(postcode) => postcode.sanitisedPostcode
             case None => NullValue
           })
         ),
         Json.obj(
           "key" -> "BoxFiveValue",
-          "value" -> (claimVatEnrolmentInfo.optReturnsInformation match {
+          "value" -> (vatKnownFacts.optReturnsInformation match {
             case Some(returnsInformation) => returnsInformation.boxFive
             case None => NullValue
           })
         ),
         Json.obj(
           "key" -> "LastMonthLatestStagger",
-          "value" -> (claimVatEnrolmentInfo.optReturnsInformation match {
+          "value" -> (vatKnownFacts.optReturnsInformation match {
             case Some(returnsInformation) => returnsInformation.lastReturnMonth.getValue.formatted("%02d")
             case None => NullValue
           })

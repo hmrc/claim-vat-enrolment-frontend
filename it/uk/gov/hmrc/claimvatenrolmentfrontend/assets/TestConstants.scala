@@ -19,7 +19,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.assets
 import java.time.{LocalDate, Month}
 import java.util.UUID
 import uk.gov.hmrc.auth.core.retrieve.Credentials
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.{ClaimVatEnrolmentModel, Postcode, ReturnsInformationModel}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.{VatKnownFacts, Postcode, ReturnsInformation}
 
 
 object TestConstants {
@@ -36,40 +36,40 @@ object TestConstants {
   val testCredentialId: String = UUID.randomUUID().toString
   val testCredentials: Credentials = Credentials(testCredentialId, "GovernmentGateway")
 
-  val testFullClaimVatEnrolmentModel: ClaimVatEnrolmentModel =
-    ClaimVatEnrolmentModel(
+  val testFullVatKnownFacts: VatKnownFacts =
+    VatKnownFacts(
       vatNumber = testVatNumber,
       optPostcode = Some(testPostcode),
       vatRegistrationDate = testVatRegDate,
       optReturnsInformation =
-        Some(ReturnsInformationModel(
+        Some(ReturnsInformation(
           boxFive = testBoxFive,
           lastReturnMonth = testLastReturnMonth
         ))
     )
 
-  val testClaimVatEnrolmentModelNoReturns: ClaimVatEnrolmentModel =
-    ClaimVatEnrolmentModel(
+  val testVatKnownFactsNoReturns: VatKnownFacts =
+    VatKnownFacts(
       vatNumber = testVatNumber,
       optPostcode = Some(testPostcode),
       vatRegistrationDate = testVatRegDate,
       optReturnsInformation = None
     )
 
-  val testClaimVatEnrolmentModelNoReturnsNoPostcode: ClaimVatEnrolmentModel =
-    ClaimVatEnrolmentModel(
+  val testVatKnownFactsNoReturnsNoPostcode: VatKnownFacts =
+    VatKnownFacts(
       vatNumber = testVatNumber,
       optPostcode = None,
       vatRegistrationDate = testVatRegDate,
       optReturnsInformation = None
     )
 
-  val testClaimVatEnrolmentModelNoPostcode: ClaimVatEnrolmentModel =
-    ClaimVatEnrolmentModel(
+  val testVatKnownFactsNoPostcode: VatKnownFacts =
+    VatKnownFacts(
       vatNumber = testVatNumber,
       optPostcode = None,
       vatRegistrationDate = testVatRegDate,
-      optReturnsInformation = Some(ReturnsInformationModel(
+      optReturnsInformation = Some(ReturnsInformation(
         boxFive = testBoxFive,
         lastReturnMonth = testLastReturnMonth
       ))

@@ -22,8 +22,8 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
 import reactivemongo.play.json._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.ClaimVatEnrolmentModel
-import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{claimVatEnrolmentModelReads, claimVatEnrolmentModelWrites}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.VatKnownFacts
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{vatKnownFactsReads, vatKnownFactsWrites}
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.CaptureSubmittedVatReturnViewTests
@@ -68,7 +68,7 @@ class CaptureSubmittedVatReturnControllerISpec extends ComponentSpecHelper with 
             "_id" -> testJourneyId,
             "authInternalId" -> testInternalId,
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-          ) ++ Json.toJsObject(testFullClaimVatEnrolmentModel)
+          ) ++ Json.toJsObject(testFullVatKnownFacts)
         ))
         lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "no")
 
@@ -77,11 +77,11 @@ class CaptureSubmittedVatReturnControllerISpec extends ComponentSpecHelper with 
           redirectUri(routes.CheckYourAnswersController.show(testJourneyId).url)
         )
         await(
-          journeyDataRepository.collection.find[JsObject, ClaimVatEnrolmentModel](
+          journeyDataRepository.collection.find[JsObject, VatKnownFacts](
             Json.obj("_id" -> testJourneyId),
             None
-          ).one[ClaimVatEnrolmentModel]
-        ) mustBe Some(testClaimVatEnrolmentModelNoReturns)
+          ).one[VatKnownFacts]
+        ) mustBe Some(testVatKnownFactsNoReturns)
       }
 
       "the user selects no" in {
@@ -100,11 +100,11 @@ class CaptureSubmittedVatReturnControllerISpec extends ComponentSpecHelper with 
           redirectUri(routes.CheckYourAnswersController.show(testJourneyId).url)
         )
         await(
-          journeyDataRepository.collection.find[JsObject, ClaimVatEnrolmentModel](
+          journeyDataRepository.collection.find[JsObject, VatKnownFacts](
             Json.obj("_id" -> testJourneyId),
             None
-          ).one[ClaimVatEnrolmentModel]
-        ) mustBe Some(testClaimVatEnrolmentModelNoReturns)
+          ).one[VatKnownFacts]
+        ) mustBe Some(testVatKnownFactsNoReturns)
       }
     }
   }

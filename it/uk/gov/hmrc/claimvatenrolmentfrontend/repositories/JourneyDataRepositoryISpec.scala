@@ -20,7 +20,7 @@ import play.api.libs.json.{JsObject, JsString, Json}
 import play.api.test.Helpers._
 import reactivemongo.play.json._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.JourneyDataModel
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.JourneyData
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository._
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
 
@@ -38,7 +38,7 @@ class JourneyDataRepositoryISpec extends ComponentSpecHelper {
   "insertJourneyVatNumber" should {
     "successfully insert the vatNumber" in {
       await(repo.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
-      await(repo.findById(testJourneyId)) mustBe Some(JourneyDataModel(testJourneyId))
+      await(repo.findById(testJourneyId)) mustBe Some(JourneyData(testJourneyId))
       await(repo.collection.find[JsObject, JsObject](
         Json.obj("_id" -> testJourneyId),
         Some(Json.obj(
@@ -50,29 +50,29 @@ class JourneyDataRepositoryISpec extends ComponentSpecHelper {
   }
 
   s"getJourneyData($testJourneyId)" should {
-    "successfully return a full ClaimVatEnrolmentModel" when {
+    "successfully return a full VatKnownFacts" when {
       "all data is populated" in {
         await(repo.collection.insert(ordered = false).one(
           Json.obj(
             JourneyIdKey -> testJourneyId,
             AuthInternalIdKey -> testInternalId
-          ) ++ Json.toJsObject(testFullClaimVatEnrolmentModel)
+          ) ++ Json.toJsObject(testFullVatKnownFacts)
         ))
 
-        await(repo.getJourneyData(testJourneyId, testInternalId)) mustBe Some(testFullClaimVatEnrolmentModel)
+        await(repo.getJourneyData(testJourneyId, testInternalId)) mustBe Some(testFullVatKnownFacts)
       }
     }
 
-    "successfully return partial ClaimVatEnrolmentModel" when {
+    "successfully return partial VatKnownFacts" when {
       "there is no postcode" in {
         await(repo.collection.insert(ordered = false).one(
           Json.obj(
             JourneyIdKey -> testJourneyId,
             AuthInternalIdKey -> testInternalId
-          ) ++ Json.toJsObject(testClaimVatEnrolmentModelNoPostcode)
+          ) ++ Json.toJsObject(testVatKnownFactsNoPostcode)
         ))
 
-        await(repo.getJourneyData(testJourneyId, testInternalId)) mustBe Some(testClaimVatEnrolmentModelNoPostcode)
+        await(repo.getJourneyData(testJourneyId, testInternalId)) mustBe Some(testVatKnownFactsNoPostcode)
       }
 
       "there is no postcode and no returns information" in {
@@ -80,10 +80,10 @@ class JourneyDataRepositoryISpec extends ComponentSpecHelper {
           Json.obj(
             JourneyIdKey -> testJourneyId,
             AuthInternalIdKey -> testInternalId
-          ) ++ Json.toJsObject(testClaimVatEnrolmentModelNoReturnsNoPostcode)
+          ) ++ Json.toJsObject(testVatKnownFactsNoReturnsNoPostcode)
         ))
 
-        await(repo.getJourneyData(testJourneyId, testInternalId)) mustBe Some(testClaimVatEnrolmentModelNoReturnsNoPostcode)
+        await(repo.getJourneyData(testJourneyId, testInternalId)) mustBe Some(testVatKnownFactsNoReturnsNoPostcode)
       }
 
       "there is no returns information" in {
@@ -91,10 +91,10 @@ class JourneyDataRepositoryISpec extends ComponentSpecHelper {
           Json.obj(
             JourneyIdKey -> testJourneyId,
             AuthInternalIdKey -> testInternalId
-          ) ++ Json.toJsObject(testClaimVatEnrolmentModelNoReturns)
+          ) ++ Json.toJsObject(testVatKnownFactsNoReturns)
         ))
 
-        await(repo.getJourneyData(testJourneyId, testInternalId)) mustBe Some(testClaimVatEnrolmentModelNoReturns)
+        await(repo.getJourneyData(testJourneyId, testInternalId)) mustBe Some(testVatKnownFactsNoReturns)
       }
     }
   }

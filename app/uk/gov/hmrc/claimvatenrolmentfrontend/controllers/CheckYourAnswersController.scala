@@ -35,7 +35,7 @@ class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
                                            view: check_your_answers_page,
                                            journeyService: JourneyService,
                                            claimVatEnrolmentService: ClaimVatEnrolmentService,
-                                           val authConnector: AuthConnector,
+                                           val authConnector: AuthConnector
                                           )(implicit appConfig: AppConfig,
                                             ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions {
 
@@ -55,7 +55,7 @@ class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
     implicit request =>
       authorised().retrieve(credentials and groupIdentifier and internalId) {
         case Some(Credentials(credentialId, "GovernmentGateway")) ~ Some(groupId) ~ Some(internalId) =>
-          claimVatEnrolmentService.claimVatEnrolment(credentialId, groupId, internalId, journeyId).map{
+          claimVatEnrolmentService.claimVatEnrolment(credentialId, groupId, internalId, journeyId).map {
             case Right(continueUrl) =>
               SeeOther(continueUrl)
             case Left(KnownFactsMismatch) =>

@@ -14,9 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.claimvatenrolmentfrontend.utils
+package uk.gov.hmrc.claimvatenrolmentfrontend.models
 
-import org.scalatest.matchers.must.Matchers
-import org.scalatest.wordspec.AnyWordSpec
+import play.api.libs.json.{Format, JsObject, JsResult, JsValue, Json}
 
-trait UnitSpec extends AnyWordSpec with Matchers
+
+case class JourneyData(journeyId: String)
+
+object JourneyData {
+
+  implicit object MongoFormat extends Format[JourneyData] {
+    override def writes(o: JourneyData): JsObject =
+      Json.obj("_id" -> o.journeyId)
+
+    override def reads(json: JsValue): JsResult[JourneyData] =
+      for {
+        journeyId <- (json \ "_id").validate[String]
+      } yield JourneyData(journeyId)
+  }
+
+}

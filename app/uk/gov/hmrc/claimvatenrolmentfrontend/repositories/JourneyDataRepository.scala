@@ -23,7 +23,7 @@ import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json._
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.{ClaimVatEnrolmentModel, JourneyDataModel, Postcode, ReturnsInformationModel}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.{VatKnownFacts, JourneyData, Postcode, ReturnsInformation}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository._
 import uk.gov.hmrc.mongo.ReactiveRepository
 
@@ -34,10 +34,10 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoComponent,
                                       appConfig: AppConfig
-                                     )(implicit ec: ExecutionContext) extends ReactiveRepository[JourneyDataModel, String](
+                                     )(implicit ec: ExecutionContext) extends ReactiveRepository[JourneyData, String](
   collectionName = "claim-vat-enrolment-frontend-data",
   mongo = reactiveMongoComponent.mongoConnector.db,
-  domainFormat = JourneyDataModel.MongoFormat,
+  domainFormat = JourneyData.MongoFormat,
   idFormat = implicitly[Format[String]]
 ) {
 
@@ -51,7 +51,7 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
       )
     ).map(_ => journeyId)
 
-  def getJourneyData(journeyId: String, authInternalId: String): Future[Option[ClaimVatEnrolmentModel]] =
+  def getJourneyData(journeyId: String, authInternalId: String): Future[Option[VatKnownFacts]] =
     collection.find(
       Json.obj(
         JourneyIdKey -> journeyId,
@@ -61,7 +61,7 @@ class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoCompo
         JourneyIdKey -> 0,
         AuthInternalIdKey -> 0
       ))
-    ).one[ClaimVatEnrolmentModel]
+    ).one[VatKnownFacts]
 
   def updateJourneyData(journeyId: String, dataKey: String, data: JsValue, authInternalId: String): Future[UpdateWriteResult] =
     collection.update(true).one(
@@ -123,7 +123,7 @@ object JourneyDataRepository {
   val Box5FigureKey: String = "box5Figure"
   val LastMonthSubmittedKey: String = "lastMonthSubmitted"
 
-  implicit lazy val claimVatEnrolmentModelReads: Reads[ClaimVatEnrolmentModel] =
+  implicit lazy val vatKnownFactsReads: Reads[VatKnownFacts] =
     (json: JsValue) => for {
       vatNumber <- (json \ VatNumberKey).validate[String]
       optPostcode <- (json \ PostcodeKey).validateOpt[String].map {
@@ -135,23 +135,23 @@ object JourneyDataRepository {
         for {
           boxFiveFigure <- (json \ Box5FigureKey).validate[String]
           lastReturnMonth <- (json \ LastMonthSubmittedKey).validate[Int].map(Month.of)
-        } yield Some(ReturnsInformationModel(boxFiveFigure, lastReturnMonth))
+        } yield Some(ReturnsInformation(boxFiveFigure, lastReturnMonth))
       } else {
         JsSuccess(None)
       }
-    } yield ClaimVatEnrolmentModel(vatNumber, optPostcode, vatRegistrationDate, optReturnsInformation)
+    } yield VatKnownFacts(vatNumber, optPostcode, vatRegistrationDate, optReturnsInformation)
 
-  implicit lazy val claimVatEnrolmentModelWrites: OWrites[ClaimVatEnrolmentModel] =
-    (claimVatEnrolmentModel: ClaimVatEnrolmentModel) => Json.obj(
-      VatNumberKey -> claimVatEnrolmentModel.vatNumber,
-      VatRegistrationDateKey -> claimVatEnrolmentModel.vatRegistrationDate,
-      PostcodeKey -> claimVatEnrolmentModel.optPostcode.map(_.stringValue)
+  implicit lazy val vatKnownFactsWrites: OWrites[VatKnownFacts] =
+    (vatKnownFacts: VatKnownFacts) => Json.obj(
+      VatNumberKey -> vatKnownFacts.vatNumber,
+      VatRegistrationDateKey -> vatKnownFacts.vatRegistrationDate,
+      PostcodeKey -> vatKnownFacts.optPostcode.map(_.stringValue)
     ) ++ {
-      if (claimVatEnrolmentModel.optReturnsInformation.isDefined) {
+      if (vatKnownFacts.optReturnsInformation.isDefined) {
         Json.obj(
           SubmittedVatReturnKey -> true,
-          Box5FigureKey -> claimVatEnrolmentModel.optReturnsInformation.map(_.boxFive),
-          LastMonthSubmittedKey -> claimVatEnrolmentModel.optReturnsInformation.map(_.lastReturnMonth.getValue)
+          Box5FigureKey -> vatKnownFacts.optReturnsInformation.map(_.boxFive),
+          LastMonthSubmittedKey -> vatKnownFacts.optReturnsInformation.map(_.lastReturnMonth.getValue)
         )
       } else {
         Json.obj(SubmittedVatReturnKey -> false)

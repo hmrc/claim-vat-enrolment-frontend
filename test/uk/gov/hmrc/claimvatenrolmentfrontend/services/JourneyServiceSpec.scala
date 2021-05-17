@@ -17,18 +17,19 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
 import org.mockito.Mockito.when
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import reactivemongo.api.commands.WriteResult
 import uk.gov.hmrc.claimvatenrolmentfrontend.helpers.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.JourneyConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.mocks.{MockJourneyConfigRepository, MockJourneyDataRepository}
-import uk.gov.hmrc.claimvatenrolmentfrontend.utils.UnitSpec
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class JourneyServiceSpec extends UnitSpec with MockJourneyConfigRepository with MockJourneyDataRepository {
+class JourneyServiceSpec extends AnyWordSpec with Matchers with MockJourneyConfigRepository with MockJourneyDataRepository {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -77,11 +78,11 @@ class JourneyServiceSpec extends UnitSpec with MockJourneyConfigRepository with 
 
   "retrieveJourneyData" should {
     "return the full Journey Data" in {
-      mockGetJourneyData(testJourneyId, testInternalId)(Future.successful(Some(testFullClaimVatEnrolmentModel)))
+      mockGetJourneyData(testJourneyId, testInternalId)(Future.successful(Some(testFullVatKnownFacts)))
 
       val result = await(TestService.retrieveJourneyData(testJourneyId, testInternalId))
 
-      result mustBe testFullClaimVatEnrolmentModel
+      result mustBe testFullVatKnownFacts
       verifyGetJourneyData(testJourneyId, testInternalId)
     }
 

@@ -19,7 +19,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.services
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.{AllocateEnrolmentConnector, EnrolmentStoreProxyConnector}
 import uk.gov.hmrc.claimvatenrolmentfrontend.httpparsers.QueryUsersHttpParser.QueryUsersSuccess
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.{AllocateEnrolmentResponse, ClaimVatEnrolmentModel}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.{AllocateEnrolmentResponse, VatKnownFacts}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.Future
@@ -28,8 +28,11 @@ import scala.concurrent.Future
 class AllocateEnrolmentService @Inject()(allocateEnrolmentConnector: AllocateEnrolmentConnector,
                                          enrolmentStoreProxyConnector: EnrolmentStoreProxyConnector) {
 
-  def allocateEnrolment(claimVatEnrolmentInfo: ClaimVatEnrolmentModel, credentialId: String, groupId: String)(implicit hc: HeaderCarrier): Future[AllocateEnrolmentResponse] =
-    allocateEnrolmentConnector.allocateEnrolment(claimVatEnrolmentInfo, credentialId, groupId)
+  def allocateEnrolment(vatKnownFacts: VatKnownFacts,
+                        credentialId: String,
+                        groupId: String
+                       )(implicit hc: HeaderCarrier): Future[AllocateEnrolmentResponse] =
+    allocateEnrolmentConnector.allocateEnrolment(vatKnownFacts, credentialId, groupId)
 
   def getUserIds(vatNumber: String)(implicit hc: HeaderCarrier): Future[QueryUsersSuccess] =
     enrolmentStoreProxyConnector.getUserIds(vatNumber)

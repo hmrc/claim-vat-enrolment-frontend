@@ -34,8 +34,12 @@ object QueryUsersHttpParser {
 
   sealed trait QueryUsersSuccess
 
-  case object UsersFound extends QueryUsersSuccess
+  case object UsersFound extends QueryUsersSuccess {
+    val message = "Enrolment could not be allocated as a user with the specified enrolment already applied to their credential has been found"
+  }
 
-  case object NoUsersFound extends QueryUsersSuccess
+  case object NoUsersFound extends QueryUsersSuccess {
+    val message = "Enrolment could not be allocated but no other users have been found with the specified enrolment"
+  }
 
 }

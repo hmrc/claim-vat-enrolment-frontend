@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.helpers
 
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.{ClaimVatEnrolmentModel, Postcode, ReturnsInformationModel}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, Postcode, ReturnsInformation, VatKnownFacts}
 
 import java.time.{LocalDate, Month}
 import java.util.UUID
@@ -24,6 +24,8 @@ import java.util.UUID
 object TestConstants {
 
   val testJourneyId: String = UUID.randomUUID().toString
+  val testCredentialId: String = UUID.randomUUID().toString
+  val testGroupId: String = UUID.randomUUID().toString
   val testContinueUrl: String = "/test"
   val testVatRegDate: LocalDate = LocalDate.parse("2021-01-01")
   val testVatReturn: Boolean = true
@@ -33,16 +35,18 @@ object TestConstants {
   val testLastMonthSubmitted: Month = Month.MARCH
   val testPostcode: Postcode = Postcode("AA11AA")
   val testLastReturnMonth: Month = Month.JANUARY
-  val testFullClaimVatEnrolmentModel: ClaimVatEnrolmentModel =
-    ClaimVatEnrolmentModel(
+  val testFullVatKnownFacts: VatKnownFacts =
+    VatKnownFacts(
       vatNumber = testVatNumber,
       optPostcode = Some(testPostcode),
       vatRegistrationDate = testVatRegDate,
       optReturnsInformation =
-        Some(ReturnsInformationModel(
+        Some(ReturnsInformation(
           boxFive = testBoxFive,
           lastReturnMonth = testLastReturnMonth
         ))
     )
+
+  val testJourneyConfig: JourneyConfig = JourneyConfig(testContinueUrl)
 
 }

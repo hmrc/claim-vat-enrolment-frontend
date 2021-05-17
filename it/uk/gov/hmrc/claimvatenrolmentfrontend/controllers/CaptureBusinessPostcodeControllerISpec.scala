@@ -20,8 +20,8 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
 import reactivemongo.play.json._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.ClaimVatEnrolmentModel
-import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{claimVatEnrolmentModelWrites, claimVatEnrolmentModelReads}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.VatKnownFacts
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{vatKnownFactsWrites, vatKnownFactsReads}
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.CaptureBusinessPostcodeViewTests
@@ -121,7 +121,7 @@ class CaptureBusinessPostcodeControllerISpec extends ComponentSpecHelper with Ca
             "_id" -> testJourneyId,
             "authInternalId" -> testInternalId,
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-          ) ++ Json.toJsObject(testClaimVatEnrolmentModelNoReturns)
+          ) ++ Json.toJsObject(testVatKnownFactsNoReturns)
         ))
         lazy val result = get(s"/$testJourneyId/no-business-postcode")
 
@@ -130,11 +130,11 @@ class CaptureBusinessPostcodeControllerISpec extends ComponentSpecHelper with Ca
           redirectUri(routes.CaptureSubmittedVatReturnController.show(testJourneyId).url)
         )
         await(
-          journeyDataRepository.collection.find[JsObject, ClaimVatEnrolmentModel](
+          journeyDataRepository.collection.find[JsObject, VatKnownFacts](
             Json.obj("_id" -> testJourneyId),
             None
-          ).one[ClaimVatEnrolmentModel]
-        ) mustBe Some(testClaimVatEnrolmentModelNoReturnsNoPostcode)
+          ).one[VatKnownFacts]
+        ) mustBe Some(testVatKnownFactsNoReturnsNoPostcode)
       }
     }
   }

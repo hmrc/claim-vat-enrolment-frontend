@@ -16,29 +16,28 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
-import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{credentials, groupIdentifier, internalId}
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, ~}
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
-import uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.{routes => errorRoutes}
-import uk.gov.hmrc.claimvatenrolmentfrontend.httpparsers.QueryUsersHttpParser.{NoUsersFound, UsersFound}
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.{EnrolmentFailure, EnrolmentSuccess, InvalidKnownFacts, MultipleEnrolmentsInvalid}
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.{AllocateEnrolmentService, JourneyService}
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.ClaimVatEnrolmentService.{CannotAssignMultipleMtdvatEnrolments, EnrolmentAlreadyAllocated, KnownFactsMismatch}
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.{ClaimVatEnrolmentService, JourneyService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.check_your_answers_page
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
                                            view: check_your_answers_page,
                                            journeyService: JourneyService,
-                                           allocateEnrolmentService: AllocateEnrolmentService,
-                                           val authConnector: AuthConnector
-                                          )(implicit appConfig: AppConfig, ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions {
+                                           claimVatEnrolmentService: ClaimVatEnrolmentService,
+                                           val authConnector: AuthConnector,
+                                          )(implicit appConfig: AppConfig,
+                                            ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions {
 
   def show(journeyId: String): Action[AnyContent] = Action.async {
     implicit request =>
@@ -56,25 +55,15 @@ class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
     implicit request =>
       authorised().retrieve(credentials and groupIdentifier and internalId) {
         case Some(Credentials(credentialId, "GovernmentGateway")) ~ Some(groupId) ~ Some(internalId) =>
-          journeyService.retrieveJourneyData(journeyId, internalId).flatMap {
-            journeyData =>
-              allocateEnrolmentService.allocateEnrolment(journeyData, credentialId, groupId).flatMap {
-                case EnrolmentSuccess =>
-                  journeyService.retrieveJourneyConfig(journeyId).map {
-                    journeyConfig => SeeOther(journeyConfig.continueUrl)
-                  }
-                case MultipleEnrolmentsInvalid =>
-                  Future.successful(Redirect(errorRoutes.UnmatchedUserErrorController.show()))
-                case InvalidKnownFacts =>
-                  Future.successful(Redirect(errorRoutes.KnownFactsMismatchController.show().url))
-                case EnrolmentFailure(_) =>
-                  allocateEnrolmentService.getUserIds(journeyData.vatNumber).map {
-                    case UsersFound =>
-                      Redirect(errorRoutes.EnrolmentAlreadyAllocatedController.show().url)
-                    case NoUsersFound =>
-                      throw new InternalServerException("no users found with specified enrolment")
-                  }
-              }
+          claimVatEnrolmentService.claimVatEnrolment(credentialId, groupId, internalId, journeyId).map{
+            case Right(continueUrl) =>
+              SeeOther(continueUrl)
+            case Left(KnownFactsMismatch) =>
+              Redirect(errorPages.routes.KnownFactsMismatchController.show())
+            case Left(EnrolmentAlreadyAllocated) =>
+              Redirect(errorPages.routes.EnrolmentAlreadyAllocatedController.show())
+            case Left(CannotAssignMultipleMtdvatEnrolments) =>
+              Redirect(errorPages.routes.UnmatchedUserErrorController.show())
           }
         case _ =>
           Future.successful(Unauthorized)

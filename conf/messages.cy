@@ -1,6 +1,6 @@
 app.govuk                                                   = GOV.UK/CYMRAEG
-app.service_name                                            = Claim VAT Enrolment
-app.title                                                   = Claim VAT Enrolment
+app.service_name                                            = Hawlio Cofrestriad TAW
+app.title                                                   = Hawlio Cofrestriad TAW
 app.title.error_prefix                                      = Gwall:
 app.common.errorSummaryLabel                                = Mae problem wedi codi
 app.common.signOut                                          = Allgofnodi
@@ -10,10 +10,10 @@ app.common.back                                             = Nôl
 app.common.change                                           = Newid
 app.common.yes                                              = Iawn
 app.common.no                                               = Na
-app.phaseBanner1                                            = This is a new service - your
-app.phaseBanner2                                            = feedback (opens in new tab)
-app.phaseBanner3                                            = will help us to improve it.
-app.getHelp.linkText                                        = Get help with this page (opens in new tab)
+app.phaseBanner1                                            = Gwasanaeth newydd yw hwn –
+app.phaseBanner2                                            = bydd eich adborth (yn agor tab newydd)
+app.phaseBanner3                                            = yn ein helpu i’w wella.
+app.getHelp.linkText                                        = Help gyda’r dudalen hon (yn agor tab newydd)
 app.date.day                                                = Diwrnod
 app.date.month                                              = Mis
 app.date.year                                               = Blwyddyn
@@ -28,10 +28,10 @@ vat_registration_date.error.no_date                         = Nodwch eich dyddia
 vat_registration_date.error.future_date                     = Mae’n rhaid i’r dyddiad cofrestru TAW fod yn y gorffennol
 
 # Business Postcode Page
-capture-business-postcode.title                             = What is the UK postcode where your business is registered for VAT?
-capture-business-postcode.heading                           = What is the UK postcode where your business is registered for VAT?
+capture-business-postcode.title                             = Beth yw’r cod post yn y DU ble mae’ch busnes wedi’i gofrestru ar gyfer TAW?
+capture-business-postcode.heading                           = Beth yw’r cod post yn y DU ble mae’ch busnes wedi’i gofrestru ar gyfer TAW?
 capture-business-postcode.hint                              = Er enghraifft, AB1 2YZ
-capture-business-postcode.link_text                         = The business does not have a UK postcode
+capture-business-postcode.link_text                         = Nid oes gan y busnes god post yn y DU
 capture-business-postcode.error.emptyPostcode               = Nodwch y cod post ble mae’ch busnes wedi’i gofrestru ar gyfer TAW
 
 # Submitted VAT Return Page
@@ -44,7 +44,7 @@ capture-box5-figure.title                                   = Beth yw cyfanswm e
 capture-box5-figure.heading                                 = Beth yw cyfanswm eich Ffurflen TAW ddiweddaraf?
 capture-box5-figure.line_1                                  = Mae’r swm hwn i’w weld ym mlwch 5 o’r Ffurflen TAW ddiweddaraf i chi ei chyflwyno i CThEM.
 capture-box5-figure.line_2                                  = Mae angen i fformat y rhif hwn fod yn ddau le degol, er enghraifft £123.00.
-capture_box5_figure.empty.error                             = Nodwch gyfanswm eich Ffurflen TAW neu'ch swm o Flwch 5
+capture_box5_figure.empty.error                             = Nodwch gyfanswm eich Ffurflen TAW ddiweddaraf neu swm Blwch 5
 capture_box5_figure.invalid_length.error                    = TMae’n rhaid i’r swm o Flwch 5 fod yn llai na 14 o ddigidau
 capture_box5_figure.invalid_format.error                    = Nodwch werth hyd at 2 le degol. Er enghraifft, £100.00
 
@@ -56,7 +56,7 @@ capture-last-month-submitted.panel_title_1                  = Cyfnod cyfrifyddu 
 capture-last-month-submitted.panel_text_1                   = Rydych yn cyflwyno’ch Ffurflen TAW yn chwarterol (bob tri mis). Yn y ’cyfnod cyfrifyddu’ o fis Ionawr i fis Mawrth, y mis diwethaf yn y ’cyfnod cyfrifyddu’ hwnnw yw mis Mawrth. Felly, mae’n rhaid i chi ddewis mis Mawrth.
 capture-last-month-submitted.panel_title_2                  = Cyfnod cyfrifyddu TAW diweddaraf, enghraifft 2
 capture-last-month-submitted.panel_text_2                   = Os ydych chi’n cyflwyno’ch Ffurflen TAW yn fisol, y cyfnod cyfrifyddu diwethaf y gwnaethoch gyflwyno ar ei gyfer oedd mis Ionawr. Mae’n rhaid i chi ddewis mis Ionawr.
-capture-last-month-submitted.hint                           = Dewiswch y mis diwethaf yn eich cyfnod cyfrifyddu TAW diwetharaf.
+capture-last-month-submitted.hint                           = Dewiswch fis diwethaf eich cyfnod cyfrifyddu TAW diweddaraf.
 capture-last-month-submitted.JANUARY                        = Ionawr
 capture-last-month-submitted.FEBRUARY                       = Chwefror
 capture-last-month-submitted.MARCH                          = Mawrth
@@ -75,9 +75,9 @@ capture-last-month-submitted.error.message                  = Dewiswch fis
 check-your-answers.title                                    = Gwirio’ch atebion
 check-your-answers.heading                                  = Gwirio’ch atebion
 check-your-answers.vat_number                               = Rhif TAW
-check-your-answers.registration_date                        = VAT Registration Date
+check-your-answers.registration_date                        = Dyddiad Cofrestru TAW
 check-your-answers.business_postcode                        = Ble mae’ch busnes wedi’i gofrestru ar gyfer TAW
-check-your-answers.vat_returns                              = You are currently submitting VAT returns
+check-your-answers.vat_returns                              = Rydych yn cyflwyno Ffurflenni TAW ar hyn o bryd
 check-your-answers.box_five                                 = Cyfanswm eich Ffurflen TAW neu’ch swm o Flwch 5
 check-your-answers.last_return_month                        = Y mis diwethaf yn eich cyfnod cyfrifyddu diweddaraf
 
@@ -87,20 +87,20 @@ known_facts_mismatch.heading                                = Doedd dim modd cad
 known_facts_mismatch.line_1                                 = Dydy’r wybodaeth rydych wedi’i nodi ddim yn cyd-fynd â’r manylion sydd gennym am eich busnes.
 
 # Invalid Account Type Page
-invalid_account_type.title                                  = You are not authorised to use this service
-invalid_account_type.heading                                = You are not authorised to use this service
-invalid_account_type.line_1                                 = Contact the person who set up the account. You need authority to enrol the business for VAT.
+invalid_account_type.title                                  = Nid ydych wedi’ch awdurdodi i ddefnyddio’r gwasanaeth hwn
+invalid_account_type.heading                                = Nid ydych wedi’ch awdurdodi i ddefnyddio’r gwasanaeth hwn
+invalid_account_type.line_1                                 = Cysylltwch â’r person a greodd y cyfrif. Mae angen awdurdod arnoch i gofrestru’r busnes ar gyfer TAW.
 
 # Unmatched User Error Page
 unmatched_user.title                                        = Allwch chi ddim defnyddio’r gwasanaeth hwn
 unmatched_user.heading                                      = Allwch chi ddim defnyddio’r gwasanaeth hwn
-unmatched_user.line_1                                       = Go to your business tax account to
-unmatched_user.link                                         = manage who can access your taxes, duties and schemes
+unmatched_user.line_1                                       = Ewch i’ch cyfrif treth busnes i wneud y canlynol:
+unmatched_user.link                                         = rheoli pwy all gael mynediad at eich trethi, eich tollau a’ch cynlluniau
 
 # Enrolment Already Allocated Error Page
 enrolment_already_allocated.title                           = Allwch chi ddim defnyddio’r gwasanaeth hwn
 enrolment_already_allocated.heading                         = Allwch chi ddim defnyddio’r gwasanaeth hwn
-enrolment_already_allocated.line_1                          = Your business is set up for VAT with another Government Gateway user ID. Try signing in again using a different user ID.
+enrolment_already_allocated.line_1                          = Mae’ch busnes wedi cofrestru ar gyfer TAW gyda Dynodydd Defnyddiwr (ID) arall ar gyfer Porth y Llywodraeth. Rhowch gynnig arall ar fewngofnodi gan ddefnyddio Dynodydd Defnyddiwr (ID) gwahanol.
 enrolment_already_allocated.line_2                          = Os ydych wedi colli’ch manylion,
 enrolment_already_allocated.link                            = ewch ati i ddod o hyd i’ch cyfrif neu ei adfer
-enrolment_already_allocated.go_back_to_bta                  = Go back to your business tax account
+enrolment_already_allocated.go_back_to_bta                  = Ewch yn ôl i’ch cyfrif treth busnes

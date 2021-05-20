@@ -23,5 +23,6 @@
 @hmrcHeader(uk.gov.hmrc.hmrcfrontend.views.html.components.Header(
     serviceName = Some(messages("app.title")),
     containerClasses = "govuk-width-container",
-    signOutHref = if (showSignOut) Some(SignInOutController.signOut().url) else None
+    signOutHref = if (showSignOut) Some(SignInOutController.signOut().url) else None,
+    language = if(messages.lang.code == "cy") {Cy} else En)
 ))

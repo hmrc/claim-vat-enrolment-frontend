@@ -26,9 +26,10 @@ import uk.gov.hmrc.play.audit.AuditExtensions
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.audit.model.DataEvent
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
+@Singleton
 class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
                                          allocateEnrolmentService: AllocateEnrolmentService,
                                          journeyService: JourneyService) {

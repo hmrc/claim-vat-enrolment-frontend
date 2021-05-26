@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
+import play.api.libs.json.JsResultException
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{credentials, groupIdentifier, internalId}
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, ~}
@@ -45,6 +46,8 @@ class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
           journeyService.retrieveJourneyData(journeyId, authInternalId).map {
             journeyData =>
               Ok(view(routes.CheckYourAnswersController.submit(journeyId), journeyId, journeyData))
+          }.recover {
+            case _: JsResultException => Redirect(routes.CaptureVatRegistrationDateController.show(journeyId))
           }
         case None => Future.successful(Unauthorized)
       }

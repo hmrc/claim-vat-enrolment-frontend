@@ -24,7 +24,7 @@ import reactivemongo.play.json._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.{routes => errorRoutes}
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.AllocateEnrolmentResponseHttpParser.MultipleEnrolmentsInvalidKey
-import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.vatKnownFactsWrites
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{SubmittedVatReturnKey, VatNumberKey, VatRegistrationDateKey, vatKnownFactsWrites}
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.{AllocationEnrolmentStub, AuthStub, EnrolmentStoreProxyStub}
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.WiremockHelper._
@@ -90,6 +90,32 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
       }
 
       testCheckYourAnswersViewNoPostcode(result)
+    }
+
+    "there is an invalid VatKnownFacts stored in the database" should {
+      lazy val result = {
+        await(journeyDataRepository.collection.insert(true).one(
+          Json.obj(
+            "_id" -> testJourneyId,
+            "authInternalId" -> testInternalId,
+            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli),
+            VatNumberKey -> testVatNumber,
+            VatRegistrationDateKey -> testVatRegDate,
+            SubmittedVatReturnKey -> true
+          )
+        ))
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAudit
+        get(s"/$testJourneyId/check-your-answers-vat")
+      }
+
+      "return a redirect to the registration date page" in {
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(routes.CaptureVatRegistrationDateController.show(testJourneyId).url)
+        )
+      }
+
     }
 
     "there is a VatKnownFacts with no returns stored in the database" should {

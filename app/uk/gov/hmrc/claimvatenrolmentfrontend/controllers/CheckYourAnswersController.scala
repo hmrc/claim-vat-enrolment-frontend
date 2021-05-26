@@ -24,7 +24,6 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.ClaimVatEnrolmentService.{CannotAssignMultipleMtdvatEnrolments, EnrolmentAlreadyAllocated, KnownFactsMismatch}
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.{ClaimVatEnrolmentService, JourneyService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.check_your_answers_page
-import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}

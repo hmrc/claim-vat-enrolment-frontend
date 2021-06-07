@@ -26,13 +26,9 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.utils.{ComponentSpecHelper, ViewSpe
 trait CaptureVatRegistrationDateViewTests extends ViewSpecHelper {
   this: ComponentSpecHelper =>
 
-  def testCaptureVatRegistrationDateViewTests(result: => WSResponse,
-                                              authStub: => StubMapping): Unit = {
+  def testCaptureVatRegistrationDateViewTests(result: => WSResponse): Unit = {
 
-    lazy val doc: Document = {
-      authStub
-      Jsoup.parse(result.body)
-    }
+    lazy val doc: Document = Jsoup.parse(result.body)
 
     "have a sign out link in the header" in {
       doc.getSignOutText mustBe Header.signOut

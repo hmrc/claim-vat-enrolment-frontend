@@ -19,12 +19,12 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.Helpers.{OK, SEE_OTHER, UNAUTHORIZED}
+import play.api.test.Helpers.{INTERNAL_SERVER_ERROR, OK, SEE_OTHER}
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.{testContinueUrl, testInternalId, testJourneyId, testVatNumber}
+import uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.{routes => errorRoutes}
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.JourneyIdGenerationService
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.{AuthStub, FakeJourneyIdGenerationService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
-import uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.{routes => errorRoutes}
 
 class JourneyControllerISpec extends ComponentSpecHelper with AuthStub {
 
@@ -52,12 +52,12 @@ class JourneyControllerISpec extends ComponentSpecHelper with AuthStub {
 
       result.header("Location").getOrElse("None") mustBe errorRoutes.InvalidAccountTypeController.show().url
     }
-    "return Unauthorized" in {
+    "return Internal Server Error" in {
       stubAuth(OK, successfulAuthResponse(None, None, None))
 
       lazy val result = get(s"/journey/$testVatNumber?continueUrl=$testContinueUrl")
 
-      result.status mustBe UNAUTHORIZED
+      result.status mustBe INTERNAL_SERVER_ERROR
 
     }
   }

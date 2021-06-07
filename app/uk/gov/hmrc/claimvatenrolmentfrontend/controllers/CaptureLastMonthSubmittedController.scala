@@ -17,29 +17,36 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
-import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureLastMonthSubmittedForm
-import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_last_month_submitted_page
-import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.StoreLastMonthSubmittedService
+import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
+import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureLastMonthSubmittedForm
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, StoreLastMonthSubmittedService}
+import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_last_month_submitted_page
+import uk.gov.hmrc.http.InternalServerException
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CaptureLastMonthSubmittedController @Inject()(mcc: MessagesControllerComponents,
                                                     view: capture_last_month_submitted_page,
                                                     storeLastMonthSubmittedService: StoreLastMonthSubmittedService,
+                                                    journeyService: JourneyService,
                                                     val authConnector: AuthConnector
                                                    )(implicit val config: AppConfig,
                                                      ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions {
 
   def show(journeyId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      authorised() {
-        Future.successful(Ok(view(routes.CaptureLastMonthSubmittedController.submit(journeyId), CaptureLastMonthSubmittedForm.form)))
+      authorised().retrieve(internalId) {
+        case Some(authId) =>
+          journeyService.retrieveJourneyConfig(journeyId, authId).map {
+            _ => Ok(view(routes.CaptureLastMonthSubmittedController.submit(journeyId), CaptureLastMonthSubmittedForm.form))
+          }
+        case None =>
+          throw new InternalServerException("Internal ID could not be retrieved from Auth")
       }
   }
 
@@ -57,7 +64,7 @@ class CaptureLastMonthSubmittedController @Inject()(mcc: MessagesControllerCompo
               }
           )
         case None =>
-          Future.successful(Unauthorized)
+          throw new InternalServerException("Internal ID could not be retrieved from Auth")
       }
   }
 }

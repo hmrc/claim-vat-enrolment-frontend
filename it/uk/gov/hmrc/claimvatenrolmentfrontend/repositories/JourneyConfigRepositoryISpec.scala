@@ -20,7 +20,7 @@ import org.scalatest.concurrent.{AbstractPatienceConfiguration, Eventually}
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
-import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.{testContinueUrl, testJourneyId}
+import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.{testContinueUrl, testInternalId, testJourneyId}
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.JourneyConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
 
@@ -43,24 +43,24 @@ class JourneyConfigRepositoryISpec extends ComponentSpecHelper with AbstractPati
 
   "documents" should {
     "successfully insert a new document" in {
-      await(repo.insertJourneyConfig(testJourneyId, JourneyConfig(testContinueUrl)))
+      await(repo.insertJourneyConfig(testJourneyId, JourneyConfig(testContinueUrl), testInternalId))
       await(repo.count) mustBe 1
     }
 
     "successfully insert journeyConfig" in {
-      await(repo.insertJourneyConfig(testJourneyId, JourneyConfig(testContinueUrl)))
+      await(repo.insertJourneyConfig(testJourneyId, JourneyConfig(testContinueUrl), testInternalId))
       await(repo.findById(testJourneyId)) must contain(JourneyConfig(testContinueUrl))
     }
 
     "successfully delete all documents" in {
-      await(repo.insertJourneyConfig(testJourneyId, JourneyConfig(testContinueUrl)))
+      await(repo.insertJourneyConfig(testJourneyId, JourneyConfig(testContinueUrl), testInternalId))
       await(repo.drop)
       await(repo.count) mustBe 0
     }
 
     "successfully delete one document" in {
-      await(repo.insertJourneyConfig(testJourneyId, JourneyConfig(testContinueUrl)))
-      await(repo.insertJourneyConfig(testJourneyId + 1, JourneyConfig(testContinueUrl)))
+      await(repo.insertJourneyConfig(testJourneyId, JourneyConfig(testContinueUrl), testInternalId))
+      await(repo.insertJourneyConfig(testJourneyId + 1, JourneyConfig(testContinueUrl), testInternalId))
       await(repo.removeById(testJourneyId + 1))
       await(repo.count) mustBe 1
     }

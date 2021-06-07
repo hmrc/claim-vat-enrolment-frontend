@@ -21,8 +21,9 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.VatRegistrationDateForm.vatRegistrationDateForm
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.StoreVatRegistrationDateService
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, StoreVatRegistrationDateService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_vat_registration_date_page
+import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
@@ -32,16 +33,20 @@ import scala.concurrent.{ExecutionContext, Future}
 class CaptureVatRegistrationDateController @Inject()(mcc: MessagesControllerComponents,
                                                      view: capture_vat_registration_date_page,
                                                      storeVatRegistrationDateService: StoreVatRegistrationDateService,
+                                                     journeyService: JourneyService,
                                                      val authConnector: AuthConnector
                                                     )(implicit ec: ExecutionContext,
                                                       appConfig: AppConfig) extends FrontendController(mcc) with AuthorisedFunctions {
 
   def show(journeyId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      authorised() {
-        Future.successful(
-          Ok(view(vatRegistrationDateForm, routes.CaptureVatRegistrationDateController.submit(journeyId)))
-        )
+      authorised().retrieve(internalId) {
+        case Some(authId) =>
+          journeyService.retrieveJourneyConfig(journeyId, authId).map {
+            _ => Ok(view(vatRegistrationDateForm, routes.CaptureVatRegistrationDateController.submit(journeyId)))
+          }
+        case None =>
+          throw new InternalServerException("Internal ID could not be retrieved from Auth")
       }
   }
 
@@ -65,7 +70,7 @@ class CaptureVatRegistrationDateController @Inject()(mcc: MessagesControllerComp
               }
           )
         case None =>
-          Future.successful(Unauthorized)
+          throw new InternalServerException("Internal ID could not be retrieved from Auth")
       }
   }
 

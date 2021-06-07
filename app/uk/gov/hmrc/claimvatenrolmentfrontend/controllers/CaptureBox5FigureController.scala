@@ -16,30 +16,37 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
-import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureBox5FigureForm
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.StoreBox5FigureService
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, StoreBox5FigureService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_box5_figure_page
+import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CaptureBox5FigureController @Inject()(mcc: MessagesControllerComponents,
                                             view: capture_box5_figure_page,
                                             storeBox5FigureService: StoreBox5FigureService,
+                                            journeyService: JourneyService,
                                             val authConnector: AuthConnector
                                            )(implicit val config: AppConfig,
                                              ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions {
 
   def show(journeyId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      authorised() {
-        Future.successful(Ok(view(CaptureBox5FigureForm.form, routes.CaptureBox5FigureController.submit(journeyId))))
+      authorised().retrieve(internalId) {
+        case Some(authId) =>
+          journeyService.retrieveJourneyConfig(journeyId, authId).map {
+            _ => Ok(view(CaptureBox5FigureForm.form, routes.CaptureBox5FigureController.submit(journeyId)))
+          }
+        case None =>
+          throw new InternalServerException("Internal ID could not be retrieved from Auth")
       }
   }
 
@@ -58,7 +65,7 @@ class CaptureBox5FigureController @Inject()(mcc: MessagesControllerComponents,
               }
           )
         case None =>
-          Future.successful(Unauthorized)
+          throw new InternalServerException("Internal ID could not be retrieved from Auth")
       }
   }
 }

@@ -24,6 +24,7 @@ import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json._
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.JourneyConfig
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyConfigRepository.{AuthInternalIdKey, CreationTimestampKey, JourneyIdKey}
 import uk.gov.hmrc.mongo.ReactiveRepository
 
 import java.time.Instant
@@ -40,14 +41,27 @@ class JourneyConfigRepository @Inject()(reactiveMongoComponent: ReactiveMongoCom
   idFormat = implicitly[Format[String]]
 ) {
 
-  def insertJourneyConfig(journeyId: String, journeyConfig: JourneyConfig): Future[WriteResult] = {
+  def insertJourneyConfig(journeyId: String, journeyConfig: JourneyConfig, authInternalId: String): Future[WriteResult] = {
     val document = Json.obj(
-      "_id" -> journeyId,
-      "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
+      JourneyIdKey -> journeyId,
+      AuthInternalIdKey -> authInternalId,
+      CreationTimestampKey -> Json.obj("$date" -> Instant.now.toEpochMilli)
     ) ++ Json.toJsObject(journeyConfig)
 
     collection.insert(true).one(document)
   }
+
+  def retrieveJourneyConfig(journeyId: String, authInternalId: String): Future[Option[JourneyConfig]] =
+    collection.find(
+      Json.obj(
+        JourneyIdKey -> journeyId,
+        AuthInternalIdKey -> authInternalId
+      ),
+      Some(Json.obj(
+        JourneyIdKey -> 0,
+        AuthInternalIdKey -> 0
+      ))
+    ).one[JourneyConfig]
 
   private lazy val ttlIndex = Index(
     Seq(("creationTimestamp", IndexType.Ascending)),
@@ -69,4 +83,10 @@ class JourneyConfigRepository @Inject()(reactiveMongoComponent: ReactiveMongoCom
       r
     }
 
+}
+
+object JourneyConfigRepository {
+  val JourneyIdKey = "_id"
+  val AuthInternalIdKey = "authInternalId"
+  val CreationTimestampKey = "creationTimestamp"
 }

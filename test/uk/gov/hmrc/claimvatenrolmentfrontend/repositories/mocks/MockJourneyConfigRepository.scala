@@ -21,12 +21,11 @@ import org.mockito.Mockito.{reset, verify, when}
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatestplus.mockito.MockitoSugar
-import reactivemongo.api.ReadPreference
 import reactivemongo.api.commands.WriteResult
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.JourneyConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyConfigRepository
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 trait MockJourneyConfigRepository extends MockitoSugar with BeforeAndAfterEach {
   self: Suite =>
@@ -38,33 +37,33 @@ trait MockJourneyConfigRepository extends MockitoSugar with BeforeAndAfterEach {
     reset(mockJourneyConfigRepository)
   }
 
-  def mockInsertJourneyConfig(journeyId: String, journeyConfig: JourneyConfig)
+  def mockInsertJourneyConfig(journeyId: String, journeyConfig: JourneyConfig, authInternalId: String)
                              (response: Future[WriteResult]): OngoingStubbing[_] = {
     when(mockJourneyConfigRepository.insertJourneyConfig(
       ArgumentMatchers.eq(journeyId),
-      ArgumentMatchers.eq(journeyConfig)
+      ArgumentMatchers.eq(journeyConfig),
+      ArgumentMatchers.eq(authInternalId)
     )).thenReturn(response)
   }
 
-  def mockFindById(journeyId: String)(response: Future[Option[JourneyConfig]]): OngoingStubbing[_] = {
-    when(mockJourneyConfigRepository.findById(
+  def mockRetrieveJourneyConfig(journeyId: String,
+                                authId: String)(response: Future[Option[JourneyConfig]]): OngoingStubbing[_] =
+    when(mockJourneyConfigRepository.retrieveJourneyConfig(
       ArgumentMatchers.eq(journeyId),
-      ArgumentMatchers.any[ReadPreference]
-    )(ArgumentMatchers.any[ExecutionContext])
-    ).thenReturn(response)
-  }
+      ArgumentMatchers.eq(authId)
+    )).thenReturn(response)
 
-  def verifyInsertJourneyConfig(journeyId: String, journeyConfig: JourneyConfig): Unit =
+  def verifyInsertJourneyConfig(journeyId: String, journeyConfig: JourneyConfig, authInternalId: String): Unit =
     verify(mockJourneyConfigRepository).insertJourneyConfig(
       ArgumentMatchers.eq(journeyId),
-      ArgumentMatchers.eq(journeyConfig)
+      ArgumentMatchers.eq(journeyConfig),
+      ArgumentMatchers.eq(authInternalId)
     )
 
-  def verifyFindById(journeyId: String): Unit =
-    verify(mockJourneyConfigRepository).findById(
+  def verifyRetrieveJourneyConfig(journeyId: String, authId: String): Unit =
+    verify(mockJourneyConfigRepository).retrieveJourneyConfig(
       ArgumentMatchers.eq(journeyId),
-      ArgumentMatchers.any[ReadPreference]
-    )(ArgumentMatchers.any[ExecutionContext])
-
+      ArgumentMatchers.eq(authId)
+    )
 
 }

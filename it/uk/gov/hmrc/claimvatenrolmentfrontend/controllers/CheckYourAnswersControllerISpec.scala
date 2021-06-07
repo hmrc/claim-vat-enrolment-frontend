@@ -48,6 +48,7 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
 
   override def beforeEach(): Unit = {
     await(journeyDataRepository.drop)
+    await(journeyConfigRepository.drop)
     super.beforeEach()
   }
 
@@ -159,6 +160,24 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
 
       testCheckYourAnswersViewNoReturnsNoPostcode(result)
     }
+
+    "the internal Ids do not match" should {
+      lazy val result = {
+        await(journeyDataRepository.collection.insert(true).one(
+          Json.obj(
+            "_id" -> testJourneyId,
+            "authInternalId" -> "testInternalId",
+            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
+          ) ++ Json.toJsObject(testVatKnownFactsNoReturnsNoPostcode)
+        ))
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAudit
+        get(s"/$testJourneyId/check-your-answers-vat")
+      }
+      "return a NOT_FOUND" in {
+        result.status mustBe NOT_FOUND
+      }
+    }
   }
 
   s"POST /$testJourneyId/check-your-answers-vat" should {
@@ -171,7 +190,7 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
           "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ))
-      await(insertJourneyConfig(testJourneyId, testContinueUrl))
+      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
       stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(CREATED, Json.obj())
       stubAudit
 
@@ -193,7 +212,7 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
           "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ))
-      await(insertJourneyConfig(testJourneyId, testContinueUrl))
+      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
       stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(CONFLICT, Json.obj("code" -> MultipleEnrolmentsInvalidKey))
       stubAudit
 
@@ -215,7 +234,7 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
           "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ))
-      await(insertJourneyConfig(testJourneyId, testContinueUrl))
+      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
       stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(BAD_REQUEST, Json.obj())
       stubAudit
 
@@ -238,7 +257,7 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
           "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ))
-      await(insertJourneyConfig(testJourneyId, testContinueUrl))
+      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
       stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(INTERNAL_SERVER_ERROR, Json.obj())
       stubGetUserIds(testVatNumber)(OK)
       stubAudit
@@ -261,7 +280,7 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
           "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ))
-      await(insertJourneyConfig(testJourneyId, testContinueUrl))
+      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
       stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(INTERNAL_SERVER_ERROR, Json.obj())
       stubGetUserIds(testVatNumber)(NO_CONTENT)
       stubAudit
@@ -275,13 +294,13 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
     }
 
 
-    "return UNAUTHORISED when no credentials or groupId are retrieved from Auth" in {
+    "return Internal Server Error when no credentials or groupId are retrieved from Auth" in {
       stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
       stubAudit
 
       lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 
-      result.status mustBe UNAUTHORIZED
+      result.status mustBe INTERNAL_SERVER_ERROR
     }
 
   }

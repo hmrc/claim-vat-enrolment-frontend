@@ -23,6 +23,7 @@ import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions, User}
 import uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.{routes => errorRoutes}
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.JourneyConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.JourneyService
+import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
@@ -44,7 +45,7 @@ class JourneyController @Inject()(journeyService: JourneyService,
         case Some(_) ~ _ =>
           Future.successful(Redirect(errorRoutes.InvalidAccountTypeController.show().url))
         case None ~ _ =>
-          Future.successful(Unauthorized)
+          throw new InternalServerException("Unauthorised")
       }
 
   }

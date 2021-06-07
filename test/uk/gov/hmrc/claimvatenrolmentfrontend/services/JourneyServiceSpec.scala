@@ -24,7 +24,7 @@ import reactivemongo.api.commands.WriteResult
 import uk.gov.hmrc.claimvatenrolmentfrontend.helpers.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.JourneyConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.mocks.{MockJourneyConfigRepository, MockJourneyDataRepository}
-import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
+import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -44,34 +44,34 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockJourneyConfi
   "createJourney" should {
     "return the journeyId and store the Journey Config" in {
       when(mockJourneyIdGenerationService.generateJourneyId()).thenReturn(testJourneyId)
-      mockInsertJourneyConfig(testJourneyId, testJourneyConfig)(response = Future.successful(mock[WriteResult]))
+      mockInsertJourneyConfig(testJourneyId, testJourneyConfig, testInternalId)(response = Future.successful(mock[WriteResult]))
       mockInsertJourneyData(testJourneyId, testInternalId, testVatNumber)(response = Future.successful(testJourneyId))
 
       val result = await(TestService.createJourney(testJourneyConfig, testVatNumber, testInternalId))
 
       result mustBe testJourneyId
-      verifyInsertJourneyConfig(testJourneyId, testJourneyConfig)
+      verifyInsertJourneyConfig(testJourneyId, testJourneyConfig, testInternalId)
     }
   }
 
   "retrieveJourneyConfig" should {
     "return the Journey Config" in {
-      mockFindById(testJourneyId)(Future.successful(Some(testJourneyConfig)))
+      mockRetrieveJourneyConfig(testJourneyId, testInternalId)(Future.successful(Some(testJourneyConfig)))
 
-      val result = await(TestService.retrieveJourneyConfig(testJourneyId))
+      val result = await(TestService.retrieveJourneyConfig(testJourneyId, testInternalId))
 
       result mustBe testJourneyConfig
-      verifyFindById(testJourneyId)
+      verifyRetrieveJourneyConfig(testJourneyId, testInternalId)
     }
 
     "throw an Internal Server Exception" when {
       "the journey config does not exist in the database" in {
-        mockFindById(testJourneyId)(Future.successful(None))
+        mockRetrieveJourneyConfig(testJourneyId, testInternalId)(Future.successful(None))
 
-        intercept[InternalServerException] {
-          await(TestService.retrieveJourneyConfig(testJourneyId))
+        intercept[NotFoundException] {
+          await(TestService.retrieveJourneyConfig(testJourneyId, testInternalId))
         }
-        verifyFindById(testJourneyId)
+        verifyRetrieveJourneyConfig(testJourneyId, testInternalId)
       }
     }
   }
@@ -86,11 +86,11 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockJourneyConfi
       verifyGetJourneyData(testJourneyId, testInternalId)
     }
 
-    "throw an Internal Server Exception" when {
+    "throw a Not Found Exception" when {
       "the journey data does not exist in the database" in {
         mockGetJourneyData(testJourneyId, testInternalId)(Future.successful(None))
 
-        intercept[InternalServerException] {
+        intercept[NotFoundException] {
           await(TestService.retrieveJourneyData(testJourneyId, testInternalId))
           verifyGetJourneyData(testJourneyId, testInternalId)
         }

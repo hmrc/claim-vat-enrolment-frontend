@@ -29,11 +29,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class CaptureBox5FigureControllerISpec extends ComponentSpecHelper with CaptureBox5FigureViewTests with AuthStub {
 
-  override def afterEach(): Unit = {
-    super.afterEach()
-    journeyConfigRepository.drop
-  }
-
   s"GET /$testJourneyId/box-5-figure" should {
     lazy val result = {
       await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))

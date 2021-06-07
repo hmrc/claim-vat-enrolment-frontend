@@ -31,11 +31,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class CaptureSubmittedVatReturnControllerISpec extends ComponentSpecHelper with CaptureSubmittedVatReturnViewTests with AuthStub {
 
-  override def afterEach(): Unit = {
-    super.afterEach()
-    journeyConfigRepository.drop
-  }
-
   s"GET /$testJourneyId/submitted-vat-return" should {
     lazy val result = {
       await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))

@@ -30,8 +30,6 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.services.ClaimVatEnrolmentService.{
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.mocks.{MockAllocateEnrolmentService, MockJourneyService}
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 
-import java.time.format.{DateTimeFormatter, TextStyle}
-import java.util.Locale
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -61,7 +59,7 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with Matchers with MockJo
       "the enrolment is successfully claimed" in {
         mockRetrieveJourneyData(testJourneyId, testInternalId)(Future.successful(testFullVatKnownFacts))
         mockAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(Future.successful(EnrolmentSuccess))
-        mockRetrieveJourneyConfig(testJourneyId)(Future.successful(testJourneyConfig))
+        mockRetrieveJourneyConfig(testJourneyId, testInternalId)(Future.successful(testJourneyConfig))
 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
 

@@ -83,7 +83,7 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
         allocateEnrolmentService.allocateEnrolment(journeyData, credentialId, groupId).flatMap {
           case EnrolmentSuccess =>
             sendAuditEvent(journeyData, isSuccessful = true)
-            journeyService.retrieveJourneyConfig(journeyId).map {
+            journeyService.retrieveJourneyConfig(journeyId, internalId).map {
               journeyConfig =>
                 Right(journeyConfig.continueUrl)
             }

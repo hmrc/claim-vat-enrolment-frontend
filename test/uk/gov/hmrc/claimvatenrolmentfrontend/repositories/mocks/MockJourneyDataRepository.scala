@@ -41,7 +41,7 @@ trait MockJourneyDataRepository extends MockitoSugar with BeforeAndAfterEach {
   def mockInsertJourneyData(journeyId: String,
                             authId: String,
                             vatNumber: String
-                       )(response: Future[String]): OngoingStubbing[_] =
+                           )(response: Future[String]): OngoingStubbing[_] =
     when(mockJourneyDataRepository.insertJourneyVatNumber(
       ArgumentMatchers.eq(journeyId),
       ArgumentMatchers.eq(authId),

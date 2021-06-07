@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.assets
 
+import uk.gov.hmrc.auth.core.retrieve.Credentials
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, Postcode, ReturnsInformation, VatKnownFacts}
+
 import java.time.{LocalDate, Month}
 import java.util.UUID
-import uk.gov.hmrc.auth.core.retrieve.Credentials
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.{VatKnownFacts, Postcode, ReturnsInformation}
 
 
 object TestConstants {
@@ -35,6 +36,7 @@ object TestConstants {
   val testGroupId: String = UUID.randomUUID().toString
   val testCredentialId: String = UUID.randomUUID().toString
   val testCredentials: Credentials = Credentials(testCredentialId, "GovernmentGateway")
+  val testJourneyConfig: JourneyConfig = JourneyConfig(testContinueUrl)
 
   val testFullVatKnownFacts: VatKnownFacts =
     VatKnownFacts(

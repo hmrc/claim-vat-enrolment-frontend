@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
-import java.time.Instant
-
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
 import reactivemongo.play.json._
@@ -28,12 +26,19 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.CaptureSubmittedVatReturnViewTests
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class CaptureSubmittedVatReturnControllerISpec extends ComponentSpecHelper with CaptureSubmittedVatReturnViewTests with AuthStub {
 
+  override def afterEach(): Unit = {
+    super.afterEach()
+    journeyConfigRepository.drop
+  }
+
   s"GET /$testJourneyId/submitted-vat-return" should {
     lazy val result = {
+      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
       stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
       get(s"/$testJourneyId/submitted-vat-return")
     }
@@ -43,6 +48,31 @@ class CaptureSubmittedVatReturnControllerISpec extends ComponentSpecHelper with 
     }
 
     testCaptureSubmittedVatReturnViewTests(result)
+
+    "return NOT_FOUND" when {
+      "the internal Ids do not match" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        await(insertJourneyConfig(testJourneyId, testContinueUrl, "testInternalId"))
+
+        lazy val result = get(s"/$testJourneyId/submitted-vat-return")
+
+        result.status mustBe NOT_FOUND
+      }
+
+      "the journey Id has no internal Id stored" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        await(journeyConfigRepository.collection.insert(true).one(
+          Json.obj(
+            "_id" -> testJourneyId,
+            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
+          ) ++ Json.toJsObject(testJourneyConfig)
+        ))
+
+        lazy val result = get(s"/$testJourneyId/submitted-vat-return")
+
+        result.status mustBe NOT_FOUND
+      }
+    }
   }
 
 

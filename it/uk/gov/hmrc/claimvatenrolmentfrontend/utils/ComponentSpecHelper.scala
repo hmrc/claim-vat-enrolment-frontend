@@ -117,8 +117,9 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
   lazy val journeyDataRepository: JourneyDataRepository = app.injector.instanceOf[JourneyDataRepository]
 
   def insertJourneyConfig(journeyId: String,
-                          continueUrl: String): Future[WriteResult] =
+                          continueUrl: String,
+                          authInternalId: String): Future[WriteResult] =
     journeyConfigRepository.insertJourneyConfig(
-      journeyId, JourneyConfig(continueUrl)
+      journeyId, JourneyConfig(continueUrl), authInternalId
     )
 }

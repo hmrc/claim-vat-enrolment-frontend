@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
-import javax.inject.{Inject, Singleton}
 import reactivemongo.api.commands.UpdateWriteResult
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.{VatKnownFacts, JourneyConfig}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, VatKnownFacts}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{Box5FigureKey, LastMonthSubmittedKey, PostcodeKey}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.{JourneyConfigRepository, JourneyDataRepository}
-import uk.gov.hmrc.http.InternalServerException
+import uk.gov.hmrc.http.{InternalServerException, NotFoundException}
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -34,17 +34,17 @@ class JourneyService @Inject()(journeyConfigRepository: JourneyConfigRepository,
   def createJourney(journeyConfig: JourneyConfig, vatNumber: String, authInternalId: String): Future[String] = {
     val id = journeyIdGenerationService.generateJourneyId()
     for {
-      _ <- journeyConfigRepository.insertJourneyConfig(id, journeyConfig)
+      _ <- journeyConfigRepository.insertJourneyConfig(id, journeyConfig, authInternalId)
       _ <- journeyDataRepository.insertJourneyVatNumber(id, authInternalId, vatNumber)
     } yield id
   }
 
-  def retrieveJourneyConfig(journeyId: String): Future[JourneyConfig] =
-    journeyConfigRepository.findById(journeyId).map {
+  def retrieveJourneyConfig(journeyId: String, authInternalId: String): Future[JourneyConfig] =
+    journeyConfigRepository.retrieveJourneyConfig(journeyId, authInternalId).map {
       case Some(journeyConfig) =>
         journeyConfig
       case None =>
-        throw new InternalServerException(s"Journey config was not found for journey ID $journeyId")
+        throw new NotFoundException(s"Journey data was not found for journey ID $journeyId")
     }
 
   def retrieveJourneyData(journeyId: String, authInternalId: String): Future[VatKnownFacts] =
@@ -52,7 +52,7 @@ class JourneyService @Inject()(journeyConfigRepository: JourneyConfigRepository,
       case Some(journeyData) =>
         journeyData
       case None =>
-        throw new InternalServerException(s"Journey data was not found for journey ID $journeyId")
+        throw new NotFoundException(s"Journey data was not found for journey ID $journeyId")
     }
 
   def removePostcodeField(journeyId: String, authInternalId: String): Future[UpdateWriteResult] = {

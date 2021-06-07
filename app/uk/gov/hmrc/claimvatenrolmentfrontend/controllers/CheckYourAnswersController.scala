@@ -25,10 +25,11 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.ClaimVatEnrolmentService.{CannotAssignMultipleMtdvatEnrolments, EnrolmentAlreadyAllocated, KnownFactsMismatch}
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.{ClaimVatEnrolmentService, JourneyService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.check_your_answers_page
+import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
@@ -42,14 +43,14 @@ class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
   def show(journeyId: String): Action[AnyContent] = Action.async {
     implicit request =>
       authorised().retrieve(internalId) {
-        case Some(authInternalId) =>
-          journeyService.retrieveJourneyData(journeyId, authInternalId).map {
+        case Some(authId) =>
+          journeyService.retrieveJourneyData(journeyId, authId).map {
             journeyData =>
               Ok(view(routes.CheckYourAnswersController.submit(journeyId), journeyId, journeyData))
           }.recover {
             case _: JsResultException => Redirect(routes.CaptureVatRegistrationDateController.show(journeyId))
           }
-        case None => Future.successful(Unauthorized)
+        case None => throw new InternalServerException("Internal ID could not be retrieved from Auth")
       }
   }
 
@@ -68,7 +69,7 @@ class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
               Redirect(errorPages.routes.UnmatchedUserErrorController.show())
           }
         case _ =>
-          Future.successful(Unauthorized)
+          throw new InternalServerException("Internal ID could not be retrieved from Auth")
       }
   }
 

@@ -16,29 +16,58 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
+import play.api.libs.json.Json
 import play.api.test.Helpers._
-import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.{testInternalId, testJourneyId, testVatNumber}
+import reactivemongo.play.json._
+import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.CaptureBox5FigureViewTests
 
+import java.time.Instant
+import scala.concurrent.ExecutionContext.Implicits.global
+
 class CaptureBox5FigureControllerISpec extends ComponentSpecHelper with CaptureBox5FigureViewTests with AuthStub {
 
+  override def afterEach(): Unit = {
+    super.afterEach()
+    journeyConfigRepository.drop
+  }
+
   s"GET /$testJourneyId/box-5-figure" should {
-    "return OK" in {
+    lazy val result = {
+      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
       stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-
-      lazy val result = get(s"/$testJourneyId/box-5-figure")
-
+      get(s"/$testJourneyId/box-5-figure")
+    }
+    "return OK" in {
       result.status mustBe OK
     }
+    testCaptureBox5FigureViewTests(result)
 
-    "return a view" should {
-      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+    "return NOT_FOUND" when {
+      "the internal Ids do not match" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        await(insertJourneyConfig(testJourneyId, testContinueUrl, "testInternalId"))
 
-      lazy val result = get(s"/$testJourneyId/box-5-figure")
+        lazy val result = get(s"/$testJourneyId/box-5-figure")
 
-      testCaptureBox5FigureViewTests(result, authStub)
+        result.status mustBe NOT_FOUND
+      }
+
+      "the journey Id has no internal Id stored" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        await(journeyConfigRepository.collection.insert(true).one(
+          Json.obj(
+            "_id" -> testJourneyId,
+            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
+          ) ++ Json.toJsObject(testJourneyConfig)
+        ))
+
+        lazy val result = get(s"/$testJourneyId/box-5-figure")
+
+        result.status mustBe NOT_FOUND
+      }
     }
   }
 

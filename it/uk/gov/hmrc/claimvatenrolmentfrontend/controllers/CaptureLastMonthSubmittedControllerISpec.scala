@@ -16,18 +16,27 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
+import play.api.libs.json.Json
 import play.api.test.Helpers._
-import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.{testInternalId, testJourneyId, testVatNumber}
+import reactivemongo.play.json._
+import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.CaptureLastMonthSubmittedViewTests
 
-import java.time.Month
+import java.time.{Instant, Month}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class CaptureLastMonthSubmittedControllerISpec extends ComponentSpecHelper with CaptureLastMonthSubmittedViewTests with AuthStub {
 
+  override def afterEach(): Unit = {
+    super.afterEach()
+    journeyConfigRepository.drop
+  }
+
   s"GET /$testJourneyId/last-vat-return-date" should {
     lazy val result = {
+      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
       stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
       get(s"/$testJourneyId/last-vat-return-date")
     }
@@ -37,6 +46,29 @@ class CaptureLastMonthSubmittedControllerISpec extends ComponentSpecHelper with 
 
     testCaptureLastMonthSubmittedViewTests(result)
 
+    "return NOT_FOUND" when {
+      "the internal Ids do not match" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        await(insertJourneyConfig(testJourneyId, testContinueUrl, "testInternalId"))
+
+        lazy val result = get(s"/$testJourneyId/last-vat-return-date")
+
+        result.status mustBe NOT_FOUND
+      }
+
+      "the journey Id has no internal Id stored" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        await(journeyConfigRepository.collection.insert(true).one(
+          Json.obj(
+            "_id" -> testJourneyId,
+            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
+          ) ++ Json.toJsObject(testJourneyConfig)
+        ))
+        lazy val result = get(s"/$testJourneyId/last-vat-return-date")
+
+        result.status mustBe NOT_FOUND
+      }
+    }
   }
 
   "POST /last-vat-return-date" should {

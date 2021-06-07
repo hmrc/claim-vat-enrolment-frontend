@@ -48,7 +48,6 @@ class CheckYourAnswersControllerISpec extends ComponentSpecHelper with CheckYour
 
   override def beforeEach(): Unit = {
     await(journeyDataRepository.drop)
-    await(journeyConfigRepository.drop)
     super.beforeEach()
   }
 

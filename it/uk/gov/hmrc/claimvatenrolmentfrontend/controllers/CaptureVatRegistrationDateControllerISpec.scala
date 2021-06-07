@@ -29,11 +29,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class CaptureVatRegistrationDateControllerISpec extends ComponentSpecHelper with CaptureVatRegistrationDateViewTests with AuthStub {
 
-  override def afterEach(): Unit = {
-    super.afterEach()
-    journeyConfigRepository.drop
-  }
-
   s"GET /$testJourneyId/vat-registration-date" should {
     lazy val result = {
       await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))

@@ -29,11 +29,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class CaptureLastMonthSubmittedControllerISpec extends ComponentSpecHelper with CaptureLastMonthSubmittedViewTests with AuthStub {
 
-  override def afterEach(): Unit = {
-    super.afterEach()
-    journeyConfigRepository.drop
-  }
-
   s"GET /$testJourneyId/last-vat-return-date" should {
     lazy val result = {
       await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))

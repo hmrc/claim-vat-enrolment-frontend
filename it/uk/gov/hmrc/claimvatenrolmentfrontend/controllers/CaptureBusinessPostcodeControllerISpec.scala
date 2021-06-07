@@ -31,11 +31,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class CaptureBusinessPostcodeControllerISpec extends ComponentSpecHelper with CaptureBusinessPostcodeViewTests with AuthStub {
 
-  override def afterEach(): Unit = {
-    super.afterEach()
-    journeyConfigRepository.drop
-  }
-
   s"GET /$testJourneyId/business-postcode" should {
     lazy val result = {
       await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))

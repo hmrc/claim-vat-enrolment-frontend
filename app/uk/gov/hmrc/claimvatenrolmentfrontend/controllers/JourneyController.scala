@@ -45,7 +45,7 @@ class JourneyController @Inject()(journeyService: JourneyService,
         case Some(_) ~ _ =>
           Future.successful(Redirect(errorRoutes.InvalidAccountTypeController.show().url))
         case None ~ _ =>
-          throw new InternalServerException("Unauthorised")
+          throw new InternalServerException("Internal ID could not be retrieved from Auth")
       }
 
   }

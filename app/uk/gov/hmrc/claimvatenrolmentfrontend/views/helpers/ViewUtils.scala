@@ -19,6 +19,8 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.views.helpers
 import play.api.data.Form
 import play.api.i18n.Messages
 
+import java.time.LocalDate
+
 object ViewUtils {
 
   def title(form: Form[_], titleStr: String, section: Option[String] = None, titleMessageArgs: Seq[String] = Seq())
@@ -31,6 +33,14 @@ object ViewUtils {
 
   def errorPrefix(form: Form[_])(implicit messages: Messages): String = {
     if (form.hasErrors || form.hasGlobalErrors) messages("app.title.error_prefix") else ""
+  }
+
+  def dateFormat(date: LocalDate)(implicit messages: Messages): String = {
+    val day = date.getDayOfMonth
+    val month = messages(s"capture-last-month-submitted.${date.getMonth}")
+    val year = date.getYear
+
+    s"$day $month $year"
   }
 
 }

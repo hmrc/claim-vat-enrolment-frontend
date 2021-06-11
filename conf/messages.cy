@@ -1,12 +1,12 @@
 app.govuk                                                   = GOV.UK/CYMRAEG
-app.service_name                                            = Hawlio Cofrestriad TAW
-app.title                                                   = Hawlio Cofrestriad TAW
+app.service_name                                            = Cofrestru ar gyfer hawlio TAW
+app.title                                                   = Cofrestru ar gyfer hawlio TAW
 app.title.error_prefix                                      = Gwall:
 app.common.errorSummaryLabel                                = Mae problem wedi codi
 app.common.signOut                                          = Allgofnodi
 app.common.continue                                         = Yn eich blaen
 app.common.tryAgain                                         = Rhowch gynnig arall arni
-app.common.back                                             = Nôl
+app.common.back                                             = Yn ôl
 app.common.change                                           = Newid
 app.common.yes                                              = Iawn
 app.common.no                                               = Na
@@ -19,8 +19,8 @@ app.date.month                                              = Mis
 app.date.year                                               = Blwyddyn
 
 # Capture VAT Registration Date
-vat_registration_date.title                                 = Pryd y gwnaethoch gofrestru ar gyfer TAW
-vat_registration_date.heading                               = Pryd y gwnaethoch gofrestru ar gyfer TAW
+vat_registration_date.title                                 = Pryd y gwnaethoch gofrestru ar gyfer TAW?
+vat_registration_date.heading                               = Pryd y gwnaethoch gofrestru ar gyfer TAW?
 vat_registration_date.line_1                                = Mae hwn i’w weld ar y dystysgrif cofrestru TAW.
 vat_registration_date.formhint_1                            = Er enghraifft, 6 4 2017
 vat_registration_date.error.invalid_date                    = Nodwch ddyddiad go iawn
@@ -37,7 +37,7 @@ capture-business-postcode.error.emptyPostcode               = Nodwch y cod post 
 # Submitted VAT Return Page
 capture-submitted-vat-return.title                          = Ydych chi’n cyflwyno Ffurflenni TAW ar hyn o bryd?
 capture-submitted-vat-return.heading                        = Ydych chi’n cyflwyno Ffurflenni TAW ar hyn o bryd?
-capture-submitted-vat-return.error.message                  = Dewiswch ’Iawn’ os ydych yn cyflwyno Ffurflenni TAW
+capture-submitted-vat-return.error.message                  = Dewiswch ‘Iawn’ os ydych yn cyflwyno Ffurflenni TAW
 
 ## Box 5 Figure Page
 capture-box5-figure.title                                   = Beth yw cyfanswm eich Ffurflen TAW ddiweddaraf?
@@ -45,7 +45,7 @@ capture-box5-figure.heading                                 = Beth yw cyfanswm e
 capture-box5-figure.line_1                                  = Mae’r swm hwn i’w weld ym mlwch 5 o’r Ffurflen TAW ddiweddaraf i chi ei chyflwyno i CThEM.
 capture-box5-figure.line_2                                  = Mae angen i fformat y rhif hwn fod yn ddau le degol, er enghraifft £123.00.
 capture_box5_figure.empty.error                             = Nodwch gyfanswm eich Ffurflen TAW ddiweddaraf neu swm Blwch 5
-capture_box5_figure.invalid_length.error                    = TMae’n rhaid i’r swm o Flwch 5 fod yn llai na 14 o ddigidau
+capture_box5_figure.invalid_length.error                    = Mae’n rhaid i’r swm o Flwch 5 fod yn llai na 14 o ddigidau
 capture_box5_figure.invalid_format.error                    = Nodwch werth hyd at 2 le degol. Er enghraifft, £100.00
 
 # Last Month Submitted Page
@@ -94,8 +94,8 @@ invalid_account_type.line_1                                 = Cysylltwch â’r 
 # Unmatched User Error Page
 unmatched_user.title                                        = Allwch chi ddim defnyddio’r gwasanaeth hwn
 unmatched_user.heading                                      = Allwch chi ddim defnyddio’r gwasanaeth hwn
-unmatched_user.line_1                                       = Ewch i’ch cyfrif treth busnes i wneud y canlynol:
-unmatched_user.link                                         = rheoli pwy all gael mynediad at eich trethi, eich tollau a’ch cynlluniau
+unmatched_user.line_1                                       = Ewch i’ch cyfrif treth busnes i
+unmatched_user.link                                         = reoli pwy all gael mynediad at eich trethi, eich tollau a’ch cynlluniau.
 
 # Enrolment Already Allocated Error Page
 enrolment_already_allocated.title                           = Allwch chi ddim defnyddio’r gwasanaeth hwn
@@ -104,3 +104,16 @@ enrolment_already_allocated.line_1                          = Mae’ch busnes we
 enrolment_already_allocated.line_2                          = Os ydych wedi colli’ch manylion,
 enrolment_already_allocated.link                            = ewch ati i ddod o hyd i’ch cyfrif neu ei adfer
 enrolment_already_allocated.go_back_to_bta                  = Ewch yn ôl i’ch cyfrif treth busnes
+
+# Error Pages
+global.error.badRequest400.title                            = Cais gwallus – 400
+global.error.badRequest400.heading                          = Cais gwallus
+global.error.badRequest400.message                          = Gwiriwch eich bod wedi nodi’r cyfeiriad gwe cywir.
+
+global.error.pageNotFound404.title                          = Heb ddod o hyd i’r dudalen – 404
+global.error.pageNotFound404.heading                        = Ni ellir dod o hyd i’r dudalen hon
+global.error.pageNotFound404.message                        = Gwiriwch eich bod wedi nodi’r cyfeiriad gwe cywir.
+
+global.error.InternalServerError500.title                   = Mae’n ddrwg gennym, mae anawsterau technegol wedi codi – 500
+global.error.InternalServerError500.heading                 = Mae’n ddrwg gennym, mae anawsterau technegol wedi codi
+global.error.InternalServerError500.message                 = Rhowch gynnig arall arni mewn ychydig o funudau

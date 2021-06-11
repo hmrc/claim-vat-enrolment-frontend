@@ -43,7 +43,7 @@
             ),
             SummaryListRow(
                 key = Key(content = Text(messages("check-your-answers.registration_date"))),
-                value = Value(content = Text(vatKnownFacts.vatRegistrationDate.format(DateTimeFormatter.ofPattern("d MMMM yyyy")))),
+                value = Value(content = Text(dateFormat(vatKnownFacts.vatRegistrationDate))),
                 actions = Some(Actions(items = Seq(
                     ActionItem(
                         href = Routes.CaptureVatRegistrationDateController.show(journeyId).url,

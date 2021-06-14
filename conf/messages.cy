@@ -95,7 +95,7 @@ invalid_account_type.line_1                                 = Cysylltwch â’r 
 unmatched_user.title                                        = Allwch chi ddim defnyddio’r gwasanaeth hwn
 unmatched_user.heading                                      = Allwch chi ddim defnyddio’r gwasanaeth hwn
 unmatched_user.line_1                                       = Ewch i’ch cyfrif treth busnes i
-unmatched_user.link                                         = reoli pwy all gael mynediad at eich trethi, eich tollau a’ch cynlluniau.
+unmatched_user.link                                         = reoli pwy all gael mynediad at eich trethi, eich tollau a’ch cynlluniau
 
 # Enrolment Already Allocated Error Page
 enrolment_already_allocated.title                           = Allwch chi ddim defnyddio’r gwasanaeth hwn

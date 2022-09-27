@@ -16,20 +16,17 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.Json
 import play.api.test.Helpers._
-import reactivemongo.play.json._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.VatKnownFacts
-import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{vatKnownFactsReads, vatKnownFactsWrites}
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository._
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
-import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
+import uk.gov.hmrc.claimvatenrolmentfrontend.utils.JourneyMongoHelper
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.CaptureBusinessPostcodeViewTests
 
 import java.time.Instant
-import scala.concurrent.ExecutionContext.Implicits.global
 
-class CaptureBusinessPostcodeControllerISpec extends ComponentSpecHelper with CaptureBusinessPostcodeViewTests with AuthStub {
+class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with CaptureBusinessPostcodeViewTests with AuthStub {
 
   s"GET /$testJourneyId/business-postcode" should {
     lazy val result = {
@@ -55,12 +52,12 @@ class CaptureBusinessPostcodeControllerISpec extends ComponentSpecHelper with Ca
       }
       "the journey Id has no internal Id stored" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        await(journeyConfigRepository.collection.insert(true).one(
+        await(journeyConfigRepository.collection.insertOne(
           Json.obj(
             "_id" -> testJourneyId,
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
           ) ++ Json.toJsObject(testJourneyConfig)
-        ))
+        ).toFuture())
 
         lazy val result = get(s"/$testJourneyId/business-postcode")
 
@@ -121,6 +118,17 @@ class CaptureBusinessPostcodeControllerISpec extends ComponentSpecHelper with Ca
         testCaptureBusinessPostcodeInvalidErrorViewTests(result)
       }
     }
+    "raise an internal server exception" when {
+      "the journey data is missing" in {
+        lazy val result = {
+          stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+          post(s"/$testJourneyId/business-postcode")("business_postcode" -> "ZZ1 1ZZ")
+        }
+
+        result.status mustBe INTERNAL_SERVER_ERROR
+      }
+
+    }
   }
 
   "clicking the skip postcode link (GET /no-business-postcode)" should {
@@ -141,13 +149,13 @@ class CaptureBusinessPostcodeControllerISpec extends ComponentSpecHelper with Ca
     "remove the postcode field and redirect to Submitted VAT Returns page" when {
       "there is a postcode in the database" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        await(journeyDataRepository.collection.insert(true).one(
+        await(journeyDataRepository.collection.insertOne(
           Json.obj(
             "_id" -> testJourneyId,
             "authInternalId" -> testInternalId,
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
           ) ++ Json.toJsObject(testVatKnownFactsNoReturns)
-        ))
+        ).toFuture())
         lazy val result = get(s"/$testJourneyId/no-business-postcode")
 
         result must have(
@@ -155,11 +163,17 @@ class CaptureBusinessPostcodeControllerISpec extends ComponentSpecHelper with Ca
           redirectUri(routes.CaptureSubmittedVatReturnController.show(testJourneyId).url)
         )
         await(
-          journeyDataRepository.collection.find[JsObject, VatKnownFacts](
-            Json.obj("_id" -> testJourneyId),
-            None
-          ).one[VatKnownFacts]
+          journeyDataRepository.getJourneyData(testJourneyId, testInternalId)
         ) mustBe Some(testVatKnownFactsNoReturnsNoPostcode)
+      }
+    }
+    "raise an exception" when {
+      "the journey data is missing" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        lazy val result = get(s"/$testJourneyId/no-business-postcode")
+
+        result.status mustBe INTERNAL_SERVER_ERROR
       }
     }
   }

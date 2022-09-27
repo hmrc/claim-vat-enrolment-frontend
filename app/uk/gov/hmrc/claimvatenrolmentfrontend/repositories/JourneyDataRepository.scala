@@ -17,105 +17,90 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.repositories
 
 import play.api.libs.json._
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.UpdateWriteResult
-import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.BSONDocument
-import reactivemongo.play.json._
+import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.model.Indexes.ascending
+import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Updates, UpdateOptions}
+import org.mongodb.scala.model.Updates.{combine, unset}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.{VatKnownFacts, JourneyData, Postcode, ReturnsInformation}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.{VatKnownFacts, Postcode, ReturnsInformation}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository._
-import uk.gov.hmrc.mongo.ReactiveRepository
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
 import java.time.{Instant, LocalDate, Month}
+import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class JourneyDataRepository @Inject()(reactiveMongoComponent: ReactiveMongoComponent,
+class JourneyDataRepository @Inject()(mongoComponent: MongoComponent,
                                       appConfig: AppConfig
-                                     )(implicit ec: ExecutionContext) extends ReactiveRepository[JourneyData, String](
+                                     )(implicit ec: ExecutionContext) extends PlayMongoRepository[JsObject](
   collectionName = "claim-vat-enrolment-frontend-data",
-  mongo = reactiveMongoComponent.mongoConnector.db,
-  domainFormat = JourneyData.MongoFormat,
-  idFormat = implicitly[Format[String]]
+  mongoComponent = mongoComponent,
+  domainFormat = implicitly[Format[JsObject]],
+  indexes = Seq(timeToLiveIndex(appConfig.timeToLiveSeconds))
 ) {
 
   def insertJourneyVatNumber(journeyId: String, authInternalId: String, vatNumber: String): Future[String] =
-    collection.insert(true).one(
+    collection.insertOne(
       Json.obj(
         JourneyIdKey -> journeyId,
         AuthInternalIdKey -> authInternalId,
         VatNumberKey -> vatNumber,
-        "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
+        CreationTimestampKey -> Json.obj( "$date" -> Instant.now.toEpochMilli)
       )
-    ).map(_ => journeyId)
+    ).toFuture().map(_ => journeyId)
 
-  def getJourneyData(journeyId: String, authInternalId: String): Future[Option[VatKnownFacts]] =
-    collection.find(
-      Json.obj(
-        JourneyIdKey -> journeyId,
-        AuthInternalIdKey -> authInternalId
-      ),
-      Some(Json.obj(
-        JourneyIdKey -> 0,
-        AuthInternalIdKey -> 0
-      ))
-    ).one[VatKnownFacts]
+   def getJourneyData(journeyId: String, authInternalId: String): Future[Option[VatKnownFacts]] = {
 
-  def updateJourneyData(journeyId: String, dataKey: String, data: JsValue, authInternalId: String): Future[UpdateWriteResult] =
-    collection.update(true).one(
-      Json.obj(
-        JourneyIdKey -> journeyId,
-        AuthInternalIdKey -> authInternalId
-      ),
-      Json.obj(
-        "$set" -> Json.obj(dataKey -> data)
-      ),
-      upsert = false,
-      multi = false
-    ).filter(_.n == 1)
+     collection.find[JsObject](
+       Filters.and(
+         Filters.equal(JourneyIdKey, journeyId),
+         Filters.equal(AuthInternalIdKey, authInternalId)
+       )
+     ).headOption.map {
+       case Some(doc) => Some(doc.as[VatKnownFacts])
+       case _ => None
+     }
 
-  def removeJourneyDataFields(journeyId: String, authInternalId: String, dataKeySeq: Seq[String]): Future[UpdateWriteResult] =
-    collection.update(true).one(
-      Json.obj(
-        JourneyIdKey -> journeyId,
-        AuthInternalIdKey -> authInternalId
-      ),
-      Json.obj(
-        "$unset" ->
-          Json.toJsObject(dataKeySeq.map { dataKey => dataKey -> 1 }.toMap)
-      ),
-      upsert = false,
-      multi = false
-    ).filter(_.n == 1)
+   }
 
-  private val TtlIndexName = "ClaimVatEnrolmentDataExpires"
-
-  private lazy val ttlIndex = Index(
-    Seq(("creationTimestamp", IndexType.Ascending)),
-    name = Some(TtlIndexName),
-    options = BSONDocument("expireAfterSeconds" -> appConfig.timeToLiveSeconds)
-  )
-
-  private def setIndex(): Unit = {
-    collection.indexesManager.drop(TtlIndexName) onComplete {
-      _ => collection.indexesManager.ensure(ttlIndex)
+  def updateJourneyData(journeyId: String, dataKey: String, data: JsValue, authInternalId: String): Future[Boolean] =
+    collection.updateOne(
+      filterJourneyData(journeyId, authInternalId),
+      Updates.set(dataKey, Codecs.toBson(data)),
+      UpdateOptions().upsert(false)
+    ).toFuture().map{
+      _.getMatchedCount == 1
     }
+
+  def removeJourneyDataFields(journeyId: String, authInternalId: String, dataKeySeq: Seq[String]): Future[Boolean] = {
+
+    val unsetDataKeySeq: Seq[Bson] = dataKeySeq.map(key => unset(key))
+
+    collection.updateOne(
+      filterJourneyData(journeyId, authInternalId),
+      combine(unsetDataKeySeq:_*),
+      UpdateOptions().upsert(false)
+    ).toFuture().map{
+      _.getMatchedCount == 1
+    }
+
   }
 
-  setIndex()
+  private def filterJourneyData(journeyId: String, authInternalId: String): Bson =
+    Filters.and(
+      Filters.equal(JourneyIdKey, journeyId),
+      Filters.equal(AuthInternalIdKey, authInternalId)
+    )
 
-  override def drop(implicit ec: ExecutionContext): Future[Boolean] =
-    collection.drop(failIfNotFound = false).map { r =>
-      setIndex()
-      r
-    }
 }
 
 object JourneyDataRepository {
   val JourneyIdKey: String = "_id"
   val AuthInternalIdKey: String = "authInternalId"
+  val CreationTimestampKey = "creationTimestamp"
   val VatNumberKey: String = "vatNumber"
   val PostcodeKey: String = "vatRegPostcode"
   val VatRegistrationDateKey: String = "vatRegistrationDate"
@@ -157,6 +142,14 @@ object JourneyDataRepository {
         Json.obj(SubmittedVatReturnKey -> false)
       }
     }
+
+  def timeToLiveIndex(timeToLiveDuration: Long): IndexModel =
+    IndexModel(
+      keys = ascending(CreationTimestampKey),
+      indexOptions = IndexOptions()
+        .name("ClaimVatEnrolmentDataExpires")
+        .expireAfter(timeToLiveDuration, TimeUnit.SECONDS)
+    )
 
 }
 

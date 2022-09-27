@@ -16,8 +16,11 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.assets
 
+import play.api.libs.json.{JsObject, Json}
+
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, Postcode, ReturnsInformation, VatKnownFacts}
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{JourneyIdKey, AuthInternalIdKey}
 
 import java.time.{LocalDate, Month}
 import java.util.UUID
@@ -37,6 +40,19 @@ object TestConstants {
   val testCredentialId: String = UUID.randomUUID().toString
   val testCredentials: Credentials = Credentials(testCredentialId, "GovernmentGateway")
   val testJourneyConfig: JourneyConfig = JourneyConfig(testContinueUrl)
+
+  val testKey = "testKey"
+  val testData = "test"
+  val testSecondKey = "secondKey"
+  val testSecondData = "secondTest"
+  val testThirdKey = "thirdKey"
+  val testThirdData = "thirdTest"
+  val testFourthKey = "fourthKey"
+  val testFourthData = "fourthTest"
+  val testFifthKey = "fifthKey"
+  val testFifthData = "fifthTest"
+
+  val updatedData = "updated"
 
   val testFullVatKnownFacts: VatKnownFacts =
     VatKnownFacts(
@@ -76,5 +92,11 @@ object TestConstants {
         lastReturnMonth = testLastReturnMonth
       ))
     )
+
+  val emptyJourneyDataJson: JsObject = Json.obj(
+    JourneyIdKey -> testJourneyId,
+    AuthInternalIdKey -> testInternalId
+  )
+
 
 }

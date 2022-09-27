@@ -20,7 +20,7 @@ import org.mockito.Mockito.when
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import reactivemongo.api.commands.WriteResult
+import org.mongodb.scala.result.InsertOneResult
 import uk.gov.hmrc.claimvatenrolmentfrontend.helpers.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.JourneyConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.mocks.{MockJourneyConfigRepository, MockJourneyDataRepository}
@@ -44,7 +44,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockJourneyConfi
   "createJourney" should {
     "return the journeyId and store the Journey Config" in {
       when(mockJourneyIdGenerationService.generateJourneyId()).thenReturn(testJourneyId)
-      mockInsertJourneyConfig(testJourneyId, testJourneyConfig, testInternalId)(response = Future.successful(mock[WriteResult]))
+      mockInsertJourneyConfig(testJourneyId, testJourneyConfig, testInternalId)(response = Future.successful(mock[InsertOneResult]))
       mockInsertJourneyData(testJourneyId, testInternalId, testVatNumber)(response = Future.successful(testJourneyId))
 
       val result = await(TestService.createJourney(testJourneyConfig, testVatNumber, testInternalId))

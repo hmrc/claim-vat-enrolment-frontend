@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
-import reactivemongo.api.commands.UpdateWriteResult
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, VatKnownFacts}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{Box5FigureKey, LastMonthSubmittedKey, PostcodeKey}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.{JourneyConfigRepository, JourneyDataRepository}
@@ -47,19 +46,20 @@ class JourneyService @Inject()(journeyConfigRepository: JourneyConfigRepository,
         throw new NotFoundException(s"Journey data was not found for journey ID $journeyId")
     }
 
-  def retrieveJourneyData(journeyId: String, authInternalId: String): Future[VatKnownFacts] =
-    journeyDataRepository.getJourneyData(journeyId, authInternalId).map {
-      case Some(journeyData) =>
-        journeyData
-      case None =>
-        throw new NotFoundException(s"Journey data was not found for journey ID $journeyId")
-    }
+  def retrieveJourneyData(journeyId: String, authInternalId: String): Future[VatKnownFacts] = {
+      journeyDataRepository.getJourneyData(journeyId, authInternalId).map {
+        case Some(journeyData) =>
+          journeyData
+        case None =>
+          throw new NotFoundException(s"Journey data was not found for journey ID $journeyId")
+      }
+  }
 
-  def removePostcodeField(journeyId: String, authInternalId: String): Future[UpdateWriteResult] = {
+  def removePostcodeField(journeyId: String, authInternalId: String): Future[Boolean] = {
     journeyDataRepository.removeJourneyDataFields(journeyId, authInternalId, Seq(PostcodeKey))
   }
 
-  def removeAdditionalVatReturnFields(journeyId: String, authInternalId: String): Future[UpdateWriteResult] = {
+  def removeAdditionalVatReturnFields(journeyId: String, authInternalId: String): Future[Boolean] = {
     journeyDataRepository.removeJourneyDataFields(journeyId, authInternalId, Seq(Box5FigureKey, LastMonthSubmittedKey))
   }
 

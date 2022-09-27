@@ -18,16 +18,14 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
 import play.api.libs.json.Json
 import play.api.test.Helpers._
-import reactivemongo.play.json._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
-import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
+import uk.gov.hmrc.claimvatenrolmentfrontend.utils.JourneyMongoHelper
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.CaptureVatRegistrationDateViewTests
 
 import java.time.Instant
-import scala.concurrent.ExecutionContext.Implicits.global
 
-class CaptureVatRegistrationDateControllerISpec extends ComponentSpecHelper with CaptureVatRegistrationDateViewTests with AuthStub {
+class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with CaptureVatRegistrationDateViewTests with AuthStub {
 
   s"GET /$testJourneyId/vat-registration-date" should {
     lazy val result = {
@@ -52,12 +50,12 @@ class CaptureVatRegistrationDateControllerISpec extends ComponentSpecHelper with
 
       "the journey Id has no internal Id stored" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        await(journeyConfigRepository.collection.insert(true).one(
+        await(journeyConfigRepository.collection.insertOne(
           Json.obj(
             "_id" -> testJourneyId,
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
           ) ++ Json.toJsObject(testJourneyConfig)
-        ))
+        ).toFuture())
 
         lazy val result = get(s"/$testJourneyId/vat-registration-date")
 
@@ -162,6 +160,19 @@ class CaptureVatRegistrationDateControllerISpec extends ComponentSpecHelper with
         )
 
         result.status mustBe BAD_REQUEST
+      }
+    }
+    "raise an internal server exception" when {
+      "the journey data is missing" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        lazy val result = post(s"/$testJourneyId/vat-registration-date")(
+          "date.day" -> "1",
+          "date.month" -> "1",
+          "date.year" -> "2020"
+        )
+
+        result.status mustBe INTERNAL_SERVER_ERROR
       }
     }
   }

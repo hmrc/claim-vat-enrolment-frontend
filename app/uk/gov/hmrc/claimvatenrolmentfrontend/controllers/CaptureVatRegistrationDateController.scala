@@ -66,7 +66,11 @@ class CaptureVatRegistrationDateController @Inject()(mcc: MessagesControllerComp
                 vatRegistrationDate,
                 authId
               ).map {
-                _ => Redirect(routes.CaptureBusinessPostcodeController.show(journeyId).url)
+                    matched => if (matched) {
+                      Redirect(routes.CaptureBusinessPostcodeController.show(journeyId).url)
+                    } else {
+                      throw new InternalServerException(s"The date of Vat registration could not be updated for journey $journeyId")
+                    }
               }
           )
         case None =>

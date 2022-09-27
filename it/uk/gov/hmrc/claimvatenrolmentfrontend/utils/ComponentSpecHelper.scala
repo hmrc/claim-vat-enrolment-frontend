@@ -27,15 +27,9 @@ import play.api.libs.ws.{DefaultWSCookie, WSClient, WSCookie, WSRequest, WSRespo
 import play.api.mvc.{Cookie, Session, SessionCookieBaker}
 import play.api.test.Helpers._
 import play.api.test.Injecting
-import reactivemongo.api.commands.WriteResult
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.JourneyConfig
-import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.{JourneyConfigRepository, JourneyDataRepository}
 import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.http.SessionKeys
 import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 trait ComponentSpecHelper extends AnyWordSpec with Matchers
   with CustomMatchers
@@ -78,8 +72,6 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
 
   override def beforeEach(): Unit = {
     resetWiremock()
-    await(journeyConfigRepository.drop)
-    await(journeyDataRepository.drop)
     super.beforeEach()
   }
 
@@ -128,17 +120,6 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
 
   private def buildClient(path: String): WSRequest =
     ws.url(s"http://localhost:$port$baseUrl$path").withFollowRedirects(false)
-
-  lazy val journeyConfigRepository: JourneyConfigRepository = app.injector.instanceOf[JourneyConfigRepository]
-
-  lazy val journeyDataRepository: JourneyDataRepository = app.injector.instanceOf[JourneyDataRepository]
-
-  def insertJourneyConfig(journeyId: String,
-                          continueUrl: String,
-                          authInternalId: String): Future[WriteResult] =
-    journeyConfigRepository.insertJourneyConfig(
-      journeyId, JourneyConfig(continueUrl), authInternalId
-    )
 
   def mockSessionCookie: WSCookie = {
 

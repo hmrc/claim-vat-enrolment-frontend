@@ -62,13 +62,22 @@ class CaptureSubmittedVatReturnController @Inject()(mcc: MessagesControllerCompo
                 journeyId,
                 submittedReturn,
                 authId
-              ).map {
-                _ =>
-                  if (submittedReturn) {
-                    Redirect(routes.CaptureBox5FigureController.show(journeyId).url)
+              ).flatMap {
+                storeMatched =>
+                  if(storeMatched) {
+                    if (submittedReturn) {
+                      Future.successful(Redirect(routes.CaptureBox5FigureController.show(journeyId).url))
+                    } else {
+                      journeyService.removeAdditionalVatReturnFields(journeyId, authId).map {
+                        removeMatched => if (removeMatched) {
+                          Redirect(routes.CheckYourAnswersController.show(journeyId).url)
+                        } else {
+                          throw new InternalServerException(s"The additional Vat return fields could not be removed for journey $journeyId")
+                        }
+                      }
+                    }
                   } else {
-                    journeyService.removeAdditionalVatReturnFields(journeyId, authId)
-                    Redirect(routes.CheckYourAnswersController.show(journeyId).url)
+                    throw new InternalServerException(s"The Vat return submitted flag could not be updated for journey $journeyId")
                   }
               }
           )

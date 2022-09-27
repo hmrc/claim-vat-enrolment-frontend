@@ -20,12 +20,10 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
-import reactivemongo.api.commands.UpdateWriteResult
-import reactivemongo.core.errors.GenericDriverException
+import com.mongodb.MongoException
 import uk.gov.hmrc.claimvatenrolmentfrontend.helpers.TestConstants.{testBoxFive, testInternalId, testJourneyId}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.mocks.MockJourneyDataRepository
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class StoreBox5FigureServiceSpec extends AnyWordSpec with Matchers with MockJourneyDataRepository {
@@ -39,11 +37,11 @@ class StoreBox5FigureServiceSpec extends AnyWordSpec with Matchers with MockJour
         dataKey = "box5Figure",
         data = Json.toJson(testBoxFive),
         authId = testInternalId
-      )(Future.successful(mock[UpdateWriteResult]))
+      )(Future.successful(true))
 
-      val result: Unit = await(TestService.storeBox5Figure(testJourneyId, testBoxFive, testInternalId))
+      val result: Boolean = await(TestService.storeBox5Figure(testJourneyId, testBoxFive, testInternalId))
 
-      result mustBe ()
+      result mustBe true
 
       verifyUpdateJourneyData(
         journeyId = testJourneyId,
@@ -59,9 +57,9 @@ class StoreBox5FigureServiceSpec extends AnyWordSpec with Matchers with MockJour
           dataKey = "box5Figure",
           data = Json.toJson(testBoxFive),
           authId = testInternalId
-        )(response = Future.failed(GenericDriverException("failed to update")))
+        )(response = Future.failed(new MongoException("failed to update")))
 
-        intercept[GenericDriverException](
+        intercept[MongoException](
           await(TestService.storeBox5Figure(testJourneyId, testBoxFive, testInternalId))
         )
         verifyUpdateJourneyData(

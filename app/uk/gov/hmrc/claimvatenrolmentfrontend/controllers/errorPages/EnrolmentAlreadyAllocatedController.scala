@@ -32,6 +32,6 @@ class EnrolmentAlreadyAllocatedController @Inject()(mcc: MessagesControllerCompo
 
   def show: Action[AnyContent] = Action.async {
     implicit request =>
-      Future.successful(Ok(view(appRoutes.SignInOutController.signOut())))
+      Future.successful(Ok(view(appRoutes.SignInOutController.signOut)))
   }
 }

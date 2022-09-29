@@ -23,11 +23,16 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsValue, Writes}
-import play.api.libs.ws.{WSClient, WSRequest, WSResponse}
+import play.api.libs.ws.{DefaultWSCookie, WSClient, WSCookie, WSRequest, WSResponse}
+import play.api.mvc.{Cookie, Session, SessionCookieBaker}
 import play.api.test.Helpers._
+import play.api.test.Injecting
 import reactivemongo.api.commands.WriteResult
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.JourneyConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.{JourneyConfigRepository, JourneyDataRepository}
+import uk.gov.hmrc.crypto.PlainText
+import uk.gov.hmrc.http.SessionKeys
+import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -37,7 +42,8 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
   with WiremockHelper
   with BeforeAndAfterAll
   with BeforeAndAfterEach
-  with GuiceOneServerPerSuite {
+  with GuiceOneServerPerSuite
+  with Injecting {
 
   val mockHost: String = WiremockHelper.wiremockHost
   val mockPort: String = WiremockHelper.wiremockPort.toString
@@ -77,15 +83,24 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
     super.beforeEach()
   }
 
-  def get[T](uri: String): WSResponse = {
-    await(buildClient(uri).withHttpHeaders().get)
+  val cyLangCookie: WSCookie = DefaultWSCookie("PLAY_LANG", "cy")
+
+  val enLangCookie: WSCookie = DefaultWSCookie("PLAY_LANG", "en")
+
+  def get(uri: String, cookie: WSCookie = enLangCookie): WSResponse = {
+    await(
+      buildClient(uri)
+        .withCookies(cookie, mockSessionCookie)
+        .get
+    )
   }
 
-  def post(uri: String)(form: (String, String)*): WSResponse = {
+  def post(uri: String, cookie: WSCookie = enLangCookie)(form: (String, String)*): WSResponse = {
     val formBody = (form map { case (k, v) => (k, Seq(v)) }).toMap
     await(
       buildClient(uri)
         .withHttpHeaders("Csrf-Token" -> "nocheck")
+        .withCookies(cookie, mockSessionCookie)
         .post(formBody)
     )
   }
@@ -95,6 +110,7 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
     await(
       buildClient(uri)
         .withHttpHeaders("Content-Type" -> "application/json")
+        .withCookies(mockSessionCookie)
         .post(json.toString())
     )
   }
@@ -103,6 +119,7 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
     await(
       buildClient(uri)
         .withHttpHeaders("Content-Type" -> "application/json")
+        .withCookies(mockSessionCookie)
         .put(writes.writes(body).toString())
     )
   }
@@ -122,4 +139,40 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
     journeyConfigRepository.insertJourneyConfig(
       journeyId, JourneyConfig(continueUrl), authInternalId
     )
+
+  def mockSessionCookie: WSCookie = {
+
+    def makeSessionCookie(session: Session): Cookie = {
+      val cookieCrypto = inject[SessionCookieCrypto]
+      val cookieBaker = inject[SessionCookieBaker]
+      val sessionCookie = cookieBaker.encodeAsCookie(session)
+      val encryptedValue = cookieCrypto.crypto.encrypt(PlainText(sessionCookie.value))
+      sessionCookie.copy(value = encryptedValue.value)
+    }
+
+    val mockSession = Session(Map(
+      SessionKeys.lastRequestTimestamp -> System.currentTimeMillis().toString,
+      SessionKeys.authToken -> "mock-bearer-token",
+      SessionKeys.sessionId -> "mock-sessionid"
+    ))
+
+    val cookie = makeSessionCookie(mockSession)
+
+    new WSCookie() {
+      override def name: String = cookie.name
+
+      override def value: String = cookie.value
+
+      override def domain: Option[String] = cookie.domain
+
+      override def path: Option[String] = Some(cookie.path)
+
+      override def maxAge: Option[Long] = cookie.maxAge.map(_.toLong)
+
+      override def secure: Boolean = cookie.secure
+
+      override def httpOnly: Boolean = cookie.httpOnly
+    }
+  }
+
 }

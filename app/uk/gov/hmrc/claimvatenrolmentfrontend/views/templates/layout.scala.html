@@ -43,8 +43,8 @@
         language = Some(messages.lang.code),
         timeout = Some(appConfig.timeout),
         countdown = Some(appConfig.countdown),
-        keepAliveUrl = Some(SignInOutController.keepAlive().url),
-        signOutUrl = Some(SignInOutController.signOut().url)
+        keepAliveUrl = Some(SignInOutController.keepAlive.url),
+        signOutUrl = Some(SignInOutController.signOut.url)
     ))
 }
 

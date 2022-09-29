@@ -63,7 +63,7 @@ trait EnrolmentAlreadyAllocatedErrorViewTest extends ViewSpecHelper {
 
     "have a sign out link" in {
       doc.getElementById("signOutLink").text mustBe Header.signOut
-      doc.getElementById("signOutLink").attr("href") mustBe routes.SignInOutController.signOut().url
+      doc.getElementById("signOutLink").attr("href") mustBe routes.SignInOutController.signOut.url
     }
 
   }

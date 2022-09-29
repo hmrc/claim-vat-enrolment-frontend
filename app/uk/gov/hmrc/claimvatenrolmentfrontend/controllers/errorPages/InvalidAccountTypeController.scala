@@ -32,7 +32,7 @@ class InvalidAccountTypeController @Inject()(mcc: MessagesControllerComponents,
 
   val show: Action[AnyContent] = Action.async {
     implicit request =>
-      Future.successful(Ok(view(appRoutes.SignInOutController.signOut())))
+      Future.successful(Ok(view(appRoutes.SignInOutController.signOut)))
   }
 
 }

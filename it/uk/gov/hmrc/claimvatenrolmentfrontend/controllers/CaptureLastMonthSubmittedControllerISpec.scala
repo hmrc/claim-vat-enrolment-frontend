@@ -18,16 +18,14 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
 import play.api.libs.json.Json
 import play.api.test.Helpers._
-import reactivemongo.play.json._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
-import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
+import uk.gov.hmrc.claimvatenrolmentfrontend.utils.JourneyMongoHelper
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.CaptureLastMonthSubmittedViewTests
 
 import java.time.{Instant, Month}
-import scala.concurrent.ExecutionContext.Implicits.global
 
-class CaptureLastMonthSubmittedControllerISpec extends ComponentSpecHelper with CaptureLastMonthSubmittedViewTests with AuthStub {
+class CaptureLastMonthSubmittedControllerISpec extends JourneyMongoHelper with CaptureLastMonthSubmittedViewTests with AuthStub {
 
   s"GET /$testJourneyId/last-vat-return-date" should {
     lazy val result = {
@@ -53,12 +51,12 @@ class CaptureLastMonthSubmittedControllerISpec extends ComponentSpecHelper with 
 
       "the journey Id has no internal Id stored" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        await(journeyConfigRepository.collection.insert(true).one(
+        await(journeyConfigRepository.collection.insertOne(
           Json.obj(
             "_id" -> testJourneyId,
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
           ) ++ Json.toJsObject(testJourneyConfig)
-        ))
+        ).toFuture())
         lazy val result = get(s"/$testJourneyId/last-vat-return-date")
 
         result.status mustBe NOT_FOUND
@@ -90,6 +88,15 @@ class CaptureLastMonthSubmittedControllerISpec extends ComponentSpecHelper with 
       lazy val result = post(s"/$testJourneyId/last-vat-return-date")()
 
       testCaptureLastMonthSubmittedErrorViewTests(result, authStub)
+    }
+    "raise an internal server exception" when {
+      "the journey data is missing" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        lazy val result = post(s"/$testJourneyId/last-vat-return-date")("return_date" -> Month.JANUARY.getValue.toString)
+
+        result.status mustBe INTERNAL_SERVER_ERROR
+      }
     }
   }
 

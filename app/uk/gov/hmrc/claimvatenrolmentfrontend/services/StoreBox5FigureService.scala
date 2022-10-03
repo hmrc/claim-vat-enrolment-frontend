@@ -21,23 +21,21 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.StoreBox5FigureService.Box5FigureKey
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 @Singleton
 class StoreBox5FigureService @Inject()(journeyDataRepository: JourneyDataRepository
-                                      )(implicit executionContext: ExecutionContext) {
+                                      ) {
 
   def storeBox5Figure(journeyId: String,
                       box5Figure: String,
-                      authInternalId: String): Future[Unit] =
+                      authInternalId: String): Future[Boolean] =
     journeyDataRepository.updateJourneyData(
       journeyId = journeyId,
       dataKey = Box5FigureKey,
       data = Json.toJson(box5Figure),
       authInternalId = authInternalId
-    ).map {
-      _ => Unit
-    }
+    )
 }
 
 object StoreBox5FigureService {

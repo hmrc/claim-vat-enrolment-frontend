@@ -64,7 +64,12 @@ class CaptureBusinessPostcodeController @Inject()(mcc: MessagesControllerCompone
                 businessPostcode,
                 authId
               ).map {
-                _ => Redirect(routes.CaptureSubmittedVatReturnController.show(journeyId).url)
+                matched =>
+                  if(matched) {
+                    Redirect(routes.CaptureSubmittedVatReturnController.show(journeyId).url)
+                  } else {
+                    throw new InternalServerException(s"The VAT registration postcode could not be updated for journey $journeyId")
+                  }
               }
           )
         case None =>
@@ -77,7 +82,11 @@ class CaptureBusinessPostcodeController @Inject()(mcc: MessagesControllerCompone
       authorised().retrieve(internalId) {
         case Some(authId) =>
           journeyService.removePostcodeField(journeyId, authId).map {
-            _ => Redirect(routes.CaptureSubmittedVatReturnController.show(journeyId))
+            matched => if (matched) {
+              Redirect(routes.CaptureSubmittedVatReturnController.show(journeyId))
+            } else {
+              throw new InternalServerException(s"The post code field could not be removed for journey $journeyId")
+            }
           }
         case None =>
           throw new InternalServerException("Internal ID could not be retrieved from Auth")

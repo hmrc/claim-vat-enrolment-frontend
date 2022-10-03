@@ -16,72 +16,52 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.repositories
 
-import play.api.libs.json.{Format, Json}
-import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.api.commands.WriteResult
-import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.BSONDocument
-import reactivemongo.play.json._
+import play.api.libs.json.{Format, JsObject, Json}
+import org.mongodb.scala.model.Indexes.ascending
+import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions}
+import org.mongodb.scala.result.InsertOneResult
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.JourneyConfig
-import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyConfigRepository.{AuthInternalIdKey, CreationTimestampKey, JourneyIdKey}
-import uk.gov.hmrc.mongo.ReactiveRepository
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.JourneyConfig.format
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyConfigRepository._
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 
 import java.time.Instant
+import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class JourneyConfigRepository @Inject()(reactiveMongoComponent: ReactiveMongoComponent,
+class JourneyConfigRepository @Inject()(mongoComponent: MongoComponent,
                                         appConfig: AppConfig
-                                       )(implicit ec: ExecutionContext) extends ReactiveRepository[JourneyConfig, String](
+                                       )(implicit ec: ExecutionContext) extends PlayMongoRepository[JsObject](
   collectionName = "claim-vat-enrolment-frontend-journey-config",
-  mongo = reactiveMongoComponent.mongoConnector.db,
-  domainFormat = JourneyConfig.format,
-  idFormat = implicitly[Format[String]]
+  mongoComponent = mongoComponent,
+  domainFormat = implicitly[Format[JsObject]],
+  indexes = Seq(timeToLiveIndex(appConfig.timeToLiveSeconds)),
+  extraCodecs = Seq(Codecs.playFormatCodec(format))
 ) {
 
-  def insertJourneyConfig(journeyId: String, journeyConfig: JourneyConfig, authInternalId: String): Future[WriteResult] = {
-    val document = Json.obj(
+  def insertJourneyConfig(journeyId: String, journeyConfig: JourneyConfig, authInternalId: String): Future[InsertOneResult] = {
+
+    val document: JsObject = Json.obj(
       JourneyIdKey -> journeyId,
       AuthInternalIdKey -> authInternalId,
-      CreationTimestampKey -> Json.obj("$date" -> Instant.now.toEpochMilli)
+      CreationTimestampKey -> Json.obj( "$date" -> Instant.now.toEpochMilli)
     ) ++ Json.toJsObject(journeyConfig)
 
-    collection.insert(true).one(document)
+    collection.insertOne(document).toFuture()
   }
 
   def retrieveJourneyConfig(journeyId: String, authInternalId: String): Future[Option[JourneyConfig]] =
-    collection.find(
-      Json.obj(
-        JourneyIdKey -> journeyId,
-        AuthInternalIdKey -> authInternalId
-      ),
-      Some(Json.obj(
-        JourneyIdKey -> 0,
-        AuthInternalIdKey -> 0
-      ))
-    ).one[JourneyConfig]
 
-  private lazy val ttlIndex = Index(
-    Seq(("creationTimestamp", IndexType.Ascending)),
-    name = Some("ClaimVatEnrolmentDataExpires"),
-    options = BSONDocument("expireAfterSeconds" -> appConfig.timeToLiveSeconds)
-  )
-
-  private def setIndex(): Unit = {
-    collection.indexesManager.drop(ttlIndex.name.get) onComplete {
-      _ => collection.indexesManager.ensure(ttlIndex)
-    }
-  }
-
-  setIndex()
-
-  override def drop(implicit ec: ExecutionContext): Future[Boolean] =
-    collection.drop(failIfNotFound = false).map { r =>
-      setIndex()
-      r
-    }
+    collection.find[JourneyConfig](
+      Filters.and(
+        Filters.equal(JourneyIdKey, journeyId),
+        Filters.equal(AuthInternalIdKey, authInternalId)
+      )
+    ).headOption()
 
 }
 
@@ -89,4 +69,12 @@ object JourneyConfigRepository {
   val JourneyIdKey = "_id"
   val AuthInternalIdKey = "authInternalId"
   val CreationTimestampKey = "creationTimestamp"
+
+  def timeToLiveIndex(timeToLiveDuration: Long): IndexModel =
+    IndexModel(
+      keys = ascending(CreationTimestampKey),
+      indexOptions = IndexOptions()
+        .name("ClaimVatEnrolmentDataExpires")
+        .expireAfter(timeToLiveDuration, TimeUnit.SECONDS)
+    )
 }

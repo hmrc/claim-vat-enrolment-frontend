@@ -61,7 +61,11 @@ class CaptureBox5FigureController @Inject()(mcc: MessagesControllerComponents,
               ),
             box5Figure =>
               storeBox5FigureService.storeBox5Figure(journeyId, box5Figure, authId).map {
-                _ => Redirect(routes.CaptureLastMonthSubmittedController.show(journeyId).url)
+                    matched => if (matched) {
+                      Redirect(routes.CaptureLastMonthSubmittedController.show(journeyId).url)
+                    } else {
+                      throw new InternalServerException(s"The box 5 figure could not be updated for journey $journeyId")
+                    }
               }
           )
         case None =>

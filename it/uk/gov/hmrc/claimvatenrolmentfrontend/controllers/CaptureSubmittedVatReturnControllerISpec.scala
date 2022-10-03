@@ -16,20 +16,17 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.Json
 import play.api.test.Helpers._
-import reactivemongo.play.json._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.VatKnownFacts
-import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{vatKnownFactsReads, vatKnownFactsWrites}
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository._
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
-import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
+import uk.gov.hmrc.claimvatenrolmentfrontend.utils.JourneyMongoHelper
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.CaptureSubmittedVatReturnViewTests
 
 import java.time.Instant
-import scala.concurrent.ExecutionContext.Implicits.global
 
-class CaptureSubmittedVatReturnControllerISpec extends ComponentSpecHelper with CaptureSubmittedVatReturnViewTests with AuthStub {
+class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with CaptureSubmittedVatReturnViewTests with AuthStub {
 
   s"GET /$testJourneyId/submitted-vat-return" should {
     lazy val result = {
@@ -56,12 +53,12 @@ class CaptureSubmittedVatReturnControllerISpec extends ComponentSpecHelper with 
 
       "the journey Id has no internal Id stored" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        await(journeyConfigRepository.collection.insert(true).one(
+        await(journeyConfigRepository.collection.insertOne(
           Json.obj(
             "_id" -> testJourneyId,
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
           ) ++ Json.toJsObject(testJourneyConfig)
-        ))
+        ).toFuture())
 
         lazy val result = get(s"/$testJourneyId/submitted-vat-return")
 
@@ -88,13 +85,13 @@ class CaptureSubmittedVatReturnControllerISpec extends ComponentSpecHelper with 
     "redirect to Check Your Answers Page" when {
       "the user changes their answer to no" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        await(journeyDataRepository.collection.insert(true).one(
+        await(journeyDataRepository.collection.insertOne(
           Json.obj(
             "_id" -> testJourneyId,
             "authInternalId" -> testInternalId,
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
           ) ++ Json.toJsObject(testFullVatKnownFacts)
-        ))
+        ).toFuture())
         lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "no")
 
         result must have(
@@ -102,22 +99,19 @@ class CaptureSubmittedVatReturnControllerISpec extends ComponentSpecHelper with 
           redirectUri(routes.CheckYourAnswersController.show(testJourneyId).url)
         )
         await(
-          journeyDataRepository.collection.find[JsObject, VatKnownFacts](
-            Json.obj("_id" -> testJourneyId),
-            None
-          ).one[VatKnownFacts]
+          journeyDataRepository.getJourneyData(testJourneyId, testInternalId)
         ) mustBe Some(testVatKnownFactsNoReturns)
       }
 
       "the user selects no" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        await(journeyDataRepository.collection.insert(true).one(
+        await(journeyDataRepository.collection.insertOne(
           Json.obj(
             "_id" -> testJourneyId,
             "authInternalId" -> testInternalId,
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
           ) ++ Json.obj("vatRegPostcode" -> testPostcode.stringValue, "vatRegistrationDate" -> testVatRegDate, "vatNumber" -> testVatNumber)
-        ))
+        ).toFuture())
         lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "no")
 
         result must have(
@@ -125,11 +119,17 @@ class CaptureSubmittedVatReturnControllerISpec extends ComponentSpecHelper with 
           redirectUri(routes.CheckYourAnswersController.show(testJourneyId).url)
         )
         await(
-          journeyDataRepository.collection.find[JsObject, VatKnownFacts](
-            Json.obj("_id" -> testJourneyId),
-            None
-          ).one[VatKnownFacts]
+          journeyDataRepository.getJourneyData(testJourneyId, testInternalId)
         ) mustBe Some(testVatKnownFactsNoReturns)
+      }
+    }
+    "raise an internal server error" when {
+      "the journey data is missing" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "yes")
+
+        result.status mustBe INTERNAL_SERVER_ERROR
       }
     }
   }

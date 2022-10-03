@@ -23,23 +23,21 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.StoreVatRegistrationDateService.VatRegistrationDateKey
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 @Singleton
 class StoreVatRegistrationDateService @Inject()(journeyDataRepository: JourneyDataRepository
-                                               )(implicit executionContext: ExecutionContext) {
+                                               ) {
 
   def storeVatRegistrationDate(journeyId: String,
                                vatRegDate: LocalDate,
-                               authInternalId: String): Future[Unit] =
+                               authInternalId: String): Future[Boolean] =
     journeyDataRepository.updateJourneyData(
       journeyId = journeyId,
       dataKey = VatRegistrationDateKey,
       data = Json.toJson(vatRegDate),
       authInternalId = authInternalId
-    ).map {
-      _ => Unit
-    }
+    )
 
 }
 

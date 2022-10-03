@@ -21,23 +21,21 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.StoreSubmittedVatReturnService.SubmittedVatReturnKey
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 @Singleton
 class StoreSubmittedVatReturnService @Inject()(journeyDataRepository: JourneyDataRepository
-                                              )(implicit executionContext: ExecutionContext) {
+                                              ) {
 
   def storeStoreSubmittedVat(journeyId: String,
                              submittedReturn: Boolean,
-                             authInternalId: String): Future[Unit] =
+                             authInternalId: String): Future[Boolean] =
     journeyDataRepository.updateJourneyData(
       journeyId = journeyId,
       dataKey = SubmittedVatReturnKey,
       data = Json.toJson(submittedReturn),
       authInternalId = authInternalId
-    ).map {
-      _ => Unit
-    }
+    )
 }
 
 object StoreSubmittedVatReturnService {

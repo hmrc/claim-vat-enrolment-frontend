@@ -21,7 +21,7 @@ import org.mockito.Mockito.{reset, verify, when}
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatestplus.mockito.MockitoSugar
-import reactivemongo.api.commands.WriteResult
+import org.mongodb.scala.result.InsertOneResult
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.JourneyConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyConfigRepository
 
@@ -38,7 +38,7 @@ trait MockJourneyConfigRepository extends MockitoSugar with BeforeAndAfterEach {
   }
 
   def mockInsertJourneyConfig(journeyId: String, journeyConfig: JourneyConfig, authInternalId: String)
-                             (response: Future[WriteResult]): OngoingStubbing[_] = {
+                             (response: Future[InsertOneResult]): OngoingStubbing[_] = {
     when(mockJourneyConfigRepository.insertJourneyConfig(
       ArgumentMatchers.eq(journeyId),
       ArgumentMatchers.eq(journeyConfig),

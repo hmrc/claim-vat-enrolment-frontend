@@ -23,23 +23,20 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.services.StoreLastMonthSubmittedSer
 
 import java.time.Month
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 @Singleton
-class StoreLastMonthSubmittedService @Inject()(journeyDataRepository: JourneyDataRepository
-                                               )(implicit executionContext: ExecutionContext) {
+class StoreLastMonthSubmittedService @Inject()(journeyDataRepository: JourneyDataRepository) {
 
   def storeLastMonthSubmitted(journeyId: String,
                               lastMonth: Month,
-                               authInternalId: String): Future[Unit] =
+                               authInternalId: String): Future[Boolean] =
     journeyDataRepository.updateJourneyData(
       journeyId = journeyId,
       dataKey = LastMonthSubmittedKey,
       data = JsNumber(lastMonth.getValue),
       authInternalId = authInternalId
-    ).map{
-      _ => Unit
-    }
+    )
 
 }
 

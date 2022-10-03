@@ -22,24 +22,21 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.models.Postcode
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.StoreBusinessPostcodeService.vatRegPostcodeKey
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 @Singleton
 class StoreBusinessPostcodeService @Inject()(journeyDataRepository: JourneyDataRepository
-                                            )(implicit executionContext: ExecutionContext) {
+                                            ) {
 
   def storeBusinessPostcodeService(journeyId: String,
                                    vatRegPostcode: Postcode,
-                                   authInternalId: String): Future[Unit] =
+                                   authInternalId: String): Future[Boolean] =
     journeyDataRepository.updateJourneyData(
       journeyId = journeyId,
       dataKey = vatRegPostcodeKey,
       data = Json.toJson(vatRegPostcode.stringValue),
       authInternalId = authInternalId
-    ).map {
-      _ => Unit
-    }
-
+    )
 }
 
 object StoreBusinessPostcodeService {

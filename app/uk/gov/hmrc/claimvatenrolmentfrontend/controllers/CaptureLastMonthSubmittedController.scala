@@ -60,7 +60,11 @@ class CaptureLastMonthSubmittedController @Inject()(mcc: MessagesControllerCompo
             ),
             lastMonthSubmitted =>
               storeLastMonthSubmittedService.storeLastMonthSubmitted(journeyId, lastMonthSubmitted, authId).map {
-                _ => Redirect(routes.CheckYourAnswersController.show(journeyId).url)
+                matched => if (matched) {
+                  Redirect(routes.CheckYourAnswersController.show(journeyId).url)
+                } else {
+                  throw new InternalServerException(s"The last month a Vat return was submitted could not be updated for journey $journeyId")
+                }
               }
           )
         case None =>

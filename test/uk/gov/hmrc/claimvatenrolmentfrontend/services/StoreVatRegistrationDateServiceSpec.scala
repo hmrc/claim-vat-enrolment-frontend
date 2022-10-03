@@ -20,12 +20,10 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
 import play.api.test.Helpers._
-import reactivemongo.api.commands.UpdateWriteResult
-import reactivemongo.core.errors.GenericDriverException
+import com.mongodb.MongoException
 import uk.gov.hmrc.claimvatenrolmentfrontend.helpers.TestConstants.{testInternalId, testJourneyId, testVatRegDate}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.mocks.MockJourneyDataRepository
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class StoreVatRegistrationDateServiceSpec extends AnyWordSpec with Matchers with MockJourneyDataRepository {
@@ -39,11 +37,11 @@ class StoreVatRegistrationDateServiceSpec extends AnyWordSpec with Matchers with
         dataKey = "vatRegistrationDate",
         data = Json.toJson(testVatRegDate),
         authId = testInternalId
-      )(Future.successful(mock[UpdateWriteResult]))
+      )(Future.successful(true))
 
-      val result: Unit = await(TestService.storeVatRegistrationDate(testJourneyId, testVatRegDate, testInternalId))
+      val result: Boolean = await(TestService.storeVatRegistrationDate(testJourneyId, testVatRegDate, testInternalId))
 
-      result mustBe ()
+      result mustBe true
 
       verifyUpdateJourneyData(
         journeyId = testJourneyId,
@@ -60,9 +58,9 @@ class StoreVatRegistrationDateServiceSpec extends AnyWordSpec with Matchers with
           dataKey = "vatRegistrationDate",
           data = Json.toJson(testVatRegDate),
           authId = testInternalId
-        )(response = Future.failed(GenericDriverException("failed to update")))
+        )(response = Future.failed(new MongoException("failed to update")))
 
-        intercept[GenericDriverException](
+        intercept[MongoException](
           await(TestService.storeVatRegistrationDate(testJourneyId, testVatRegDate, testInternalId))
         )
         verifyUpdateJourneyData(

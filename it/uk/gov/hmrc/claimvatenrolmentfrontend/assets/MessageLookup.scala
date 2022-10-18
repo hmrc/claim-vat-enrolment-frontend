@@ -164,4 +164,15 @@ object MessageLookup {
     val link_url = "/tax-and-scheme-management/services"
   }
 
+  object SignUpCompleteClient {
+    val title = "You have added VAT to your business tax account - Claim VAT Enrolment - GOV.UK"
+    val heading = "You have added VAT to your business tax account"
+    val line_1 = "You can now use your business tax account to:"
+    val bullet1 = "see what you owe"
+    val bullet2 = "check your deadlines"
+    val bullet3 = "pay your VAT"
+    val bullet4 = "tell us about any changes to your business"
+    val link_url = "https://www.tax.service.gov.uk/business-account"
+  }
+
 }

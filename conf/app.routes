@@ -7,6 +7,7 @@ GET         /assets/*file                             controllers.Assets.version
 # Session
 GET         /keep-alive                               uk.gov.hmrc.claimvatenrolmentfrontend.controllers.SignInOutController.keepAlive
 GET         /sign-out                                 uk.gov.hmrc.claimvatenrolmentfrontend.controllers.SignInOutController.signOut
+GET         /:journeyId/sign-up-complete              uk.gov.hmrc.claimvatenrolmentfrontend.controllers.SignUpCompleteController.signUpComplete(journeyId)
 
 # Journey
 GET         /journey/:vrn                             uk.gov.hmrc.claimvatenrolmentfrontend.controllers.JourneyController.createJourney(vrn, continueUrl)

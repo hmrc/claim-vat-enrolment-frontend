@@ -37,7 +37,7 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   lazy val selfBaseUrl: String = servicesConfig.baseUrl("self")
   lazy val selfUrl: String = servicesConfig.getString("microservice.services.self.url")
 
-  lazy val exitSurveyServiceIdentifier = "MTDfB-VAT-claim-vat-enrolment"
+  lazy val exitSurveyServiceIdentifier = "MTDfB-VAT-sign-up"
   lazy val feedbackFrontendUrl: String = servicesConfig.getString("microservice.services.feedback-frontend.url")
   lazy val feedbackUrl = s"$feedbackFrontendUrl/feedback/$exitSurveyServiceIdentifier"
 
@@ -48,7 +48,7 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
 
   lazy val businessTaxAccountAddVatUrl = "/business-account/add-tax/vat/what-is-your-vat-number"
 
-  lazy val btaUrl: String = servicesConfig.getString("bta.url")
+  lazy val btaBaseUrl: String = servicesConfig.baseUrl("business-account") + "/business-account"
 
   lazy val businessTaxAccountUrl = "/tax-and-scheme-management/services"
 

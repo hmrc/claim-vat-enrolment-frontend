@@ -198,7 +198,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
 
       result must have(
         httpStatus(SEE_OTHER),
-        redirectUri(testContinueUrl)
+        redirectUri(routes.SignUpCompleteController.signUpComplete(testJourneyId).url)
       )
       verifyAudit()
     }

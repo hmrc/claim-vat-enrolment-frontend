@@ -41,7 +41,7 @@
     @govukButton(Button(
         attributes = Map("id" -> "backToBTA"),
         content = Text(messages("enrolment_already_allocated.go_back_to_bta")),
-        href = Some(appConfig.btaUrl)
+        href = Some(appConfig.btaBaseUrl)
     ))
 
     @p {<a class='govuk-link' href="@Routes.SignInOutController.signOut.url" id="signOutLink">@messages("app.common.signOut")</a>}

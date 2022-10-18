@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.connectors.mocks
 
+import org.mockito.Mockito.{reset, times, verify}
 import org.mockito.{ArgumentCaptor, ArgumentMatchers}
-import org.mockito.Mockito.{reset, times, verify, when}
-import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.http.HeaderCarrier

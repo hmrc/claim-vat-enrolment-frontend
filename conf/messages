@@ -104,3 +104,12 @@ enrolment_already_allocated.line_1                          = Your business is s
 enrolment_already_allocated.line_2                          = If you have lost your details,
 enrolment_already_allocated.link                            = find or recover your account
 enrolment_already_allocated.go_back_to_bta                  = Go back to your business tax account
+
+# Sign Up Complete Page
+sign_up_complete.title                                      = You have added VAT to your business tax account
+sign_up_complete.heading                                    = You have added VAT to your business tax account
+sign_up_complete.line_1                                     = You can now use your business tax account to:
+sign_up_complete.bullet_1                                   = see what you owe
+sign_up_complete.bullet_2                                   = check your deadlines
+sign_up_complete.bullet_3                                   = pay your VAT
+sign_up_complete.bullet_4                                   = tell us about any changes to your business

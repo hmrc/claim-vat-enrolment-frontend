@@ -117,3 +117,12 @@ global.error.pageNotFound404.message                        = Gwiriwch eich bod 
 global.error.InternalServerError500.title                   = Mae’n ddrwg gennym, mae anawsterau technegol wedi codi – 500
 global.error.InternalServerError500.heading                 = Mae’n ddrwg gennym, mae anawsterau technegol wedi codi
 global.error.InternalServerError500.message                 = Rhowch gynnig arall arni mewn ychydig o funudau
+
+# Sign Up Complete Page
+sign_up_complete.title                                      = Rydych wedi ychwanegu TAW at eich cyfrif treth busnes
+sign_up_complete.heading                                    = Rydych wedi ychwanegu TAW at eich cyfrif treth busnes
+sign_up_complete.line_1                                     = Gallwch nawr ddefnyddio’ch cyfrif treth busnes i wneud y canlynol:
+sign_up_complete.bullet_1                                   = gweld beth sydd arnoch
+sign_up_complete.bullet_2                                   = gweld eich dyddiadau cau
+sign_up_complete.bullet_3                                   = talu’ch TAW
+sign_up_complete.bullet_4                                   = rhoi gwybod i ni am unrhyw newidiadau i’ch busnes

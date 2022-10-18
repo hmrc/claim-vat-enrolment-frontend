@@ -48,7 +48,7 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
 
   lazy val businessTaxAccountAddVatUrl = "/business-account/add-tax/vat/what-is-your-vat-number"
 
-  lazy val btaBaseUrl: String = servicesConfig.baseUrl("business-account") + "/business-account"
+  lazy val btaBaseUrl: String = servicesConfig.getString("microservice.services.business-account.url") + "/business-account"
 
   lazy val businessTaxAccountUrl = "/tax-and-scheme-management/services"
 

@@ -22,9 +22,13 @@ http://localhost:9936/claim-vat-enrolment
 ### GET /journey/:vrn 
 
 ---
-This endpoint creates a journey, it also takes a query parameter called `continueUrl`
-in which the calling service provides a url to send the user back to once they complete 
-our journey.
+
+This endpoint creates a journey to enable a user to claim a VAT enrolment. The url also
+takes the query parameter `continueUrl`. Prior to release 0.91.0
+the service would send the user to the nominated continue url after the
+successful completion of an enrolment claim. For release 0.91.0 onwards, the service will redirect the user to the
+business tax account service following a successful enrolment claim. Note, however, although it is no longer used 
+the continue url is still mandatory when invoking the initial url /journey/:vrn. 
 
 ####Request:
 

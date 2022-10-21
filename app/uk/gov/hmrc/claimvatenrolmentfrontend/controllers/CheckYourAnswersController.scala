@@ -59,8 +59,8 @@ class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
       authorised().retrieve(credentials and groupIdentifier and internalId) {
         case Some(Credentials(credentialId, "GovernmentGateway")) ~ Some(groupId) ~ Some(internalId) =>
           claimVatEnrolmentService.claimVatEnrolment(credentialId, groupId, internalId, journeyId).map {
-            case Right(_) =>
-              Redirect(routes.SignUpCompleteController.signUpComplete(journeyId))
+            case Right(continueUrl) =>
+              SeeOther(continueUrl) // TODO Redirect(routes.SignUpCompleteController.signUpComplete(journeyId))
             case Left(KnownFactsMismatch) =>
               Redirect(errorPages.routes.KnownFactsMismatchController.show())
             case Left(EnrolmentAlreadyAllocated) =>

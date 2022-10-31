@@ -1,1 +1,8 @@
 GET        /successful-enrolment                       uk.gov.hmrc.claimvatenrolmentfrontend.testOnly.SuccessfulEnrolmentController.show()
+
+GET        /feature-switches                           uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.frontend.controllers.FeatureSwitchFrontendController.show
+POST       /feature-switches                           uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.frontend.controllers.FeatureSwitchFrontendController.submit
+
+GET        /api/feature-switches                       uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.api.controllers.FeatureSwitchApiController.getFeatureSwitches()
++ nocsrf
+POST       /api/feature-switches                       uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.api.controllers.FeatureSwitchApiController.updateFeatureSwitches()

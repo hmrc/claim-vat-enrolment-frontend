@@ -1,6 +1,6 @@
 app.govuk                                                   = GOV.UK/CYMRAEG
-app.service_name                                            = Cofrestru ar gyfer hawlio TAW
-app.title                                                   = Cofrestru ar gyfer hawlio TAW
+app.service_name                                            = Ymrestru ar gyfer Hawlio TAW
+app.title                                                   = Ymrestru ar gyfer Hawlio TAW
 app.title.error_prefix                                      = Gwall:
 app.common.errorSummaryLabel                                = Mae problem wedi codi
 app.common.signOut                                          = Allgofnodi

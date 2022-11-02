@@ -40,7 +40,7 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
                                               )(implicit hc: HeaderCarrier,
                                                 request: Request[_]): DataEvent = {
 
-    val auditSource = "claim-vat-enrolment"
+    val auditSource = "vat-sign-up"
     val transactionName: String = "MTDVATClaimSubscriptionRequest"
     val auditType: String = "MTDVatClaimSubscription"
 

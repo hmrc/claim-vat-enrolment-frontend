@@ -51,7 +51,7 @@ capture_box5_figure.invalid_format.error                    = Enter a value to 2
 # Last Month Submitted Page
 capture-last-month-submitted.title                          = Select the last month of your latest VAT accounting period
 capture-last-month-submitted.heading                        = Select the last month of your latest VAT accounting period
-capture-last-month-submitted.line_1                         = You can find this by signing into your online VAT account. You can also find it in your latest VAT Return submitted to HMRC.
+capture-last-month-submitted.line_1                         = You can find this in your latest VAT Return submitted to HMRC.
 capture-last-month-submitted.panel_title_1                  = Latest VAT accounting period, example 1
 capture-last-month-submitted.panel_text_1                   = You submit your VAT Return quarterly (every three months). In the ‘accounting period’ January to March, the last month in that ‘accounting period’ is March. You must therefore select March.
 capture-last-month-submitted.panel_title_2                  = Latest VAT accounting period, example 2

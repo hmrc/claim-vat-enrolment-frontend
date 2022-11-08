@@ -32,7 +32,7 @@ class EnrolmentStoreProxyConnector @Inject()(http: HttpClient,
 
   def getUserIds(vatNumber: String)(implicit hc: HeaderCarrier): Future[QueryUsersSuccess] = {
     http.GET[QueryUsersSuccess](
-      url = appConfig.QueryUserIdStub(vatNumber),
+      url = appConfig.queryUsersUrl(vatNumber),
       queryParams = Seq(principalQueryParameter))
   }
 }

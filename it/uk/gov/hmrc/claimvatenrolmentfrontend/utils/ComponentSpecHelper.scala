@@ -27,6 +27,8 @@ import play.api.libs.ws.{DefaultWSCookie, WSClient, WSCookie, WSRequest, WSRespo
 import play.api.mvc.{Cookie, Session, SessionCookieBaker}
 import play.api.test.Helpers._
 import play.api.test.Injecting
+import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.{FeatureSwitching, FeatureSwitchingModule}
+import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.models.FeatureSwitch
 import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.http.SessionKeys
 import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto
@@ -37,17 +39,24 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
   with BeforeAndAfterAll
   with BeforeAndAfterEach
   with GuiceOneServerPerSuite
+  with FeatureSwitching
   with Injecting {
 
   val mockHost: String = WiremockHelper.wiremockHost
   val mockPort: String = WiremockHelper.wiremockPort.toString
   val mockUrl: String = s"http://$mockHost:$mockPort"
 
-  def config: Map[String, String] = Map(
+  val config: Map[String, String] = Map(
     "auditing.enabled" -> "false",
+    "play.http.router" -> "testOnlyDoNotUseInAppConf.Routes",
     "play.filters.csrf.header.bypassHeaders.Csrf-Token" -> "nocheck",
     "microservice.services.auth.host" -> mockHost,
     "microservice.services.auth.port" -> mockPort,
+    "microservice.services.base.host" -> mockHost,
+    "microservice.services.base.port" -> mockPort,
+    "microservice.services.self.host" -> mockHost,
+    "microservice.services.self.port" -> mockPort,
+    "microservice.services.self.url" -> mockUrl,
     "microservice.services.tax-enrolments.host" -> mockHost,
     "microservice.services.tax-enrolments.port" -> mockPort,
     "microservice.services.enrolment-store-proxy.host" -> mockHost,
@@ -61,6 +70,7 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
     .build
 
   implicit val ws: WSClient = app.injector.instanceOf[WSClient]
+  lazy val featureSwitches: Seq[FeatureSwitch] = app.injector.instanceOf[FeatureSwitchingModule].switches
 
   override def beforeAll(): Unit = {
     startWiremock()
@@ -74,6 +84,7 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
 
   override def beforeEach(): Unit = {
     resetWiremock()
+    featureSwitches.foreach(disable)
     super.beforeEach()
   }
 

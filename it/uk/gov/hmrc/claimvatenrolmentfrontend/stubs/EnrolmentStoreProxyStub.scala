@@ -22,8 +22,12 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.utils.WireMockMethods
 trait EnrolmentStoreProxyStub extends WireMockMethods {
 
   private def getUserIdsUrl(enrolmentKey: String): String = s"/enrolment-store-proxy/enrolment-store/enrolments/$enrolmentKey/users\\?type=principal"
+  private def getUserIdsUrlStub(enrolmentKey: String): String = s"/claim-vat-enrolment/test-only/enrolments/$enrolmentKey/users\\?type=principal"
 
   def stubGetUserIds(vatNumber: String)(status: Int): StubMapping =
     when(method = GET, uri = getUserIdsUrl(s"HMRC-MTD-VAT~VRN~$vatNumber")).thenReturn(status)
+
+  def stubGetUserIdsForStub(vatNumber: String)(status: Int): StubMapping =
+    when(method = GET, uri = getUserIdsUrlStub(s"HMRC-MTD-VAT~VRN~$vatNumber")).thenReturn(status)
 }
 

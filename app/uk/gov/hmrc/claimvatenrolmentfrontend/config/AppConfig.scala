@@ -18,12 +18,14 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.config
 
 import play.api.Configuration
 import play.api.i18n.Lang
+import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.{AllocateEnrolmentStub, FeatureSwitching}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) {
+class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) extends FeatureSwitching {
+
   val welshLanguageSupportEnabled: Boolean = config.getOptional[Boolean]("features.welsh-language-support").getOrElse(false)
 
   val en: String = "en"
@@ -54,12 +56,17 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
 
   lazy val taxEnrolmentsUrl: String = servicesConfig.baseUrl("tax-enrolments") + "/tax-enrolments"
 
-  def allocateEnrolmentUrl(groupId: String, enrolmentKey: String): String = s"$taxEnrolmentsUrl/groups/$groupId/enrolments/$enrolmentKey"
+  def allocateEnrolmentUrl(groupId: String, enrolmentKey: String): String = {
+    val baseUrl = if (isEnabled(AllocateEnrolmentStub)) s"$selfBaseUrl/claim-vat-enrolment/test-only" else taxEnrolmentsUrl
+    baseUrl + s"/groups/$groupId/enrolments/$enrolmentKey"
+  }
 
   lazy val enrolmentStoreProxyUrl: String = servicesConfig.baseUrl("enrolment-store-proxy") + "/enrolment-store-proxy/enrolment-store"
 
-  def queryUsersUrl(vatNumber: String): String =
-    s"$enrolmentStoreProxyUrl/enrolments/HMRC-MTD-VAT~VRN~$vatNumber/users"
+  def queryUserIdStub(vatNumber: String): String = {
+    val baseUrl = if (isEnabled(AllocateEnrolmentStub)) s"$selfBaseUrl/claim-vat-enrolment/test-only" else enrolmentStoreProxyUrl
+    baseUrl + s"/enrolments/HMRC-MTD-VAT~VRN~$vatNumber/users"
+  }
 
 
 }

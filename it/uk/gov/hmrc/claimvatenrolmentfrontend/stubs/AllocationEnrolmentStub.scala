@@ -26,6 +26,7 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.utils.WireMockMethods
 trait AllocationEnrolmentStub extends WireMockMethods {
 
   private def allocateEnrolmentUrl(groupId: String, enrolmentKey: String): String = s"/tax-enrolments/groups/$groupId/enrolments/$enrolmentKey"
+  private def allocateEnrolmentUrlStub(groupId: String, enrolmentKey: String): String = s"/claim-vat-enrolment/test-only/groups/$groupId/enrolments/$enrolmentKey"
 
   def stubAllocateEnrolment(claimVatEnrolmentInfo: VatKnownFacts,
                             credentialId: String,
@@ -68,6 +69,54 @@ trait AllocationEnrolmentStub extends WireMockMethods {
     when(
       method = POST,
       uri = allocateEnrolmentUrl(
+        groupId = groupId,
+        enrolmentKey = enrolmentKey
+      ),
+      body = allocateEnrolmentJsonBody
+    ).thenReturn(status, jsonBody)
+  }
+
+  def stubAllocateEnrolmentForStub(claimVatEnrolmentInfo: VatKnownFacts,
+                            credentialId: String,
+                            groupId: String)(status: Int, jsonBody: JsObject): StubMapping = {
+    val enrolmentKey = s"HMRC-MTD-VAT~VRN~${claimVatEnrolmentInfo.vatNumber}"
+
+    val allocateEnrolmentJsonBody = Json.obj(
+      "userId" -> credentialId,
+      "friendlyName" -> "Making Tax Digital - VAT",
+      "type" -> "principal",
+      "verifiers" -> Json.arr(
+        Json.obj(
+          "key" -> "VATRegistrationDate",
+          "value" ->  claimVatEnrolmentInfo.vatRegistrationDate.format(etmpDateFormat)
+        ),
+        Json.obj(
+          "key" -> "Postcode",
+          "value" -> (claimVatEnrolmentInfo.optPostcode match {
+            case Some(postcode) => postcode.sanitisedPostcode
+            case None => NullValue
+          })
+        ),
+        Json.obj(
+          "key" -> "BoxFiveValue",
+          "value" -> (claimVatEnrolmentInfo.optReturnsInformation match {
+            case Some(returnsInformation) => returnsInformation.boxFive
+            case None => NullValue
+          })
+        ),
+        Json.obj(
+          "key" -> "LastMonthLatestStagger",
+          "value" -> (claimVatEnrolmentInfo.optReturnsInformation match {
+            case Some(returnsInformation) => returnsInformation.lastReturnMonth.getValue.formatted("%02d")
+            case None => NullValue
+          })
+        )
+      )
+    )
+
+    when(
+      method = POST,
+      uri = allocateEnrolmentUrlStub(
         groupId = groupId,
         enrolmentKey = enrolmentKey
       ),

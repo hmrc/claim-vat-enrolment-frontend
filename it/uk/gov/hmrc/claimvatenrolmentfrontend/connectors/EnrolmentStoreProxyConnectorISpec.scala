@@ -19,37 +19,68 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.connectors
 import play.api.http.Status.NO_CONTENT
 import play.api.test.Helpers._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
+import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.{AllocateEnrolmentStub, FeatureSwitching, QueryUserIdStub}
 import uk.gov.hmrc.claimvatenrolmentfrontend.httpparsers.QueryUsersHttpParser.{NoUsersFound, UsersFound}
-import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.EnrolmentStoreProxyStub
+import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.{AllocationEnrolmentStub, EnrolmentStoreProxyStub}
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 
-class EnrolmentStoreProxyConnectorISpec extends ComponentSpecHelper with EnrolmentStoreProxyStub{
+class EnrolmentStoreProxyConnectorISpec extends ComponentSpecHelper with EnrolmentStoreProxyStub with AllocationEnrolmentStub with FeatureSwitching {
 
   private lazy val enrolmentStoreProxyConnector = app.injector.instanceOf[EnrolmentStoreProxyConnector]
 
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
-  "EnrolmentStoreProxyConnector" should {
-    "return EnrolmentSuccess" in {
-      stubGetUserIds(testVatNumber)(OK)
+  "EnrolmentStoreProxyConnector" when {
+    "the stub Allocate Enrolment feature switch and QueryUserIdStub are disable" should {
+      "return EnrolmentSuccess" in {
+        stubGetUserIds(testVatNumber)(OK)
 
-      val result = await(enrolmentStoreProxyConnector.getUserIds(testVatNumber))
+        val result = await(enrolmentStoreProxyConnector.getUserIds(testVatNumber))
 
-      result mustBe UsersFound
+        result mustBe UsersFound
+      }
+      "return noUsersFound" in {
+        stubGetUserIds(testVatNumber)(NO_CONTENT)
+
+        val result = await(enrolmentStoreProxyConnector.getUserIds(testVatNumber))
+
+        result mustBe NoUsersFound
+      }
+      "throw exception" in {
+        stubGetUserIds(testVatNumber)(INTERNAL_SERVER_ERROR)
+
+        intercept[InternalServerException](await(enrolmentStoreProxyConnector.getUserIds(testVatNumber)))
+      }
     }
-    "return noUsersFound" in {
-      stubGetUserIds(testVatNumber)(NO_CONTENT)
+    "the stub Allocate Enrolment feature switch and QueryUserIdStub are enable" should {
+      "return EnrolmentSuccess" in {
+        enable(AllocateEnrolmentStub)
+        enable(QueryUserIdStub)
+        stubGetUserIdsForStub(testVatNumber)(OK)
 
-      val result = await(enrolmentStoreProxyConnector.getUserIds(testVatNumber))
+        val result = await(enrolmentStoreProxyConnector.getUserIds(testVatNumber))
 
-      result mustBe NoUsersFound
+        result mustBe UsersFound
+      }
+      "return noUsersFound" in {
+        enable(AllocateEnrolmentStub)
+        enable(QueryUserIdStub)
+        stubGetUserIdsForStub(testVatNumber)(NO_CONTENT)
+
+        val result = await(enrolmentStoreProxyConnector.getUserIds(testVatNumber))
+
+        result mustBe NoUsersFound
+      }
+      "throw exception" in {
+        enable(AllocateEnrolmentStub)
+        enable(QueryUserIdStub)
+        stubGetUserIdsForStub(testVatNumber)(INTERNAL_SERVER_ERROR)
+
+        intercept[InternalServerException](await(enrolmentStoreProxyConnector.getUserIds(testVatNumber)))
+      }
     }
-    "throw exception" in {
-      stubGetUserIds(testVatNumber)(INTERNAL_SERVER_ERROR)
 
-      intercept[InternalServerException](await(enrolmentStoreProxyConnector.getUserIds(testVatNumber)))
-    }
   }
 
 }

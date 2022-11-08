@@ -17,12 +17,12 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.connectors
 
 
-import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.EnrolmentStoreProxyConnector._
 import uk.gov.hmrc.claimvatenrolmentfrontend.httpparsers.QueryUsersHttpParser.QueryUsersSuccess
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton

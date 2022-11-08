@@ -25,7 +25,7 @@ import javax.inject.Singleton
 @Singleton
 class FeatureSwitchingModule extends Module with FeatureSwitchRegistry {
 
-  val switches = Seq(NewFsStub)
+  val switches = Seq(AllocateEnrolmentStub, QueryUserIdStub)
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
     Seq(
@@ -33,8 +33,13 @@ class FeatureSwitchingModule extends Module with FeatureSwitchRegistry {
     )
   }
 }
-//This will be updated to AllocateEnrolmentStub on SAR-10779
-case object NewFsStub extends FeatureSwitch {
-  override val configName: String = "feature-switch.new-feature-switch"
-  override val displayName: String = "New FS"
+
+case object AllocateEnrolmentStub extends FeatureSwitch {
+  override val configName: String = "feature-switch.allocate-enrolment-stub"
+  override val displayName: String = "Use stub for allocate enrolment call"
+}
+
+case object QueryUserIdStub extends FeatureSwitch {
+  override val configName: String = "feature-switch.query-user-stub"
+  override val displayName: String = "Use stub for query user call"
 }

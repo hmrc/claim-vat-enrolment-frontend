@@ -6,3 +6,7 @@ POST       /feature-switches                           uk.gov.hmrc.claimvatenrol
 GET        /api/feature-switches                       uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.api.controllers.FeatureSwitchApiController.getFeatureSwitches()
 + nocsrf
 POST       /api/feature-switches                       uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.api.controllers.FeatureSwitchApiController.updateFeatureSwitches()
+
+GET       /enrolments/HMRC-MTD-VAT~VRN~:vatNumber/users uk.gov.hmrc.claimvatenrolmentfrontend.testOnly.stubs.controllers.QueryUsersStubController.getUserIds(vatNumber)
++ nocsrf
+POST       /groups/:groupId/enrolments/:enrolmentKey    uk.gov.hmrc.claimvatenrolmentfrontend.testOnly.stubs.controllers.AllocateEnrolmentStubController.stubMatch(groupId, enrolmentKey)

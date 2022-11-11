@@ -11,7 +11,7 @@
 4. [Using the query user Call stub](TestREADME.md#Using-the-query-user-Call-stub)
 
 
-#### GET test-only/feature-switches
+### GET test-only/feature-switches
 
 ---
 Shows all feature switches:
@@ -22,6 +22,8 @@ Shows all feature switches:
  - Use stub for query user call
  
 ### GET /enrolments/HMRC-MTD-VAT~VRN~:vatNumber/users
+
+---
 
 Stub to create an allocating enrollment call. This feature switch will need to be enabled.
 
@@ -57,6 +59,8 @@ Example response body :
 
 ### POST /groups/:groupId/enrolments/:enrolmentKey
 
+---
+
 Stub to create an allocating enrollment call when the call is unsuccessful. This feature switch will need to be enabled.
 
 #### Request:
@@ -76,6 +80,8 @@ No body is required for this request
 
 
 ### Using the Allocated Enrolment Call stub
+
+---
 
 This stub returns different responses based on the VAT Registration Number.
 
@@ -98,6 +104,8 @@ Any other vatNumber will create an enrolment and redirect to Sign Up Complete pa
 | Any other vatNumber                     | ```CREATED```               |
 
 ### Using the query user Call stub
+
+---
 
 This stub returns different responses based on the VAT Registration Number.
 

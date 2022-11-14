@@ -7,12 +7,30 @@ val appName = "claim-vat-enrolment-frontend"
 
 val silencerVersion = "1.7.0"
 
-lazy val scoverageSettings = Seq(
-  ScoverageKeys.coverageExcludedPackages := "<empty>;Reverse.*;config.*;.*(AuthService|BuildInfo|Routes).*",
-  ScoverageKeys.coverageMinimum := 100,
-  ScoverageKeys.coverageFailOnMinimum := false,
-  ScoverageKeys.coverageHighlighting := true
-)
+lazy val scoverageSettings = {
+
+  val exclusionList: List[String] = List(
+    "<empty>",
+    "Reverse.*",
+    "app.*",
+    "config.*",
+    ".*(AuthService|BuildInfo|Routes).*",
+    "testOnly.*",
+    "business.*",
+    "testOnlyDoNotUseInAppConf.*",
+    "uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.api.*",
+    "uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.frontend.*",
+    "uk.gov.hmrc.claimvatenrolmentfrontend.testOnly.*",
+    "uk.gov.hmrc.claimvatenrolmentfrontend.views.html.*"
+  )
+
+  Seq(
+    ScoverageKeys.coverageExcludedPackages := exclusionList.mkString(";"),
+    ScoverageKeys.coverageMinimum := 90,
+    ScoverageKeys.coverageFailOnMinimum := false,
+    ScoverageKeys.coverageHighlighting := true
+  )
+}
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
@@ -40,6 +58,7 @@ lazy val microservice = Project(appName, file("."))
     )
     // ***************
   )
+  .settings(scoverageSettings)
   .settings(publishingSettings: _*)
   .configs(IntegrationTest)
   .settings(DefaultBuildSettings.integrationTestSettings())

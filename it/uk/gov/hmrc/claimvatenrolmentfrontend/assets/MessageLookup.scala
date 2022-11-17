@@ -95,7 +95,7 @@ object MessageLookup {
   object CaptureLastMonthSubmitted {
     val title = "Select the last month of your latest VAT accounting period - Claim VAT Enrolment - GOV.UK"
     val heading = "Select the last month of your latest VAT accounting period"
-    val firstLine = "You can find this by signing into your online VAT account. You can also find it in your latest VAT Return submitted to HMRC."
+    val firstLine = "You can find this in your latest VAT Return submitted to HMRC."
     val panelFirstHeading = "Latest VAT accounting period, example 1"
     val panelFirstText = "You submit your VAT Return quarterly (every three months). In the ‘accounting period’ January to March, the last month in that ‘accounting period’ is March. You must therefore select March."
     val panelSecondHeading = "Latest VAT accounting period, example 2"

@@ -51,9 +51,9 @@ capture_box5_figure.invalid_format.error                    = Nodwch werth hyd a
 # Last Month Submitted Page
 capture-last-month-submitted.title                          = Dewiswch fis diwethaf eich cyfnod cyfrifyddu TAW diweddaraf
 capture-last-month-submitted.heading                        = Dewiswch fis diwethaf eich cyfnod cyfrifyddu TAW diweddaraf
-capture-last-month-submitted.line_1                         = Gallwch ddod o hyd i hyn drwy fewngofnodi i’ch cyfrif TAW ar-lein. Gallwch hefyd ddod o hyd i hyn ar y Ffurflen TAW ddiweddaraf y gwnaethoch ei chyflwyno i CThEM.
+capture-last-month-submitted.line_1                         = Gallwch ddod o hyd i hwn yn eich Ffurflen TAW ddiweddaraf a gyflwynwyd i CThEF.
 capture-last-month-submitted.panel_title_1                  = Cyfnod cyfrifyddu TAW diweddaraf, enghraifft 1
-capture-last-month-submitted.panel_text_1                   = Rydych yn cyflwyno’ch Ffurflen TAW yn chwarterol (bob tri mis). Yn y ’cyfnod cyfrifyddu’ o fis Ionawr i fis Mawrth, y mis diwethaf yn y ’cyfnod cyfrifyddu’ hwnnw yw mis Mawrth. Felly, mae’n rhaid i chi ddewis mis Mawrth.
+capture-last-month-submitted.panel_text_1                   = Rydych yn cyflwyno’ch Ffurflen TAW yn chwarterol (bob tri mis). Yn y ‘cyfnod cyfrifyddu’ o fis Ionawr i fis Mawrth, y mis diwethaf yn y ‘cyfnod cyfrifyddu’ hwnnw yw mis Mawrth. Felly, mae’n rhaid i chi ddewis mis Mawrth.
 capture-last-month-submitted.panel_title_2                  = Cyfnod cyfrifyddu TAW diweddaraf, enghraifft 2
 capture-last-month-submitted.panel_text_2                   = Os ydych chi’n cyflwyno’ch Ffurflen TAW yn fisol, y cyfnod cyfrifyddu diwethaf y gwnaethoch gyflwyno ar ei gyfer oedd mis Ionawr. Mae’n rhaid i chi ddewis mis Ionawr.
 capture-last-month-submitted.hint                           = Dewiswch fis diwethaf eich cyfnod cyfrifyddu TAW diweddaraf.

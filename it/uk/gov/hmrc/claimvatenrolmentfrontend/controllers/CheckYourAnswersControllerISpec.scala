@@ -181,7 +181,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
   }
 
   s"POST /$testJourneyId/check-your-answers-vat" should {
-    "redirect to the continue url when the allocation was successfully created" in {
+    "redirect to SignUpComplete page when the allocation was successfully created" in {
       stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       await(journeyDataRepository.collection.insertOne(
         Json.obj(
@@ -198,7 +198,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
 
       result must have(
         httpStatus(SEE_OTHER),
-        redirectUri(testContinueUrl) // TODO update redirectUri(routes.SignUpCompleteController.signUpComplete(testJourneyId).url)
+        redirectUri(routes.SignUpCompleteController.signUpComplete(testJourneyId).url)
       )
       verifyAudit()
     }

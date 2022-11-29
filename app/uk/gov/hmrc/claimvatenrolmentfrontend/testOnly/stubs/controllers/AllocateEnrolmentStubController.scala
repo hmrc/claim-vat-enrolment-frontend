@@ -27,7 +27,7 @@ import scala.concurrent.Future
 class AllocateEnrolmentStubController @Inject()(controllerComponents: ControllerComponents) extends BackendController(controllerComponents) {
 
   def stubMatch(groupId: String, enrolmentKey: String): Action[JsValue] = Action.async(parse.json) {
-    implicit request =>
+    _ =>
       enrolmentKey match {
         case "HMRC-MTD-VAT~VRN~444444444" => Future.successful(InternalServerError("Error on the Allocate Enrolment call"))
         case "HMRC-MTD-VAT~VRN~333333333" => Future.successful(InternalServerError("Error on the Allocate Enrolment call"))

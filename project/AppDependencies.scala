@@ -4,7 +4,7 @@ import sbt._
 
 object AppDependencies {
 
-  val compile: Seq[ModuleID] = Seq(
+  val compile = Seq(
     "uk.gov.hmrc" %% "bootstrap-frontend-play-28" % "7.6.0",
     "uk.gov.hmrc" %% "play-frontend-hmrc" % "3.28.0-play-28",
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-28"  % "0.73.0",
@@ -23,13 +23,13 @@ object AppDependencies {
     )
   }
 
-  val test: Seq[ModuleID] = Seq(
+  val test = Seq(
     "org.mockito" % "mockito-core" % "3.9.0" % Test,
     "org.scalatestplus" %% "mockito-3-4" % "3.2.8.0" % Test,
     "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.13.4"
   )
 
-  val it: Seq[ModuleID] = Seq(
+  val it = Seq(
     "com.github.tomakehurst" % "wiremock-jre8" % "2.33.2" % IntegrationTest
   )
 

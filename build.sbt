@@ -65,13 +65,13 @@ lazy val microservice = Project(appName, file("."))
   .settings(resolvers += Resolver.jcenterRepo)
   .disablePlugins(JUnitXmlReportPlugin)
 
-Test / Keys.fork := true
-Test / javaOptions += "-Dlogger.resource=logback-test.xml"
-Test / parallelExecution := true
+Keys.fork in Test := true
+javaOptions in Test += "-Dlogger.resource=logback-test.xml"
+parallelExecution in Test := true
 addTestReportOption(Test, "test-reports")
 
-IntegrationTest / Keys.fork := true
-IntegrationTest / unmanagedSourceDirectories := (IntegrationTest / baseDirectory) (base => Seq(base / "it")).value
-IntegrationTest / javaOptions += "-Dlogger.resource=logback-test.xml"
+Keys.fork in IntegrationTest := true
+unmanagedSourceDirectories in IntegrationTest := (baseDirectory in IntegrationTest) (base => Seq(base / "it")).value
+javaOptions in IntegrationTest += "-Dlogger.resource=logback-test.xml"
 addTestReportOption(IntegrationTest, "int-test-reports")
-IntegrationTest / parallelExecution := false
+parallelExecution in IntegrationTest := false

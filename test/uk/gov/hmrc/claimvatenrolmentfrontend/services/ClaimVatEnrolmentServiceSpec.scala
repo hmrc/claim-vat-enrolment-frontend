@@ -69,17 +69,31 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with Matchers with MockJo
       }
     }
 
-
     "return a Left(KnownFactsMismatch)" when {
       "the enrolment cannot be claimed due to invalid known facts" in {
         mockRetrieveJourneyData(testJourneyId, testInternalId)(Future.successful(testFullVatKnownFacts))
         mockAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(Future.successful(InvalidKnownFacts))
+        mockGetUserIds(testVatNumber)(Future.successful(NoUsersFound))
 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
 
         result mustBe Left(KnownFactsMismatch)
         verifyAuditEvent
         auditEventCaptor.getValue.detail mustBe testAuditDetails(testFullVatKnownFacts, isSuccessful = false, Some(InvalidKnownFacts.message))
+      }
+    }
+
+    "return a Left(EnrolmentAlreadyAllocated)" when {
+      "the enrolment cannot be claimed due to invalid known facts but enrolment store proxy returns existing user" in {
+        mockRetrieveJourneyData(testJourneyId, testInternalId)(Future.successful(testFullVatKnownFacts))
+        mockAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(Future.successful(InvalidKnownFacts))
+        mockGetUserIds(testVatNumber)(Future.successful(UsersFound))
+
+        val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
+
+        result mustBe Left(EnrolmentAlreadyAllocated)
+        verifyAuditEvent
+        auditEventCaptor.getValue.detail mustBe testAuditDetails(testFullVatKnownFacts, isSuccessful = false, Some(UsersFound.message))
       }
     }
 

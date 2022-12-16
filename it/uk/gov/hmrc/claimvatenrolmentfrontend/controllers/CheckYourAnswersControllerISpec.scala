@@ -38,7 +38,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
   with AllocationEnrolmentStub
   with EnrolmentStoreProxyStub {
 
-  def extraConfig = Map(
+  def extraConfig: Map[String, String] = Map(
     "auditing.enabled" -> "true",
     "auditing.consumer.baseUri.host" -> mockHost,
     "auditing.consumer.baseUri.port" -> mockPort
@@ -225,7 +225,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
       verifyAudit()
     }
 
-    "redirect to KnownFactsMismatch if the enrolment fails" in {
+    "redirect to KnownFactsMismatch if the enrolment returns BAD_REQUEST and enrolment store proxy ES0 returns NO_CONTENT" in {
       stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       await(journeyDataRepository.collection.insertOne(
         Json.obj(
@@ -236,6 +236,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
       ).toFuture())
       await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
       stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(BAD_REQUEST, Json.obj())
+      stubGetUserIds(testVatNumber)(NO_CONTENT)
       stubAudit
 
       lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
@@ -248,7 +249,31 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
       verifyAudit()
     }
 
-    "redirect to EnrolmentAlreadyAllocated error page when enrolment fails " in {
+    "redirect to EnrolmentAlreadyAllocated if the enrolment returns BAD_REQUEST and enrolment store proxy ES0 returns OK" in {
+      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+      await(journeyDataRepository.collection.insertOne(
+        Json.obj(
+          "_id" -> testJourneyId,
+          "authInternalId" -> testInternalId,
+          "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
+        ) ++ Json.toJsObject(testFullVatKnownFacts)
+      ).toFuture())
+      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(BAD_REQUEST, Json.obj())
+      stubGetUserIds(testVatNumber)(OK)
+      stubAudit
+
+      lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
+
+
+      result must have(
+        httpStatus(SEE_OTHER),
+        redirectUri(errorRoutes.EnrolmentAlreadyAllocatedController.show().url)
+      )
+      verifyAudit()
+    }
+
+    "redirect to EnrolmentAlreadyAllocated error page when enrolment fails and enrolment store proxy ES0 returns OK" in {
       stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       await(journeyDataRepository.collection.insertOne(
         Json.obj(

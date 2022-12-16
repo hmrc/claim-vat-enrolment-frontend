@@ -29,6 +29,7 @@ class AllocateEnrolmentStubController @Inject()(controllerComponents: Controller
   def stubMatch(groupId: String, enrolmentKey: String): Action[JsValue] = Action.async(parse.json) {
     _ =>
       enrolmentKey match {
+        case "HMRC-MTD-VAT~VRN~555555555" => Future.successful(BadRequest)
         case "HMRC-MTD-VAT~VRN~444444444" => Future.successful(InternalServerError("Error on the Allocate Enrolment call"))
         case "HMRC-MTD-VAT~VRN~333333333" => Future.successful(InternalServerError("Error on the Allocate Enrolment call"))
         case "HMRC-MTD-VAT~VRN~222222222" => Future.successful(Conflict(Json.obj("code" -> "MULTIPLE_ENROLMENTS_INVALID")))
@@ -36,5 +37,4 @@ class AllocateEnrolmentStubController @Inject()(controllerComponents: Controller
         case _ => Future.successful(Created)
       }
   }
-
 }

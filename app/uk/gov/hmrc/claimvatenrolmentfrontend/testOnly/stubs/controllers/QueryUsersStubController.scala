@@ -27,8 +27,8 @@ class QueryUsersStubController @Inject()(controllerComponents: ControllerCompone
   def getUserIds(vatNumber: String): Action[AnyContent] = {
     Action {
       vatNumber match {
-        case "333333333" => Ok
-        case "444444444" => NoContent
+        case "333333333" | "111111111" => Ok
+        case "444444444" | "555555555" => NoContent
         case _ => InternalServerError("Error in the QueryUsersStubController")
       }
     }

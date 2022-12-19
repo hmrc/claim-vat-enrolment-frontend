@@ -36,8 +36,11 @@ class LanguageSwitchController @Inject()(
     "https://www.gov.uk/government/organisations/hm-revenue-customs"
 
   override protected def languageMap: Map[String, Lang] = {
-    if (appConfig.welshLanguageSupportEnabled) Map(en -> Lang(en), cy -> Lang(cy))
-    else Map(en -> Lang(en))
+    if (appConfig.welshLanguageSupportEnabled) {
+      Map(en -> Lang(en), cy -> Lang(cy))
+    }
+    else {
+      Map(en -> Lang(en))
+    }
   }
-
 }

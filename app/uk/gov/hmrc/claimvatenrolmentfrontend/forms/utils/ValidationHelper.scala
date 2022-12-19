@@ -21,13 +21,14 @@ import play.api.data.validation.{Invalid, Valid, ValidationResult}
 object ValidationHelper {
 
   def validate(constraint: Boolean, errMsg: String): ValidationResult = {
-    if (constraint)
+    if (constraint) {
       Invalid(errMsg)
-    else Valid
+    } else {
+      Valid
+    }
   }
 
   def validateNot(constraint: Boolean, errMsg: String): ValidationResult = {
     validate(!constraint, errMsg)
   }
-
 }

@@ -34,6 +34,59 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
                                          allocateEnrolmentService: AllocateEnrolmentService,
                                          journeyService: JourneyService) {
 
+  def claimVatEnrolment(credentialId: String,
+                        groupId: String,
+                        internalId: String,
+                        journeyId: String
+                       )(implicit hc: HeaderCarrier,
+                         request: Request[_],
+                         ec: ExecutionContext): Future[ClaimVatEnrolmentResponse] = {
+    journeyService.retrieveJourneyData(journeyId, internalId).flatMap {
+      journeyData =>
+        allocateEnrolmentService.allocateEnrolment(journeyData, credentialId, groupId).flatMap {
+          case EnrolmentSuccess =>
+            sendAuditEvent(journeyData, isSuccessful = true)
+            journeyService.retrieveJourneyConfig(journeyId, internalId).map {
+              journeyConfig =>
+                Right(journeyConfig.continueUrl)
+            }
+          case MultipleEnrolmentsInvalid =>
+            sendAuditEvent(journeyData, isSuccessful = false, Some(MultipleEnrolmentsInvalid.message))
+            Future.successful(Left(CannotAssignMultipleMtdvatEnrolments))
+          case InvalidKnownFacts =>
+            callEnrolmentStoreProxy(journeyData)
+          case EnrolmentFailure(_) =>
+            callEnrolmentStoreProxy(journeyData, enrolmentFailure = true)
+        }
+    }
+  }
+
+  private def callEnrolmentStoreProxy(journeyData: VatKnownFacts,
+                                      enrolmentFailure: Boolean = false
+                                     )(implicit hc: HeaderCarrier,
+                                      request: Request[_],
+                                      ec: ExecutionContext): Future[ClaimVatEnrolmentResponse] = {
+    allocateEnrolmentService.getUserIds(journeyData.vatNumber).map {
+      case NoUsersFound if enrolmentFailure =>
+        sendAuditEvent(journeyData, isSuccessful = false, Some(NoUsersFound.message))
+        throw new InternalServerException(NoUsersFound.message)
+      case NoUsersFound =>
+        sendAuditEvent(journeyData, isSuccessful = false, Some(InvalidKnownFacts.message))
+        Left(KnownFactsMismatch)
+      case UsersFound =>
+        sendAuditEvent(journeyData, isSuccessful = false, Some(UsersFound.message))
+        Left(EnrolmentAlreadyAllocated)
+    }
+  }
+
+  private def sendAuditEvent(vatKnownFacts: VatKnownFacts,
+                             isSuccessful: Boolean,
+                             optFailureMessage: Option[String] = None
+                            )(implicit hc: HeaderCarrier,
+                              request: Request[_],
+                              ec: ExecutionContext): Future[AuditResult] =
+    auditConnector.sendEvent(buildClaimVatEnrolmentAuditEvent(vatKnownFacts, isSuccessful, optFailureMessage))
+
   private def buildClaimVatEnrolmentAuditEvent(vatKnownFacts: VatKnownFacts,
                                                isSuccessful: Boolean,
                                                optFailureMessage: Option[String]
@@ -62,53 +115,11 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
     )
 
   }
-
-  private def sendAuditEvent(vatKnownFacts: VatKnownFacts,
-                             isSuccessful: Boolean,
-                             optFailureMessage: Option[String] = None
-                            )(implicit hc: HeaderCarrier,
-                              request: Request[_],
-                              ec: ExecutionContext): Future[AuditResult] =
-    auditConnector.sendEvent(buildClaimVatEnrolmentAuditEvent(vatKnownFacts, isSuccessful, optFailureMessage))
-
-  def claimVatEnrolment(credentialId: String,
-                        groupId: String,
-                        internalId: String,
-                        journeyId: String
-                       )(implicit hc: HeaderCarrier,
-                         request: Request[_],
-                         ec: ExecutionContext): Future[ClaimVatEnrolmentResponse] = {
-    journeyService.retrieveJourneyData(journeyId, internalId).flatMap {
-      journeyData =>
-        allocateEnrolmentService.allocateEnrolment(journeyData, credentialId, groupId).flatMap {
-          case EnrolmentSuccess =>
-            sendAuditEvent(journeyData, isSuccessful = true)
-            journeyService.retrieveJourneyConfig(journeyId, internalId).map {
-              journeyConfig =>
-                Right(journeyConfig.continueUrl)
-            }
-          case MultipleEnrolmentsInvalid =>
-            sendAuditEvent(journeyData, isSuccessful = false, Some(MultipleEnrolmentsInvalid.message))
-            Future.successful(Left(CannotAssignMultipleMtdvatEnrolments))
-          case InvalidKnownFacts =>
-            sendAuditEvent(journeyData, isSuccessful = false, Some(InvalidKnownFacts.message))
-            Future.successful(Left(KnownFactsMismatch))
-          case EnrolmentFailure(_) =>
-            allocateEnrolmentService.getUserIds(journeyData.vatNumber).map {
-              case UsersFound =>
-                sendAuditEvent(journeyData, isSuccessful = false, Some(UsersFound.message))
-                Left(EnrolmentAlreadyAllocated)
-              case NoUsersFound =>
-                sendAuditEvent(journeyData, isSuccessful = false, Some(NoUsersFound.message))
-                throw new InternalServerException(NoUsersFound.message)
-            }
-        }
-    }
-  }
-
 }
 
 object ClaimVatEnrolmentService {
+
+  type ClaimVatEnrolmentResponse = Either[ClaimVatEnrolmentFailure, String]
 
   sealed trait ClaimVatEnrolmentFailure
 
@@ -117,7 +128,5 @@ object ClaimVatEnrolmentService {
   case object CannotAssignMultipleMtdvatEnrolments extends ClaimVatEnrolmentFailure
 
   case object KnownFactsMismatch extends ClaimVatEnrolmentFailure
-
-  type ClaimVatEnrolmentResponse = Either[ClaimVatEnrolmentFailure, String]
 
 }

@@ -54,29 +54,27 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
             sendAuditEvent(journeyData, isSuccessful = false, Some(MultipleEnrolmentsInvalid.message))
             Future.successful(Left(CannotAssignMultipleMtdvatEnrolments))
           case InvalidKnownFacts =>
-            callEnrolmentStoreProxy(journeyData, UsersFound.message, InvalidKnownFacts.message)
+            callEnrolmentStoreProxy(journeyData)
           case EnrolmentFailure(_) =>
-            callEnrolmentStoreProxy(journeyData, UsersFound.message, NoUsersFound.message, enrolmentFailure = true)
+            callEnrolmentStoreProxy(journeyData, enrolmentFailure = true)
         }
     }
   }
 
   private def callEnrolmentStoreProxy(journeyData: VatKnownFacts,
-                                      usersFoundMessage: String,
-                                      noUsersFoundMessage: String,
                                       enrolmentFailure: Boolean = false
                                      )(implicit hc: HeaderCarrier,
                                       request: Request[_],
                                       ec: ExecutionContext): Future[ClaimVatEnrolmentResponse] = {
     allocateEnrolmentService.getUserIds(journeyData.vatNumber).map {
       case NoUsersFound if enrolmentFailure =>
-        sendAuditEvent(journeyData, isSuccessful = false, Some(noUsersFoundMessage))
+        sendAuditEvent(journeyData, isSuccessful = false, Some(NoUsersFound.message))
         throw new InternalServerException(NoUsersFound.message)
       case NoUsersFound =>
-        sendAuditEvent(journeyData, isSuccessful = false, Some(noUsersFoundMessage))
+        sendAuditEvent(journeyData, isSuccessful = false, Some(InvalidKnownFacts.message))
         Left(KnownFactsMismatch)
       case UsersFound =>
-        sendAuditEvent(journeyData, isSuccessful = false, Some(usersFoundMessage))
+        sendAuditEvent(journeyData, isSuccessful = false, Some(UsersFound.message))
         Left(EnrolmentAlreadyAllocated)
     }
   }

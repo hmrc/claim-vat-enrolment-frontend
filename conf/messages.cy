@@ -1,5 +1,5 @@
 app.govuk                                                   = GOV.UK/CYMRAEG
-app.service_name                                            = Ymrestru ar gyfer Hawlio TAW
+service.name                                                = Ymrestru ar gyfer Hawlio TAW
 app.title                                                   = Ymrestru ar gyfer Hawlio TAW
 app.title.error_prefix                                      = Gwall:
 app.common.errorSummaryLabel                                = Mae problem wedi codi

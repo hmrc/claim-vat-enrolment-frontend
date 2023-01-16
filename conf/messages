@@ -1,5 +1,5 @@
 app.govuk                                                    = GOV.UK
-app.service_name                                             = Claim VAT Enrolment
+service.name                                                 = Claim VAT Enrolment
 app.title                                                    = Claim VAT Enrolment
 app.title.error_prefix                                       = Error:
 app.common.errorSummaryLabel                                 = There is a problem

@@ -27,8 +27,7 @@ import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CaptureBusinessPostcodeController @Inject()(mcc: MessagesControllerComponents,
@@ -36,7 +35,8 @@ class CaptureBusinessPostcodeController @Inject()(mcc: MessagesControllerCompone
                                                   storeBusinessPostcodeService: StoreBusinessPostcodeService,
                                                   journeyService: JourneyService,
                                                   val authConnector: AuthConnector
-                                                 )(implicit val config: AppConfig) extends FrontendController(mcc) with AuthorisedFunctions {
+                                                 )(implicit val config: AppConfig,
+                                                   ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions {
 
   def show(journeyId: String): Action[AnyContent] = Action.async {
     implicit request =>

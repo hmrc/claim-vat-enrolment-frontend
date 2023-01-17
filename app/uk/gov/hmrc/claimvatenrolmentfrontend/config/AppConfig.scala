@@ -53,6 +53,7 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   lazy val btaBaseUrl: String = servicesConfig.getString("microservice.services.business-account.url") + "/business-account"
 
   lazy val businessTaxAccountUrl = "/tax-and-scheme-management/services"
+  lazy val accountRecoveryUrl = "https://www.access.service.gov.uk/account-recovery/forgot-userid-password/check-your-emails"
 
   lazy val taxEnrolmentsUrl: String = servicesConfig.baseUrl("tax-enrolments") + "/tax-enrolments"
 

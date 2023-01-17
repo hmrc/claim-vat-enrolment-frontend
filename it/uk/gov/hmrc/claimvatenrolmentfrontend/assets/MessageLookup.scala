@@ -161,7 +161,7 @@ object MessageLookup {
     val link = "find or recover your account"
     val line_2 = s"If you have lost your details, $link"
     val button_text = "Go back to your business tax account"
-    val link_url = "/tax-and-scheme-management/services"
+    val link_url = "https://www.access.service.gov.uk/account-recovery/forgot-userid-password/check-your-emails"
   }
 
   object SignUpCompleteClient {

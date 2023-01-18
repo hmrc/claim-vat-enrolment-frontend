@@ -29,7 +29,7 @@ object ViewUtils {
   }
 
   def titleNoForm(title: String, section: Option[String] = None, titleMessageArgs: Seq[String] = Seq())(implicit messages: Messages): String =
-    s"${messages(title, titleMessageArgs:_*)} - ${section.fold("")(messages(_) + " - ")}${messages("app.service_name")} - ${messages("app.govuk")}"
+    s"${messages(title, titleMessageArgs:_*)} - ${section.fold("")(messages(_) + " - ")}${messages("service.name")} - ${messages("app.govuk")}"
 
   def errorPrefix(form: Form[_])(implicit messages: Messages): String = {
     if (form.hasErrors || form.hasGlobalErrors) messages("app.title.error_prefix") else ""

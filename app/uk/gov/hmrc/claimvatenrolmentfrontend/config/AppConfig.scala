@@ -45,7 +45,6 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
 
   val contactFormServiceIdentifier = "cve"
   lazy val contactFrontendUrl: String = servicesConfig.getString("microservice.services.contact-frontend.url")
-  lazy val reportAProblemNonJSUrl = s"$contactFrontendUrl/contact/problem_reports_nonjs?service=$contactFormServiceIdentifier"
   lazy val betaFeedbackUrl = s"$contactFrontendUrl/contact/beta-feedback?service=$contactFormServiceIdentifier"
 
   lazy val businessTaxAccountAddVatUrl = "/business-account/add-tax/vat/what-is-your-vat-number"

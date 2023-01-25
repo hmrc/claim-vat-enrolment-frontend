@@ -47,9 +47,9 @@ object VatRegistrationDateForm {
       if (dateExists) {
         val inputDate = Try(
           for {
-            day <- data.get(dayKey).map(Integer.parseInt)
-            month <- data.get(monthKey).map(Integer.parseInt)
-            year <- data.get(yearKey).map(Integer.parseInt).filter(_ > 1900)
+            day <- data.get(dayKey).map(_.trim).map(Integer.parseInt)
+            month <- data.get(monthKey).map(_.trim).map(Integer.parseInt)
+            year <- data.get(yearKey).map(_.trim).map(Integer.parseInt).filter(_ > 1900)
           } yield LocalDate.of(year, month, day)
         ).getOrElse(None)
 

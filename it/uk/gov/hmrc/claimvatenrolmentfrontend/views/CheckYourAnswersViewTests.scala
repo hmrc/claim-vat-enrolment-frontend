@@ -19,7 +19,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.views
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import play.api.libs.ws.WSResponse
-import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.{Base, BetaBanner, Header, CheckYourAnswers => messages}
+import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.{Base, Header, CheckYourAnswers => messages}
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.controllers.routes
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.{ComponentSpecHelper, ViewSpecHelper}
@@ -37,9 +37,6 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
 
     "have a sign out link in the header" in {
       doc.getSignOutText mustBe Header.signOut
-    }
-    "have the correct beta banner" in {
-      doc.getBanner.text mustBe BetaBanner.title
     }
 
     "have the correct title" in {
@@ -122,9 +119,6 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
     "have a sign out link in the header" in {
       doc.getSignOutText mustBe Header.signOut
     }
-    "have the correct beta banner" in {
-      doc.getBanner.text mustBe BetaBanner.title
-    }
 
     "have the correct title" in {
       doc.title mustBe messages.title
@@ -197,9 +191,6 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
     "have a sign out link in the header" in {
       doc.getSignOutText mustBe Header.signOut
     }
-    "have the correct beta banner" in {
-      doc.getBanner.text mustBe BetaBanner.title
-    }
 
     "have the correct title" in {
       doc.title mustBe messages.title
@@ -262,9 +253,6 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
 
     "have a sign out link in the header" in {
       doc.getSignOutText mustBe Header.signOut
-    }
-    "have the correct beta banner" in {
-      doc.getBanner.text mustBe BetaBanner.title
     }
 
     "have the correct title" in {

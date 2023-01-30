@@ -19,7 +19,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.views
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import play.api.libs.ws.WSResponse
-import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.{Base, BetaBanner, Header, SignUpCompleteClient => messages}
+import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.{Base, Header, SignUpCompleteClient => messages}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.{ComponentSpecHelper, ViewSpecHelper}
 
@@ -42,16 +42,12 @@ trait SignUpCompleteViewTests extends ViewSpecHelper {
       doc.getSignOutText mustBe Header.signOut
     }
 
-    "have the correct beta banner" in {
-      doc.getBanner.text mustBe BetaBanner.title
-    }
-
     "have the correct heading" in {
       doc.getH1Elements.first.text mustBe messages.heading
     }
 
     "have the correct text" in {
-      doc.getParagraphs.get(2).text mustBe messages.line_1
+      doc.getParagraphs.get(1).text mustBe messages.line_1
     }
 
     "have the correct first bullet point" in {

@@ -19,7 +19,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.views.errorPages
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import play.api.libs.ws.WSResponse
-import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.{BetaBanner, Header, EnrolmentAlreadyAllocatedError => messages}
+import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.{Header, EnrolmentAlreadyAllocatedError => messages}
 import uk.gov.hmrc.claimvatenrolmentfrontend.controllers.routes
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.{ComponentSpecHelper, ViewSpecHelper}
 
@@ -40,16 +40,12 @@ trait EnrolmentAlreadyAllocatedErrorViewTest extends ViewSpecHelper {
       doc.getSignOutText mustBe Header.signOut
     }
 
-    "have the correct beta banner" in {
-      doc.getBanner.text mustBe BetaBanner.title
-    }
-
     "have the correct heading" in {
       doc.getH1Elements.first.text mustBe messages.heading
     }
 
     "have the correct text" in {
-      doc.getParagraphs.get(2).text mustBe messages.line_1
+      doc.getParagraphs.get(1).text mustBe messages.line_1
     }
 
     "have the correct link" in {

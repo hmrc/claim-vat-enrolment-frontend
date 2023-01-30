@@ -20,7 +20,7 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import play.api.libs.ws.WSResponse
-import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.{Base, BetaBanner, Header, CaptureVatRegistrationDate => messages}
+import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.{Base, Header, CaptureVatRegistrationDate => messages}
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.{ComponentSpecHelper, ViewSpecHelper}
 
 trait CaptureVatRegistrationDateViewTests extends ViewSpecHelper {
@@ -32,9 +32,6 @@ trait CaptureVatRegistrationDateViewTests extends ViewSpecHelper {
 
     "have a sign out link in the header" in {
       doc.getSignOutText mustBe Header.signOut
-    }
-    "have the correct beta banner" in {
-      doc.getBanner.text mustBe BetaBanner.title
     }
 
     "have a view with the correct title" in {

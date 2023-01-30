@@ -20,7 +20,7 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import play.api.libs.ws.WSResponse
-import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.{Base, BetaBanner, Header, CaptureBox5Figure => messages}
+import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.{Base, Header, CaptureBox5Figure => messages}
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.{ComponentSpecHelper, ViewSpecHelper}
 
 trait CaptureBox5FigureViewTests extends ViewSpecHelper {
@@ -33,9 +33,6 @@ trait CaptureBox5FigureViewTests extends ViewSpecHelper {
     "have a sign out link in the header" in {
       doc.getSignOutText mustBe Header.signOut
     }
-    "have the correct beta banner" in {
-      doc.getBanner.text mustBe BetaBanner.title
-    }
 
     "have a view with the correct title" in {
       doc.title mustBe messages.title
@@ -46,11 +43,11 @@ trait CaptureBox5FigureViewTests extends ViewSpecHelper {
     }
 
     "have the correct text" in {
-      doc.getParagraphs.get(2).text mustBe messages.line_1
+      doc.getParagraphs.get(1).text mustBe messages.line_1
     }
 
     "have the correct paragraph2" in {
-      doc.getParagraphs.get(3).text mustBe messages.line_2
+      doc.getParagraphs.get(2).text mustBe messages.line_2
     }
 
     "have a continue button" in {

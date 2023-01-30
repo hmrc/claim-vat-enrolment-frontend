@@ -35,16 +35,12 @@ trait UnmatchedUserErrorViewTest extends ViewSpecHelper {
       doc.title mustBe messages.title
     }
 
-    "have the correct beta banner" in {
-      doc.getBanner.text mustBe BetaBanner.title
-    }
-
     "have the correct heading" in {
       doc.getH1Elements.first.text mustBe messages.heading
     }
 
     "have the correct text" in {
-      doc.getParagraphs.get(2).text mustBe messages.line_1
+      doc.getParagraphs.get(1).text mustBe messages.line_1
     }
 
     "have the correct link" in {

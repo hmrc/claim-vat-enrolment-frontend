@@ -57,5 +57,5 @@
     isWelshTranslationAvailable = appConfig.welshLanguageSupportEnabled,
     backLink = if (showBackLink) Some(BackLink.mimicsBrowserBackButtonViaJavaScript) else None,
     displayHmrcBanner = true,
-    phaseBanner = Some(standardBetaBanner(url = appConfig.betaFeedbackUrl))
+    phaseBanner = None
 )(content)

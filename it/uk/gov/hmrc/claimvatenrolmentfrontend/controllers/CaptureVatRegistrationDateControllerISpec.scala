@@ -38,14 +38,14 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
     }
     testCaptureVatRegistrationDateViewTests(result)
 
-    "return NOT_FOUND" when {
+    "return OK" when {
       "the internal Ids do not match" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         await(insertJourneyConfig(testJourneyId, testContinueUrl, "testInternalId"))
 
         lazy val result = get(s"/$testJourneyId/vat-registration-date")
 
-        result.status mustBe NOT_FOUND
+        result.status mustBe BAD_REQUEST
       }
 
       "the journey Id has no internal Id stored" in {
@@ -59,7 +59,17 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
 
         lazy val result = get(s"/$testJourneyId/vat-registration-date")
 
-        result.status mustBe NOT_FOUND
+        result.status mustBe BAD_REQUEST
+      }
+    }
+
+    "return 500" when {
+      "there is no auth id" in {
+        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+        stubAuth(OK, successfulAuthResponse(None))
+        lazy val result = get(s"/$testJourneyId/vat-registration-date")
+
+        result.status mustBe INTERNAL_SERVER_ERROR
       }
     }
   }
@@ -165,6 +175,19 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
     "raise an internal server exception" when {
       "the journey data is missing" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        lazy val result = post(s"/$testJourneyId/vat-registration-date")(
+          "date.day" -> "1",
+          "date.month" -> "1",
+          "date.year" -> "2020"
+        )
+
+        result.status mustBe INTERNAL_SERVER_ERROR
+      }
+    }
+    "raise an internal server exception" when {
+      "the auh id is missing" in {
+        stubAuth(OK, successfulAuthResponse(None))
 
         lazy val result = post(s"/$testJourneyId/vat-registration-date")(
           "date.day" -> "1",

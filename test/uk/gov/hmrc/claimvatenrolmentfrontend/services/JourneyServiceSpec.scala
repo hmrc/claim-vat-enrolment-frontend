@@ -17,14 +17,16 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
 import org.mockito.Mockito.when
+import org.mongodb.scala.result.InsertOneResult
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.mvc.Request
+import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import org.mongodb.scala.result.InsertOneResult
 import uk.gov.hmrc.claimvatenrolmentfrontend.helpers.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.JourneyConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.mocks.{MockJourneyConfigRepository, MockJourneyDataRepository}
-import uk.gov.hmrc.http.{HeaderCarrier, NotFoundException}
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -32,6 +34,8 @@ import scala.concurrent.Future
 class JourneyServiceSpec extends AnyWordSpec with Matchers with MockJourneyConfigRepository with MockJourneyDataRepository {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
+
+  implicit val request: Request[_] = FakeRequest()
 
   val mockJourneyIdGenerationService: JourneyIdGenerationService = mock[JourneyIdGenerationService]
 
@@ -58,19 +62,18 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockJourneyConfi
     "return the Journey Config" in {
       mockRetrieveJourneyConfig(testJourneyId, testInternalId)(Future.successful(Some(testJourneyConfig)))
 
-      val result = await(TestService.retrieveJourneyConfig(testJourneyId, testInternalId))
+      val result = await(TestService.retrieveJourneyConfig(testJourneyId, testInternalId).map(_.get))
 
       result mustBe testJourneyConfig
       verifyRetrieveJourneyConfig(testJourneyId, testInternalId)
     }
 
-    "throw an Internal Server Exception" when {
+    "return None" when {
       "the journey config does not exist in the database" in {
         mockRetrieveJourneyConfig(testJourneyId, testInternalId)(Future.successful(None))
 
-        intercept[NotFoundException] {
-          await(TestService.retrieveJourneyConfig(testJourneyId, testInternalId))
-        }
+          await(TestService.retrieveJourneyConfig(testJourneyId, testInternalId)) mustBe None
+
         verifyRetrieveJourneyConfig(testJourneyId, testInternalId)
       }
     }
@@ -78,7 +81,7 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockJourneyConfi
 
   "retrieveJourneyData" should {
     "return the full Journey Data" in {
-      mockGetJourneyData(testJourneyId, testInternalId)(Future.successful(Some(testFullVatKnownFacts)))
+      mockGetJourneyData(testJourneyId, testInternalId)(Future.successful(testFullVatKnownFacts))
 
       val result = await(TestService.retrieveJourneyData(testJourneyId, testInternalId))
 
@@ -86,14 +89,14 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockJourneyConfi
       verifyGetJourneyData(testJourneyId, testInternalId)
     }
 
-    "throw a Not Found Exception" when {
+    "return None" when {
       "the journey data does not exist in the database" in {
         mockGetJourneyData(testJourneyId, testInternalId)(Future.successful(None))
 
-        intercept[NotFoundException] {
-          await(TestService.retrieveJourneyData(testJourneyId, testInternalId))
+
+          await(TestService.retrieveJourneyData(testJourneyId, testInternalId)) mustBe None
           verifyGetJourneyData(testJourneyId, testInternalId)
-        }
+
       }
     }
   }

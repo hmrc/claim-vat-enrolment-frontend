@@ -42,13 +42,13 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
                          request: Request[_],
                          ec: ExecutionContext): Future[ClaimVatEnrolmentResponse] = {
     journeyService.retrieveJourneyData(journeyId, internalId).flatMap {
-      journeyData =>
+      case Some(journeyData) =>
         allocateEnrolmentService.allocateEnrolment(journeyData, credentialId, groupId).flatMap {
           case EnrolmentSuccess =>
             sendAuditEvent(journeyData, isSuccessful = true)
             journeyService.retrieveJourneyConfig(journeyId, internalId).map {
-              journeyConfig =>
-                Right(journeyConfig.continueUrl)
+              case Some(journeyConfig) => Right(journeyConfig.continueUrl)
+              case None => Left(JourneyConfigFailure)
             }
           case MultipleEnrolmentsInvalid =>
             sendAuditEvent(journeyData, isSuccessful = false, Some(MultipleEnrolmentsInvalid.message))
@@ -58,6 +58,7 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
           case EnrolmentFailure(_) =>
             callEnrolmentStoreProxy(journeyData, enrolmentFailure = true)
         }
+      case None => Future.successful(Left(JourneyDataFailure))
     }
   }
 
@@ -128,5 +129,9 @@ object ClaimVatEnrolmentService {
   case object CannotAssignMultipleMtdvatEnrolments extends ClaimVatEnrolmentFailure
 
   case object KnownFactsMismatch extends ClaimVatEnrolmentFailure
+
+  case object JourneyConfigFailure extends ClaimVatEnrolmentFailure
+
+  case object JourneyDataFailure extends ClaimVatEnrolmentFailure
 
 }

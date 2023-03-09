@@ -174,8 +174,18 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
         stubAudit
         get(s"/$testJourneyId/check-your-answers-vat")
       }
-      "return a NOT_FOUND" in {
-        result.status mustBe NOT_FOUND
+      "return a BAD_REQUEST" in {
+        result.status mustBe BAD_REQUEST
+      }
+    }
+
+    "return 500" when {
+      "there is no auth id" in {
+        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+        stubAuth(OK, successfulAuthResponse(None))
+        lazy val result = get(s"/$testJourneyId/check-your-answers-vat")
+
+        result.status mustBe INTERNAL_SERVER_ERROR
       }
     }
   }
@@ -316,6 +326,44 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
         httpStatus(INTERNAL_SERVER_ERROR)
       )
       verifyAudit()
+    }
+
+
+    "throw an exception when there is no journeyData" in {
+      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+      await(journeyDataRepository.collection.insertOne(
+        Json.obj(
+          "_id" -> "some fake journey id",
+          "authInternalId" -> testInternalId,
+          "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
+        ) ++ Json.toJsObject(testFullVatKnownFacts)
+      ).toFuture())
+      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(BAD_REQUEST, Json.obj())
+      stubGetUserIds(testVatNumber)(NO_CONTENT)
+      stubAudit
+
+      lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
+
+      result.status mustBe BAD_REQUEST
+    }
+
+    "throw an exception when there is no journeyConfig" in {
+      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+      await(journeyDataRepository.collection.insertOne(
+        Json.obj(
+          "_id" -> testJourneyId,
+          "authInternalId" -> testInternalId,
+          "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
+        ) ++ Json.toJsObject(testFullVatKnownFacts)
+      ).toFuture())
+
+      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(CREATED, Json.obj())
+      lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
+
+      result must have(
+        httpStatus(BAD_REQUEST),
+      )
     }
 
 

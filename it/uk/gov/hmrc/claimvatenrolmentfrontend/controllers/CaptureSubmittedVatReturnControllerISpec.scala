@@ -41,14 +41,14 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
 
     testCaptureSubmittedVatReturnViewTests(result)
 
-    "return NOT_FOUND" when {
+    "return OK" when {
       "the internal Ids do not match" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         await(insertJourneyConfig(testJourneyId, testContinueUrl, "testInternalId"))
 
         lazy val result = get(s"/$testJourneyId/submitted-vat-return")
 
-        result.status mustBe NOT_FOUND
+        result.status mustBe BAD_REQUEST
       }
 
       "the journey Id has no internal Id stored" in {
@@ -62,7 +62,16 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
 
         lazy val result = get(s"/$testJourneyId/submitted-vat-return")
 
-        result.status mustBe NOT_FOUND
+        result.status mustBe BAD_REQUEST
+      }
+    }
+    "return 500" when {
+      "there is no auth id" in {
+        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+        stubAuth(OK, successfulAuthResponse(None))
+        lazy val result = get(s"/$testJourneyId/submitted-vat-return")
+
+        result.status mustBe INTERNAL_SERVER_ERROR
       }
     }
   }
@@ -126,6 +135,15 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
     "raise an internal server error" when {
       "the journey data is missing" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "yes")
+
+        result.status mustBe INTERNAL_SERVER_ERROR
+      }
+    }
+    "raise an internal server error" when {
+      "the auth id is missing" in {
+        stubAuth(OK, successfulAuthResponse(None))
 
         lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "yes")
 

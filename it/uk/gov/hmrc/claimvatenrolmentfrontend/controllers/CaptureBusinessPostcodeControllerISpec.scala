@@ -41,14 +41,14 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
 
     testCaptureBusinessPostcodeViewTests(result)
 
-    "return NOT_FOUND" when {
+    "return OK" when {
       "the internal Ids do not match" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         await(insertJourneyConfig(testJourneyId, testContinueUrl, "testInternalId"))
 
         lazy val result = get(s"/$testJourneyId/business-postcode")
 
-        result.status mustBe NOT_FOUND
+        result.status mustBe BAD_REQUEST
       }
       "the journey Id has no internal Id stored" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
@@ -61,9 +61,20 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
 
         lazy val result = get(s"/$testJourneyId/business-postcode")
 
-        result.status mustBe NOT_FOUND
+        result.status mustBe BAD_REQUEST
       }
     }
+
+    "return 500" when {
+      "there is no auth id" in {
+        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+        stubAuth(OK, successfulAuthResponse(None))
+        lazy val result = get(s"/$testJourneyId/business-postcode")
+
+        result.status mustBe INTERNAL_SERVER_ERROR
+      }
+    }
+
   }
 
   s"POST /$testJourneyId/business-postcode" should {
@@ -129,6 +140,18 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
       }
 
     }
+
+    "raise an internal server exception" when {
+      "the auth id is missing" in {
+        lazy val result = {
+          stubAuth(OK, successfulAuthResponse(None))
+          post(s"/$testJourneyId/business-postcode")("business_postcode" -> "ZZ1 1ZZ")
+        }
+
+        result.status mustBe INTERNAL_SERVER_ERROR
+      }
+
+    }
   }
 
   "clicking the skip postcode link (GET /no-business-postcode)" should {
@@ -170,6 +193,16 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
     "raise an exception" when {
       "the journey data is missing" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        lazy val result = get(s"/$testJourneyId/no-business-postcode")
+
+        result.status mustBe INTERNAL_SERVER_ERROR
+      }
+    }
+
+    "raise an exception" when {
+      "the auth id is missing" in {
+        stubAuth(OK, successfulAuthResponse(None))
 
         lazy val result = get(s"/$testJourneyId/no-business-postcode")
 

@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
+import play.api.mvc.Request
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, VatKnownFacts}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{Box5FigureKey, LastMonthSubmittedKey, PostcodeKey}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.{JourneyConfigRepository, JourneyDataRepository}
-import uk.gov.hmrc.http.NotFoundException
+import utils.LoggingUtil
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -28,7 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class JourneyService @Inject()(journeyConfigRepository: JourneyConfigRepository,
                                journeyDataRepository: JourneyDataRepository,
                                journeyIdGenerationService: JourneyIdGenerationService
-                              )(implicit ec: ExecutionContext) {
+                              )(implicit ec: ExecutionContext) extends LoggingUtil{
 
   def createJourney(journeyConfig: JourneyConfig, vatNumber: String, authInternalId: String): Future[String] = {
     val id = journeyIdGenerationService.generateJourneyId()
@@ -38,20 +39,24 @@ class JourneyService @Inject()(journeyConfigRepository: JourneyConfigRepository,
     } yield id
   }
 
-  def retrieveJourneyConfig(journeyId: String, authInternalId: String): Future[JourneyConfig] =
+  def retrieveJourneyConfig(journeyId: String, authInternalId: String)(implicit request: Request[_]): Future[Option[JourneyConfig]] =
     journeyConfigRepository.retrieveJourneyConfig(journeyId, authInternalId).map {
       case Some(journeyConfig) =>
-        journeyConfig
+        infoLog(s"[JourneyService][retrieveJourneyConfig] - successfully retrieved the journey config for journey ID $journeyId")
+        Some(journeyConfig)
       case None =>
-        throw new NotFoundException(s"Journey data was not found for journey ID $journeyId")
+        errorLog(s"[JourneyService][retrieveJourneyConfig] - Journey data was not found for journey ID $journeyId")
+        None
     }
 
-  def retrieveJourneyData(journeyId: String, authInternalId: String): Future[VatKnownFacts] = {
+  def retrieveJourneyData(journeyId: String, authInternalId: String)(implicit request: Request[_]): Future[Option[VatKnownFacts]] = {
       journeyDataRepository.getJourneyData(journeyId, authInternalId).map {
         case Some(journeyData) =>
-          journeyData
+          infoLog(s"[JourneyService][retrieveJourneyData] - successfully retrieved the journey data for journey ID $journeyId")
+          Some(journeyData)
         case None =>
-          throw new NotFoundException(s"Journey data was not found for journey ID $journeyId")
+          errorLog(s"[JourneyService][retrieveJourneyData] - Journey data was not found for journey ID $journeyId")
+          None
       }
   }
 

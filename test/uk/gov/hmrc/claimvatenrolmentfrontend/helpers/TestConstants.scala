@@ -35,8 +35,8 @@ object TestConstants {
   val testLastMonthSubmitted: Month = Month.MARCH
   val testPostcode: Postcode = Postcode("AA11AA")
   val testLastReturnMonth: Month = Month.JANUARY
-  val testFullVatKnownFacts: VatKnownFacts =
-    VatKnownFacts(
+  val testFullVatKnownFacts: Option[VatKnownFacts] =
+    Some(VatKnownFacts(
       vatNumber = testVatNumber,
       optPostcode = Some(testPostcode),
       vatRegistrationDate = testVatRegDate,
@@ -45,8 +45,8 @@ object TestConstants {
           boxFive = testBoxFive,
           lastReturnMonth = testLastReturnMonth
         ))
-    )
+    ))
 
-  val testJourneyConfig: JourneyConfig = JourneyConfig(testContinueUrl)
+  val testJourneyConfig: Option[JourneyConfig] = Some(JourneyConfig(testContinueUrl))
 
 }

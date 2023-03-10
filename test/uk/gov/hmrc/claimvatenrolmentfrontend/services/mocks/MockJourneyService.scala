@@ -17,10 +17,12 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.services.mocks
 
 import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{reset, when}
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.mvc.Request
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, VatKnownFacts}
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.JourneyService
 
@@ -38,15 +40,28 @@ trait MockJourneyService extends MockitoSugar with BeforeAndAfterEach {
 
   def mockRetrieveJourneyConfig(journeyId: String,
                                 authInternalId: String)
-                               (response: Future[JourneyConfig]): OngoingStubbing[Future[JourneyConfig]] =
-    when(mockJourneyService.retrieveJourneyConfig(ArgumentMatchers.eq(journeyId), ArgumentMatchers.eq(authInternalId))).thenReturn(response)
+                               (implicit request: Request[_], response: Future[Option[JourneyConfig]]): OngoingStubbing[Future[Option[JourneyConfig]]] =
+    when(mockJourneyService.retrieveJourneyConfig(ArgumentMatchers.eq(journeyId), ArgumentMatchers.eq(authInternalId))(any())).thenReturn(response)
+
+  def mockFailRetrieveJourneyConfig(journeyId: String,
+                                authInternalId: String)
+                               (implicit request: Request[_], response: Future[Option[JourneyConfig]]): OngoingStubbing[Future[Option[JourneyConfig]]] =
+    when(mockJourneyService.retrieveJourneyConfig(ArgumentMatchers.eq(journeyId), ArgumentMatchers.eq(authInternalId))(any())).thenReturn(Future.successful(None))
 
   def mockRetrieveJourneyData(journeyId: String,
                               authInternalId: String
-                             )(response: Future[VatKnownFacts]): OngoingStubbing[Future[VatKnownFacts]] =
+                             )(implicit request: Request[_], response: Future[Option[VatKnownFacts]]): OngoingStubbing[Future[Option[VatKnownFacts]]] =
     when(mockJourneyService.retrieveJourneyData(
       ArgumentMatchers.eq(journeyId),
-      ArgumentMatchers.eq(authInternalId))
+      ArgumentMatchers.eq(authInternalId))(any())
     ).thenReturn(response)
+
+  def mockFailRetrieveJourneyData(journeyId: String,
+                              authInternalId: String
+                             )(implicit request: Request[_], response: Future[Option[VatKnownFacts]]): OngoingStubbing[Future[Option[VatKnownFacts]]] =
+    when(mockJourneyService.retrieveJourneyData(
+      ArgumentMatchers.eq(journeyId),
+      ArgumentMatchers.eq(authInternalId))(any())
+    ).thenReturn(Future.successful(None))
 
 }

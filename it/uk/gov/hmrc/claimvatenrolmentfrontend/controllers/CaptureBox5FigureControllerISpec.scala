@@ -38,14 +38,14 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
     }
     testCaptureBox5FigureViewTests(result)
 
-    "return NOT_FOUND" when {
+    "return OK" when {
       "the internal Ids do not match" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         await(insertJourneyConfig(testJourneyId, testContinueUrl, "testInternalId"))
 
         lazy val result = get(s"/$testJourneyId/box-5-figure")
 
-        result.status mustBe NOT_FOUND
+        result.status mustBe BAD_REQUEST
       }
 
       "the journey Id has no internal Id stored" in {
@@ -59,7 +59,17 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
 
         lazy val result = get(s"/$testJourneyId/box-5-figure")
 
-        result.status mustBe NOT_FOUND
+        result.status mustBe BAD_REQUEST
+      }
+    }
+
+    "return 500" when {
+      "there is no auth id" in {
+        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+        stubAuth(OK, successfulAuthResponse(None))
+        lazy val result = get(s"/$testJourneyId/box-5-figure")
+
+        result.status mustBe INTERNAL_SERVER_ERROR
       }
     }
   }
@@ -199,6 +209,18 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
     "return an internal server error" when {
       "the journey data is missing" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        lazy val result = post(s"/$testJourneyId/box-5-figure")(
+          "box5_figure" -> "1234.56"
+        )
+
+        result.status mustBe INTERNAL_SERVER_ERROR
+      }
+    }
+
+    "return an internal server error" when {
+      "there is no auth id" in {
+        stubAuth(OK, successfulAuthResponse(None))
 
         lazy val result = post(s"/$testJourneyId/box-5-figure")(
           "box5_figure" -> "1234.56"

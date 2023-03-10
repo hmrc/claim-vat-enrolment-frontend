@@ -19,12 +19,13 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
-import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
+import uk.gov.hmrc.claimvatenrolmentfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureBusinessPostcodeForm
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, StoreBusinessPostcodeService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_business_postcode_page
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import utils.LoggingUtil
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -34,19 +35,24 @@ class CaptureBusinessPostcodeController @Inject()(mcc: MessagesControllerCompone
                                                   view: capture_business_postcode_page,
                                                   storeBusinessPostcodeService: StoreBusinessPostcodeService,
                                                   journeyService: JourneyService,
-                                                  val authConnector: AuthConnector
+                                                  val authConnector: AuthConnector,
+                                                  errorHandler: ErrorHandler
                                                  )(implicit val config: AppConfig,
-                                                   ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions {
+                                                   ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions with LoggingUtil{
 
   def show(journeyId: String): Action[AnyContent] = Action.async {
     implicit request =>
       authorised().retrieve(internalId) {
         case Some(authId) =>
           journeyService.retrieveJourneyConfig(journeyId, authId).map {
-            _ => Ok(view(routes.CaptureBusinessPostcodeController.submit(journeyId), CaptureBusinessPostcodeForm.form, journeyId))
+            case Some(value) => Ok(view(routes.CaptureBusinessPostcodeController.submit(journeyId), CaptureBusinessPostcodeForm.form, journeyId))
+            case None =>
+              errorLog(s"[CaptureBusinessPostcodeController][show] - Journey config could not be retrieved from the journeyConfigRepository for journey: $journeyId")
+              BadRequest(errorHandler.internalServerErrorTemplate)
           }
         case None =>
-          throw new InternalServerException("Internal ID could not be retrieved from Auth")
+          errorLog(s"[CaptureBusinessPostcodeController][show] - Internal ID could not be retrieved from Auth for journey: $journeyId")
+          throw new InternalServerException(s"Internal ID could not be retrieved from Auth for journey: $journeyId")
       }
   }
 
@@ -68,12 +74,14 @@ class CaptureBusinessPostcodeController @Inject()(mcc: MessagesControllerCompone
                   if(matched) {
                     Redirect(routes.CaptureSubmittedVatReturnController.show(journeyId).url)
                   } else {
+                    errorLog(s"[CaptureBusinessPostcodeController][submit] - The VAT registration postcode could not be updated for journey $journeyId")
                     throw new InternalServerException(s"The VAT registration postcode could not be updated for journey $journeyId")
                   }
               }
           )
         case None =>
-          throw new InternalServerException("Internal ID could not be retrieved from Auth")
+          errorLog(s"[CaptureBusinessPostcodeController][submit] - Internal ID could not be retrieved from Auth for journey: $journeyId")
+          throw new InternalServerException(s"Internal ID could not be retrieved from Auth for journey: $journeyId")
       }
   }
 
@@ -85,11 +93,13 @@ class CaptureBusinessPostcodeController @Inject()(mcc: MessagesControllerCompone
             matched => if (matched) {
               Redirect(routes.CaptureSubmittedVatReturnController.show(journeyId))
             } else {
+              errorLog(s"[CaptureBusinessPostcodeController][noPostcode] - The post code field could not be removed for journey $journeyId")
               throw new InternalServerException(s"The post code field could not be removed for journey $journeyId")
             }
           }
         case None =>
-          throw new InternalServerException("Internal ID could not be retrieved from Auth")
+          errorLog(s"[CaptureBusinessPostcodeController][noPostcode] - Internal ID could not be retrieved from Auth for journey: $journeyId")
+          throw new InternalServerException(s"Internal ID could not be retrieved from Auth for journey: $journeyId")
       }
   }
 

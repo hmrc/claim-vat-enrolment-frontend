@@ -19,12 +19,13 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
-import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
+import uk.gov.hmrc.claimvatenrolmentfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureLastMonthSubmittedForm
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, StoreLastMonthSubmittedService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_last_month_submitted_page
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import utils.LoggingUtil
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -34,19 +35,24 @@ class CaptureLastMonthSubmittedController @Inject()(mcc: MessagesControllerCompo
                                                     view: capture_last_month_submitted_page,
                                                     storeLastMonthSubmittedService: StoreLastMonthSubmittedService,
                                                     journeyService: JourneyService,
-                                                    val authConnector: AuthConnector
+                                                    val authConnector: AuthConnector,
+                                                    errorHandler: ErrorHandler
                                                    )(implicit val config: AppConfig,
-                                                     ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions {
+                                                     ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions with LoggingUtil {
 
   def show(journeyId: String): Action[AnyContent] = Action.async {
     implicit request =>
       authorised().retrieve(internalId) {
         case Some(authId) =>
           journeyService.retrieveJourneyConfig(journeyId, authId).map {
-            _ => Ok(view(routes.CaptureLastMonthSubmittedController.submit(journeyId), CaptureLastMonthSubmittedForm.form))
+            case Some(value) => Ok(view(routes.CaptureLastMonthSubmittedController.submit(journeyId), CaptureLastMonthSubmittedForm.form))
+            case None =>
+              errorLog(s"[CaptureLastMonthSubmittedController][show] - The journey config could not be retrieved from the journeyConfigRepository for journey: $journeyId")
+              BadRequest(errorHandler.internalServerErrorTemplate)
           }
         case None =>
-          throw new InternalServerException("Internal ID could not be retrieved from Auth")
+          errorLog(s"[CaptureLastMonthSubmittedController][show] - Internal ID could not be retrieved from Auth for journey: $journeyId")
+          throw new InternalServerException(s"Internal ID could not be retrieved from Auth for journey: $journeyId")
       }
   }
 
@@ -63,12 +69,14 @@ class CaptureLastMonthSubmittedController @Inject()(mcc: MessagesControllerCompo
                 matched => if (matched) {
                   Redirect(routes.CheckYourAnswersController.show(journeyId).url)
                 } else {
+                  errorLog(s"The last month a Vat return was submitted could not be updated for journey $journeyId")
                   throw new InternalServerException(s"The last month a Vat return was submitted could not be updated for journey $journeyId")
                 }
               }
           )
         case None =>
-          throw new InternalServerException("Internal ID could not be retrieved from Auth")
+          errorLog(s"[CaptureLastMonthSubmittedController][submit] - Internal ID could not be retrieved from Auth for journey: $journeyId")
+          throw new InternalServerException(s"Internal ID could not be retrieved from Auth for journey: $journeyId")
       }
   }
 }

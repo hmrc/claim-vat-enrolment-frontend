@@ -19,12 +19,13 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
-import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
+import uk.gov.hmrc.claimvatenrolmentfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureSubmittedVatReturnForm
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, StoreSubmittedVatReturnService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_submitted_vat_return_page
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import utils.LoggingUtil
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -34,18 +35,23 @@ class CaptureSubmittedVatReturnController @Inject()(mcc: MessagesControllerCompo
                                                     view: capture_submitted_vat_return_page,
                                                     storeSubmittedVatService: StoreSubmittedVatReturnService,
                                                     journeyService: JourneyService,
-                                                    val authConnector: AuthConnector
-                                                   )(implicit val config: AppConfig, ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions {
+                                                    val authConnector: AuthConnector,
+                                                    errorHandler: ErrorHandler
+                                                   )(implicit val config: AppConfig, ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions with LoggingUtil {
 
   def show(journeyId: String): Action[AnyContent] = Action.async {
     implicit request =>
       authorised().retrieve(internalId) {
         case Some(authId) =>
           journeyService.retrieveJourneyConfig(journeyId, authId).map {
-            _ => Ok(view(routes.CaptureSubmittedVatReturnController.submit(journeyId), CaptureSubmittedVatReturnForm.form))
+               case Some(value) => Ok(view(routes.CaptureSubmittedVatReturnController.submit(journeyId), CaptureSubmittedVatReturnForm.form))
+               case None =>
+                 errorLog(s"[CaptureSubmittedVatReturnController][show] - Journey config could not be retrieved from the journeyConfigRepository for journey: $journeyId")
+                 BadRequest(errorHandler.internalServerErrorTemplate)
           }
         case None =>
-          throw new InternalServerException("Internal ID could not be retrieved from Auth")
+          errorLog(s"CaptureSubmittedVatReturnController][show] - Internal ID could not be retrieved from Auth for journey: $journeyId")
+          throw new InternalServerException(s"Internal ID could not be retrieved from Auth for journey: $journeyId")
       }
   }
 
@@ -72,17 +78,20 @@ class CaptureSubmittedVatReturnController @Inject()(mcc: MessagesControllerCompo
                         removeMatched => if (removeMatched) {
                           Redirect(routes.CheckYourAnswersController.show(journeyId).url)
                         } else {
+                          errorLog(s"[CaptureSubmittedVatReturnController][submit] - The additional Vat return fields could not be removed for journey $journeyId")
                           throw new InternalServerException(s"The additional Vat return fields could not be removed for journey $journeyId")
                         }
                       }
                     }
                   } else {
+                    errorLog(s"[CaptureSubmittedVatReturnController][submit] - The Vat return submitted flag could not be updated for journey $journeyId")
                     throw new InternalServerException(s"The Vat return submitted flag could not be updated for journey $journeyId")
                   }
               }
           )
         case None =>
-          throw new InternalServerException("Internal ID could not be retrieved from Auth")
+          errorLog(s"[CaptureSubmittedVatReturnController][submit] - Internal ID could not be retrieved from Auth for journey: $journeyId")
+          throw new InternalServerException(s"Internal ID could not be retrieved from Auth for journey: $journeyId")
       }
   }
 }

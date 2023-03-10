@@ -39,14 +39,14 @@ class CaptureLastMonthSubmittedControllerISpec extends JourneyMongoHelper with C
 
     testCaptureLastMonthSubmittedViewTests(result)
 
-    "return NOT_FOUND" when {
+    "return OK" when {
       "the internal Ids do not match" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         await(insertJourneyConfig(testJourneyId, testContinueUrl, "testInternalId"))
 
         lazy val result = get(s"/$testJourneyId/last-vat-return-date")
 
-        result.status mustBe NOT_FOUND
+        result.status mustBe BAD_REQUEST
       }
 
       "the journey Id has no internal Id stored" in {
@@ -59,7 +59,16 @@ class CaptureLastMonthSubmittedControllerISpec extends JourneyMongoHelper with C
         ).toFuture())
         lazy val result = get(s"/$testJourneyId/last-vat-return-date")
 
-        result.status mustBe NOT_FOUND
+        result.status mustBe BAD_REQUEST
+      }
+    }
+    "return 500" when {
+      "there is no auth id" in {
+        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+        stubAuth(OK, successfulAuthResponse(None))
+        lazy val result = get(s"/$testJourneyId/last-vat-return-date")
+
+        result.status mustBe INTERNAL_SERVER_ERROR
       }
     }
   }
@@ -92,6 +101,15 @@ class CaptureLastMonthSubmittedControllerISpec extends JourneyMongoHelper with C
     "raise an internal server exception" when {
       "the journey data is missing" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        lazy val result = post(s"/$testJourneyId/last-vat-return-date")("return_date" -> Month.JANUARY.getValue.toString)
+
+        result.status mustBe INTERNAL_SERVER_ERROR
+      }
+    }
+    "raise an internal server exception" when {
+      "the auth id is missing" in {
+        stubAuth(OK, successfulAuthResponse(None))
 
         lazy val result = post(s"/$testJourneyId/last-vat-return-date")("return_date" -> Month.JANUARY.getValue.toString)
 

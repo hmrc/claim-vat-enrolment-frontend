@@ -58,10 +58,6 @@ trait CaptureLastMonthSubmittedViewTests extends ViewSpecHelper {
       panel.getParagraphs.last.text mustBe messages.panelSecondText
     }
 
-    "have the correct hint" in {
-      doc.getHintText.text mustBe messages.hint
-    }
-
     "have the correct radio button labels" should {
       lazy val radioLabels = doc.getRadioLabels.iterator().asScala.toList
 

@@ -56,7 +56,6 @@ capture-last-month-submitted.panel_title_1                  = Latest VAT account
 capture-last-month-submitted.panel_text_1                   = You submit your VAT Return quarterly (every three months). In the ‘accounting period’ January to March, the last month in that ‘accounting period’ is March. You must therefore select March.
 capture-last-month-submitted.panel_title_2                  = Latest VAT accounting period, example 2
 capture-last-month-submitted.panel_text_2                   = If you submit your VAT Return monthly, the last accounting period you ‘submitted for’ was January. You must select January.
-capture-last-month-submitted.hint                           = Select the last month of your latest VAT accounting period.
 capture-last-month-submitted.JANUARY                        = January
 capture-last-month-submitted.FEBRUARY                       = February
 capture-last-month-submitted.MARCH                          = March

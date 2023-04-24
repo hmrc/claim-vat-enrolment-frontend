@@ -100,7 +100,6 @@ object MessageLookup {
     val panelFirstText = "You submit your VAT Return quarterly (every three months). In the ‘accounting period’ January to March, the last month in that ‘accounting period’ is March. You must therefore select March."
     val panelSecondHeading = "Latest VAT accounting period, example 2"
     val panelSecondText = "If you submit your VAT Return monthly, the last accounting period you ‘submitted for’ was January. You must select January."
-    val hint = "Select the last month of your latest VAT accounting period."
     val januaryLabel = "January"
     val februaryLabel = "February"
     val marchLabel = "March"

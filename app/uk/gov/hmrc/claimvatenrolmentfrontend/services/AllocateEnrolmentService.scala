@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
+import play.api.mvc.Request
+
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.{AllocateEnrolmentConnector, EnrolmentStoreProxyConnector}
 import uk.gov.hmrc.claimvatenrolmentfrontend.httpparsers.QueryUsersHttpParser.QueryUsersSuccess
@@ -31,10 +33,10 @@ class AllocateEnrolmentService @Inject()(allocateEnrolmentConnector: AllocateEnr
   def allocateEnrolment(vatKnownFacts: VatKnownFacts,
                         credentialId: String,
                         groupId: String
-                       )(implicit hc: HeaderCarrier): Future[AllocateEnrolmentResponse] =
+                       )(implicit hc: HeaderCarrier, request: Request[_]): Future[AllocateEnrolmentResponse] =
     allocateEnrolmentConnector.allocateEnrolment(vatKnownFacts, credentialId, groupId)
 
-  def getUserIds(vatNumber: String)(implicit hc: HeaderCarrier): Future[QueryUsersSuccess] =
+  def getUserIds(vatNumber: String)(implicit hc: HeaderCarrier, request: Request[_]): Future[QueryUsersSuccess] =
     enrolmentStoreProxyConnector.getUserIds(vatNumber)
 
 }

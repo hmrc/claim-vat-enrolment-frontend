@@ -17,6 +17,7 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.connectors
 
 import play.api.http.Status.NO_CONTENT
+import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.{AllocateEnrolmentStub, FeatureSwitching, QueryUserIdStub}
@@ -30,6 +31,8 @@ class EnrolmentStoreProxyConnectorISpec extends ComponentSpecHelper with Enrolme
   private lazy val enrolmentStoreProxyConnector = app.injector.instanceOf[EnrolmentStoreProxyConnector]
 
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
+
+  private implicit val request = FakeRequest()
 
   "EnrolmentStoreProxyConnector" when {
     "the stub Allocate Enrolment feature switch and QueryUserIdStub are disable" should {

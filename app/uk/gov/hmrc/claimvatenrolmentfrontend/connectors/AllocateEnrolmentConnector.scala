@@ -17,11 +17,13 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.connectors
 
 import play.api.libs.json.{JsObject, Json, Writes}
+import play.api.mvc.Request
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.AllocateEnrolmentConnector._
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.AllocateEnrolmentResponseHttpParser.AllocateEnrolmentResponseReads
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.{AllocateEnrolmentResponse, VatKnownFacts}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import utils.LoggingUtil
 
 import java.time.format.DateTimeFormatter
 import javax.inject.{Inject, Singleton}
@@ -30,9 +32,10 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class AllocateEnrolmentConnector @Inject()(http: HttpClient,
                                            appConfig: AppConfig
-                                          )(implicit ec: ExecutionContext) {
+                                          )(implicit ec: ExecutionContext) extends LoggingUtil {
 
-  def allocateEnrolment(vatKnownFacts: VatKnownFacts, credentialId: String, groupId: String)(implicit hc: HeaderCarrier): Future[AllocateEnrolmentResponse] = {
+  def allocateEnrolment(vatKnownFacts: VatKnownFacts, credentialId: String, groupId: String)(implicit hc: HeaderCarrier, request: Request[_]): Future[AllocateEnrolmentResponse] = {
+    infoLog(s"[AllocateEnrolmentConnector][allocateEnrolment] Allocating enrolment for VAT number ${vatKnownFacts.vatNumber}")
     val enrolmentKey = s"HMRC-MTD-VAT~VRN~${vatKnownFacts.vatNumber}"
 
     val requestBody = Json.obj(

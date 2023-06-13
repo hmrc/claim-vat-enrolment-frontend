@@ -17,6 +17,7 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.services.mocks
 
 import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{reset, when}
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.{BeforeAndAfterEach, Suite}
@@ -45,13 +46,13 @@ trait MockAllocateEnrolmentService extends MockitoSugar with BeforeAndAfterEach 
     when(mockAllocateEnrolmentService.allocateEnrolment(ArgumentMatchers.eq(vatKnownFacts),
       ArgumentMatchers.eq(credentialId),
       ArgumentMatchers.eq(groupId)
-    )(ArgumentMatchers.any[HeaderCarrier])
+    )(ArgumentMatchers.any[HeaderCarrier], any())
     ).thenReturn(response)
 
   def mockGetUserIds(vatNumber: String)
                     (response: Future[QueryUsersSuccess]): OngoingStubbing[Future[QueryUsersSuccess]] =
     when(mockAllocateEnrolmentService.getUserIds(ArgumentMatchers.eq(vatNumber)
-    )(ArgumentMatchers.any[HeaderCarrier])
+    )(ArgumentMatchers.any[HeaderCarrier], any())
     ).thenReturn(response)
 
 }

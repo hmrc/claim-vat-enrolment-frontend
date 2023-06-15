@@ -25,6 +25,7 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.models.JourneyConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.JourneyService
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import utils.LoggingUtil
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -33,19 +34,23 @@ import scala.concurrent.{ExecutionContext, Future}
 class JourneyController @Inject()(journeyService: JourneyService,
                                   mcc: MessagesControllerComponents,
                                   val authConnector: AuthConnector
-                                 )(implicit ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions {
+                                 )(implicit ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions with LoggingUtil {
 
   def createJourney(vatNumber: String, continueUrl: String): Action[AnyContent] = Action.async {
     implicit request =>
       authorised().retrieve(internalId and credentialRole) {
         case Some(authId) ~ Some(User) =>
+          infoLog(s"[JourneyController][createJourney] Creating journey for VAT number $vatNumber")
           journeyService.createJourney(JourneyConfig(continueUrl), vatNumber, authId).map {
             journeyId => Redirect(routes.CaptureVatRegistrationDateController.show(journeyId).url)
           }
         case Some(_) ~ _ =>
+          warnLog("[JourneyController][createJourney] Invalid account type controller")
           Future.successful(Redirect(errorRoutes.InvalidAccountTypeController.show().url))
         case None ~ _ =>
-          throw new InternalServerException("Internal ID could not be retrieved from Auth")
+          val message = "Internal ID could not be retrieved from Auth"
+          errorLog(s"[JourneyController][createJourney] $message")
+          throw new InternalServerException(message)
       }
 
   }

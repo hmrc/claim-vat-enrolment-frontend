@@ -23,6 +23,7 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.sign_up_complete_page
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import utils.LoggingUtil
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,15 +32,19 @@ import scala.concurrent.{ExecutionContext, Future}
 class SignUpCompleteController @Inject()(mcc: MessagesControllerComponents,
                                          view: sign_up_complete_page,
                                          val authConnector: AuthConnector
-                                        )(implicit val config: AppConfig, ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions {
+                                        )(implicit val config: AppConfig, ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions with LoggingUtil {
 
 
   def signUpComplete(journeyId: String): Action[AnyContent] = Action.async {
     implicit request =>
       authorised().retrieve(internalId) {
-        case Some(_) => Future.successful(Ok(view()))
+        case Some(_) =>
+          infoLog(s"[SignUpController][singUpComplete] Sign up successful for journey ID $journeyId")
+          Future.successful(Ok(view()))
         case None =>
-          throw new InternalServerException("Internal ID could not be retrieved from Auth")
+          val message = "Internal ID could not be retrieved from Auth"
+          errorLog(s"[SignUpController][signUpComplete] $message")
+          throw new InternalServerException(message)
       }
   }
 }

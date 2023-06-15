@@ -17,20 +17,23 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.connectors
 
 
+import play.api.mvc.Request
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.EnrolmentStoreProxyConnector._
 import uk.gov.hmrc.claimvatenrolmentfrontend.httpparsers.QueryUsersHttpParser.QueryUsersSuccess
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import utils.LoggingUtil
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class EnrolmentStoreProxyConnector @Inject()(http: HttpClient,
-                                             appConfig: AppConfig)(implicit ec: ExecutionContext) {
+                                             appConfig: AppConfig)(implicit ec: ExecutionContext) extends LoggingUtil {
 
 
-  def getUserIds(vatNumber: String)(implicit hc: HeaderCarrier): Future[QueryUsersSuccess] = {
+  def getUserIds(vatNumber: String)(implicit hc: HeaderCarrier, request: Request[_]): Future[QueryUsersSuccess] = {
+    infoLog(s"[EnrolmentStoreProxyConnector][getUserIds] Getting user IDs for VAT number $vatNumber")
     http.GET[QueryUsersSuccess](
       url = appConfig.queryUsersUrl(vatNumber),
       queryParams = Seq(principalQueryParameter))

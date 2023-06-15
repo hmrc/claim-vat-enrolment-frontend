@@ -17,6 +17,7 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.connectors
 
 import play.api.libs.json.Json
+import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.{AllocateEnrolmentStub, FeatureSwitching}
@@ -32,6 +33,8 @@ class AllocateEnrolmentConnectorISpec extends ComponentSpecHelper with Allocatio
   private lazy val allocateEnrolmentConnector = app.injector.instanceOf[AllocateEnrolmentConnector]
 
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
+
+  private implicit val request = FakeRequest()
 
   val testVatKnownFacts: VatKnownFacts = VatKnownFacts(testVatNumber, Some(testPostcode), LocalDate.of(2021, 1, 1), Some(ReturnsInformation(testBoxFive, testLastReturnMonth)))
 

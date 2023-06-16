@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
+import play.api.data.Form
 import play.api.mvc.Request
 import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.AllocateEnrolmentConnector.etmpDateFormat
 import uk.gov.hmrc.claimvatenrolmentfrontend.httpparsers.QueryUsersHttpParser.{NoUsersFound, UsersFound}
@@ -88,7 +89,7 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
                               ec: ExecutionContext): Future[AuditResult] =
     auditConnector.sendEvent(buildClaimVatEnrolmentAuditEvent(vatKnownFacts, isSuccessful, optFailureMessage))
 
-  private def buildClaimVatEnrolmentAuditEvent(vatKnownFacts: VatKnownFacts,
+  def buildClaimVatEnrolmentAuditEvent(vatKnownFacts: VatKnownFacts,
                                                isSuccessful: Boolean,
                                                optFailureMessage: Option[String]
                                               )(implicit hc: HeaderCarrier,
@@ -106,6 +107,31 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
       "latestMonthReturn" -> vatKnownFacts.optReturnsInformation.map(_.lastReturnMonth.getValue.formatted("%02d")).getOrElse(""),
       "vatSubscriptionClaimSuccessful" -> isSuccessful.toString,
       "enrolmentAndClientDatabaseFailureReason" -> optFailureMessage.getOrElse("")
+    ).filter { case (_, value) => value.nonEmpty }
+
+    DataEvent(
+      auditSource = auditSource,
+      auditType = auditType,
+      tags = AuditExtensions.auditHeaderCarrier(hc).toAuditTags(transactionName, request.path),
+      detail = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails(detail.toSeq: _*)
+    )
+
+  }
+
+  def buildPostCodeFailureAuditEvent(form: Form[Postcode])
+                                    (implicit hc: HeaderCarrier, request: Request[_]): DataEvent = {
+
+    val auditSource = "claim-vat-enrolment"
+    val transactionName: String = "MTDVATPostCodeFail"
+    val auditType: String = "MTDVATPostCodeFail"
+
+    val postcodeString = form.value match {
+      case Some(value) => value.stringValue
+      case _ => ""
+    }
+
+    val detail: Map[String, String] = Map(
+      "postCodeEntered" -> postcodeString
     ).filter { case (_, value) => value.nonEmpty }
 
     DataEvent(

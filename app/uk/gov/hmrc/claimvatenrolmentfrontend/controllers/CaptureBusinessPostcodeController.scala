@@ -21,9 +21,10 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureBusinessPostcodeForm
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, StoreBusinessPostcodeService}
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.{ClaimVatEnrolmentService, JourneyService, StoreBusinessPostcodeService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_business_postcode_page
 import uk.gov.hmrc.http.InternalServerException
+import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.LoggingUtil
 
@@ -33,6 +34,8 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class CaptureBusinessPostcodeController @Inject()(mcc: MessagesControllerComponents,
                                                   view: capture_business_postcode_page,
+                                                  auditConnector: AuditConnector,
+                                                  cveService: ClaimVatEnrolmentService,
                                                   storeBusinessPostcodeService: StoreBusinessPostcodeService,
                                                   journeyService: JourneyService,
                                                   val authConnector: AuthConnector,
@@ -61,9 +64,11 @@ class CaptureBusinessPostcodeController @Inject()(mcc: MessagesControllerCompone
       authorised().retrieve(internalId) {
         case Some(authId) =>
           CaptureBusinessPostcodeForm.form.bindFromRequest.fold(
-            formWithErrors => Future.successful(
+            formWithErrors => {
+              cveService.buildPostCodeFailureAuditEvent(formWithErrors)
+            Future.successful(
               BadRequest(view(routes.CaptureBusinessPostcodeController.submit(journeyId), formWithErrors, journeyId))
-            ),
+            )},
             businessPostcode =>
               storeBusinessPostcodeService.storeBusinessPostcodeService(
                 journeyId,

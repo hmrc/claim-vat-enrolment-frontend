@@ -39,11 +39,11 @@ class SignUpCompleteController @Inject()(mcc: MessagesControllerComponents,
     implicit request =>
       authorised().retrieve(internalId) {
         case Some(_) =>
-          infoLog(s"[SignUpController][singUpComplete] Sign up successful for journey ID $journeyId")
+          infoLog(s"[SignUpCompleteController][signUpComplete] Sign up successful for journey ID $journeyId")
           Future.successful(Ok(view()))
         case None =>
           val message = "Internal ID could not be retrieved from Auth"
-          errorLog(s"[SignUpController][signUpComplete] $message")
+          errorLog(s"[SignUpCompleteController][signUpComplete] $message")
           throw new InternalServerException(message)
       }
   }

@@ -41,16 +41,28 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
 
     testCaptureSubmittedVatReturnViewTests(result)
 
-    "return OK" when {
+    "Show an error page" when {
+      "There is no Journey Config" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        lazy val result = get(s"/$testJourneyId/submitted-vat-return")
+
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
+        )
+      }
       "the internal Ids do not match" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         await(insertJourneyConfig(testJourneyId, testContinueUrl, "testInternalId"))
 
         lazy val result = get(s"/$testJourneyId/submitted-vat-return")
 
-        result.status mustBe BAD_REQUEST
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
+        )
       }
-
       "the journey Id has no internal Id stored" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         await(journeyConfigRepository.collection.insertOne(
@@ -62,7 +74,10 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
 
         lazy val result = get(s"/$testJourneyId/submitted-vat-return")
 
-        result.status mustBe BAD_REQUEST
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
+        )
       }
     }
     "return 500" when {

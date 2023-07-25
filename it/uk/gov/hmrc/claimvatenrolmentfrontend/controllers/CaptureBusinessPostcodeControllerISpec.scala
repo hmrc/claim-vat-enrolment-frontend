@@ -41,14 +41,27 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
 
     testCaptureBusinessPostcodeViewTests(result)
 
-    "return OK" when {
+    "Show an error page" when {
+      "there is no journey config" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        lazy val result = get(s"/$testJourneyId/business-postcode")
+
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
+        )
+      }
       "the internal Ids do not match" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         await(insertJourneyConfig(testJourneyId, testContinueUrl, "testInternalId"))
 
         lazy val result = get(s"/$testJourneyId/business-postcode")
 
-        result.status mustBe BAD_REQUEST
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
+        )
       }
       "the journey Id has no internal Id stored" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
@@ -61,7 +74,10 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
 
         lazy val result = get(s"/$testJourneyId/business-postcode")
 
-        result.status mustBe BAD_REQUEST
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
+        )
       }
     }
 

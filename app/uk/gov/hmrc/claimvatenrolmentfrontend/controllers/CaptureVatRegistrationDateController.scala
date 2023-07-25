@@ -48,7 +48,7 @@ class CaptureVatRegistrationDateController @Inject()(mcc: MessagesControllerComp
             case Some(value) => Ok(view(vatRegistrationDateForm, routes.CaptureVatRegistrationDateController.submit(journeyId)))
             case None =>
               errorLog(s"[CaptureVatRegistrationDateController][show] - Journey config could not be retrieved from the journeyConfigRepository for journey: $journeyId")
-              BadRequest(errorHandler.internalServerErrorTemplate)
+              Redirect(errorPages.routes.ServiceTimeoutController.show())
           }
         case None =>
           errorLog(s"[CaptureVatRegistrationDateController][show] - Internal ID could not be retrieved from Auth for journey: $journeyId")

@@ -126,3 +126,13 @@ sign_up_complete.bullet_1                                   = gweld beth sydd ar
 sign_up_complete.bullet_2                                   = gweld eich dyddiadau cau
 sign_up_complete.bullet_3                                   = talu’ch TAW
 sign_up_complete.bullet_4                                   = rhoi gwybod i ni am unrhyw newidiadau i’ch busnes
+
+# Service timeout error page
+service_timeout.title                                       = Mae problem wedi codi
+service_timeout.heading                                     = Mae problem wedi codi
+service_timeout.line_1                                      = Mae hyn oherwydd eich bod wedi dechrau’r hawliad hwn fwy na 60 munud yn ôl.
+service_timeout.line_2                                      = Nid ydym wedi cadw’ch manylion.
+service_timeout.line_3                                      = Mae’n rhaid i chi lenwi’ch cais i Ymrestru ar gyfer Hawlio TAW cyn pen 60 munud o ddechrau’ch hawliad, neu byddwn yn dileu’r manylion a roddwyd gennych.
+service_timeout.line_4_start                                = Bydd angen i chi
+service_timeout.line_4_link                                 = ddechrau’ch cais i Ymrestru ar gyfer TAW
+service_timeout.line_4_end                                  = eto.

@@ -50,7 +50,7 @@ class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
             case Some(journeyData) => Ok(view(routes.CheckYourAnswersController.submit(journeyId), journeyId, journeyData))
             case None =>
               errorLog(s"[CheckYourAnswersController][show] - Journey data could not be retrieved from the journeyDataRepository for journey: $journeyId")
-              BadRequest(errorHandler.internalServerErrorTemplate)
+              Redirect(errorPages.routes.ServiceTimeoutController.show())
           }.recover {
             case _: JsResultException =>
               warnLog(s"[CheckYourAnswersController][show] - A JsResultException was thrown while retrieving the journey data from the journeyDataRepository for journey: $journeyId")
@@ -77,10 +77,10 @@ class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
               Redirect(errorPages.routes.UnmatchedUserErrorController.show())
             case Left(JourneyConfigFailure) =>
               errorLog(s"[CheckYourAnswersController][submit] - Journey config could not be retrieved from the journeyConfigRepository for journey: $journeyId")
-              BadRequest(errorHandler.internalServerErrorTemplate)
+              Redirect(errorPages.routes.ServiceTimeoutController.show())
             case Left(JourneyDataFailure) =>
               errorLog(s"[CheckYourAnswersController][submit] - Journey data could not be retrieved from the journeyDataRepository for journey: $journeyId")
-              BadRequest(errorHandler.internalServerErrorTemplate)
+              Redirect(errorPages.routes.ServiceTimeoutController.show())
           }
         case _ =>
           errorLog(s"[CheckYourAnswersController][submit] - Internal ID could not be retrieved from Auth for journey: $journeyId")

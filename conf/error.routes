@@ -9,3 +9,6 @@ GET         /not-enrolled                       uk.gov.hmrc.claimvatenrolmentfro
 
 # Known Facts Mismatch Error
 GET         /can-not-confirm-business            uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.KnownFactsMismatchController.show()
+
+# Service Timeout Error
+GET        /service-timeout                     uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.ServiceTimeoutController.show()

@@ -48,7 +48,7 @@ class CaptureBox5FigureController @Inject()(mcc: MessagesControllerComponents,
             case Some(value) => Ok(view(CaptureBox5FigureForm.form, routes.CaptureBox5FigureController.submit(journeyId)))
             case None =>
               errorLog(s"[CaptureBox5FigureController][show] - Journey config could not be retrieved from the journeyConfigRepository for journey: $journeyId")
-              BadRequest(errorHandler.internalServerErrorTemplate)
+              Redirect(errorPages.routes.ServiceTimeoutController.show())
           }
         case None =>
           errorLog(s"[CaptureBox5FigureController][show] - Internal ID could not be retrieved from Auth for journey: $journeyId")

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
-import play.api.test.Helpers.OK
+import play.api.test.Helpers.{OK,INTERNAL_SERVER_ERROR}
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.{testInternalId, testJourneyId}
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
@@ -33,8 +33,17 @@ class SignUpCompleteControllerISpec extends ComponentSpecHelper with SignUpCompl
     "return OK" in {
       result.status mustBe OK
     }
-
     testSignUpCompleteViewTests(result)
+  }
+    s"GET /$testJourneyId/sign-up-complete" should {
+    "return Internal Server error if internal id not returned from auth" in {
+      lazy val result = {
+        stubAuth(OK, successfulAuthResponse(None))
+        get(s"/$testJourneyId/sign-up-complete")
+      }
+      result.status mustBe INTERNAL_SERVER_ERROR
+
+    }
   }
 
 

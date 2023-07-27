@@ -39,14 +39,28 @@ class CaptureLastMonthSubmittedControllerISpec extends JourneyMongoHelper with C
 
     testCaptureLastMonthSubmittedViewTests(result)
 
-    "return OK" when {
+    "Show an error page" when {
+      "There is no Journey Config" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        lazy val result = get(s"/$testJourneyId/last-vat-return-date")
+
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
+        )
+      }
+
       "the internal Ids do not match" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         await(insertJourneyConfig(testJourneyId, testContinueUrl, "testInternalId"))
 
         lazy val result = get(s"/$testJourneyId/last-vat-return-date")
 
-        result.status mustBe BAD_REQUEST
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
+        )
       }
 
       "the journey Id has no internal Id stored" in {
@@ -59,7 +73,10 @@ class CaptureLastMonthSubmittedControllerISpec extends JourneyMongoHelper with C
         ).toFuture())
         lazy val result = get(s"/$testJourneyId/last-vat-return-date")
 
-        result.status mustBe BAD_REQUEST
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
+        )
       }
     }
     "return 500" when {

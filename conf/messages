@@ -113,3 +113,15 @@ sign_up_complete.bullet_1                                   = see what you owe
 sign_up_complete.bullet_2                                   = check your deadlines
 sign_up_complete.bullet_3                                   = pay your VAT
 sign_up_complete.bullet_4                                   = tell us about any changes to your business
+
+# Service timeout error page
+service_timeout.title                                       = There has been a problem
+service_timeout.heading                                     = There has been a problem
+service_timeout.line_1                                      = This is because you started this claim more than 60 minutes ago.
+service_timeout.line_2                                      = We have not saved your details.
+service_timeout.line_3                                      = You must complete your VAT enrolment claim within 60 minutes of starting your claim or we delete the details you provided.
+service_timeout.line_4_start                                = You’ll need to
+service_timeout.line_4_link                                 = start your VAT enrolment claim
+service_timeout.line_4_end                                  = again.
+
+

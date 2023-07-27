@@ -154,6 +154,16 @@ object MessageLookup {
 
   }
 
+  object ServiceTimeoutError {
+    val title = "There has been a problem - Claim VAT Enrolment - GOV.UK"
+    val heading = "There has been a problem"
+    val line_1 = "This is because you started this claim more than 60 minutes ago."
+    val line_2 = "We have not saved your details."
+    val line_3 = "You must complete your VAT enrolment claim within 60 minutes of starting your claim or we delete the details you provided."
+    val link = "start your VAT enrolment claim"
+    val line_4 = s"You’ll need to $link again."
+
+  }
   object EnrolmentAlreadyAllocatedError {
     val title = "You cannot use this service - Claim VAT Enrolment - GOV.UK"
     val heading = "You cannot use this service"

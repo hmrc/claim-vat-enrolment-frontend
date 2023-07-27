@@ -174,8 +174,11 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
         stubAudit
         get(s"/$testJourneyId/check-your-answers-vat")
       }
-      "return a BAD_REQUEST" in {
-        result.status mustBe BAD_REQUEST
+      "Show an error page" in {
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
+        )
       }
     }
 
@@ -329,15 +332,8 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
     }
 
 
-    "throw an exception when there is no journeyData" in {
+    "Redirect to an error page when there is no journeyData" in {
       stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-      await(journeyDataRepository.collection.insertOne(
-        Json.obj(
-          "_id" -> "some fake journey id",
-          "authInternalId" -> testInternalId,
-          "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-        ) ++ Json.toJsObject(testFullVatKnownFacts)
-      ).toFuture())
       await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
       stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(BAD_REQUEST, Json.obj())
       stubGetUserIds(testVatNumber)(NO_CONTENT)
@@ -345,10 +341,13 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
 
       lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 
-      result.status mustBe BAD_REQUEST
+      result must have(
+        httpStatus(SEE_OTHER),
+        redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
+      )
     }
 
-    "throw an exception when there is no journeyConfig" in {
+    "Redirect to an error page when there is no journeyConfig" in {
       stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       await(journeyDataRepository.collection.insertOne(
         Json.obj(
@@ -362,7 +361,8 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
       lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 
       result must have(
-        httpStatus(BAD_REQUEST),
+        httpStatus(SEE_OTHER),
+        redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
       )
     }
 

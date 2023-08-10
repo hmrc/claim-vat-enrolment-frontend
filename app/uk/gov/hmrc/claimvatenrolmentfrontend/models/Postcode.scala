@@ -21,7 +21,7 @@ import uk.gov.hmrc.http.InternalServerException
 case class Postcode(stringValue: String) {
   import Postcode._
 
-  val sanitisedPostcode: String = stringValue.toUpperCase.filterNot(_.isWhitespace) match {
+  val sanitisedPostcode: String = stringValue.toUpperCase.replaceAll(" ", "") match {
     case standardPostcodeFormat(outwardCode, inwardCode) => outwardCode + " " + inwardCode
     case other => throw new InternalServerException(s"Invalid postcode format: $other") // should never happen as it is validated in the form
   }

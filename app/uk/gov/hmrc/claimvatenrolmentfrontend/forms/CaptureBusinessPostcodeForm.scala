@@ -37,7 +37,7 @@ object CaptureBusinessPostcodeForm {
 
   val businessPostcodeFormat: Constraint[String] = Constraint("business_postcode.invalid_format")(
     businessPostcode => validateNot(
-      constraint = businessPostcode.toUpperCase matches postCodeRegex,
+      constraint = businessPostcode.toUpperCase.replaceAll(" ", "") matches postCodeRegex,
       errMsg = "capture-business-postcode.error.emptyPostcode"
     )
   )

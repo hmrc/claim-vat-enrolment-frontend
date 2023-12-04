@@ -35,7 +35,7 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
                                           )(implicit ec: ExecutionContext) extends LoggingUtil {
 
   def allocateEnrolment(vatKnownFacts: VatKnownFacts, credentialId: String, groupId: String)(implicit hc: HeaderCarrier, request: Request[_]): Future[AllocateEnrolmentResponse] = {
-    infoLog(s"[AllocateEnrolmentConnector][allocateEnrolment] Allocating enrolment for VAT number ${vatKnownFacts.vatNumber}")
+    infoLog(s"[AllocateEnrolmentConnector][allocateEnrolment] Allocating enrolment")
     val enrolmentKey = s"HMRC-MTD-VAT~VRN~${vatKnownFacts.vatNumber}"
 
     val requestBody = Json.obj(

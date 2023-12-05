@@ -40,7 +40,7 @@ class JourneyController @Inject()(journeyService: JourneyService,
     implicit request =>
       authorised().retrieve(internalId and credentialRole) {
         case Some(authId) ~ Some(User) =>
-          infoLog(s"[JourneyController][createJourney] Creating journey for VAT number $vatNumber")
+          infoLog(s"[JourneyController][createJourney] Creating journey")
           journeyService.createJourney(JourneyConfig(continueUrl), vatNumber, authId).map {
             journeyId => Redirect(routes.CaptureVatRegistrationDateController.show(journeyId).url)
           }

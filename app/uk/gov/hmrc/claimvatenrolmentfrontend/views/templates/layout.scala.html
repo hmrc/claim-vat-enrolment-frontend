@@ -53,7 +53,6 @@
     pageTitle = pageTitle,
     additionalHeadBlock = Some(headBlock),
     signOutUrl = if (showSignOut) Some(SignInOutController.signOut.url) else None,
-    nonce = CSPNonce.get,
     isWelshTranslationAvailable = appConfig.welshLanguageSupportEnabled,
     backLink = if (showBackLink) Some(BackLink.mimicsBrowserBackButtonViaJavaScript) else None,
     displayHmrcBanner = true,

@@ -21,10 +21,14 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import play.api.libs.ws.WSResponse
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.{Base, Header, CaptureVatRegistrationDate => messages}
+import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.{ComponentSpecHelper, ViewSpecHelper}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 trait CaptureVatRegistrationDateViewTests extends ViewSpecHelper {
   this: ComponentSpecHelper =>
+  val testServiceConfig = inject[ServicesConfig]
+  implicit lazy val mockConfig: AppConfig = new AppConfig(app.configuration, testServiceConfig)
 
   def testCaptureVatRegistrationDateViewTests(result: => WSResponse): Unit = {
 
@@ -43,7 +47,7 @@ trait CaptureVatRegistrationDateViewTests extends ViewSpecHelper {
     }
 
     "have the correct text" in {
-      doc.getParagraphs.last().text mustBe messages.para
+      doc.select("#p1").text mustBe messages.para
     }
 
     "have the correct hint" in {
@@ -107,6 +111,19 @@ trait CaptureVatRegistrationDateViewTests extends ViewSpecHelper {
     "correctly display the field error" in {
       doc.getFieldErrorMessage.text mustBe Base.Error.error + messages.Error.futureDate
     }
+  }
+
+  def testWebchatLinkFeatureOn(result: => WSResponse): Unit = {
+    val mockConfig.webchatEnabled = true
+    lazy val doc: Document = Jsoup.parse(result.body)
+    doc.select("#webchatLink-id").text() mustBe "Ask HMRC (opens in a new tab)"
+    doc.select("#webchatLink-id").attr("href") mustBe "/ask-hmrc/chat/vat-online?ds"
+  }
+
+  def testWebchatLinkFeatureOff(result: => WSResponse): Unit = {
+    val mockConfig.webchatEnabled = false
+    lazy val doc: Document = Jsoup.parse(result.body)
+    doc.select("#webchatLink-id").size mustBe 0
   }
 
 }

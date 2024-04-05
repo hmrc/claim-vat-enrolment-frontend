@@ -56,6 +56,9 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
 
   lazy val taxEnrolmentsUrl: String = servicesConfig.baseUrl("tax-enrolments") + "/tax-enrolments"
 
+  lazy val webchatUrl: String = servicesConfig.getString("digital-engagement-platform-frontend.host") + servicesConfig.getString("webchat.endpoint")
+  lazy val webchatEnabled: Boolean = config.getOptional[Boolean]("feature-switch.webchat-enabled").getOrElse(false)
+
   def allocateEnrolmentUrl(groupId: String, enrolmentKey: String): String = {
     val baseUrl = if (isEnabled(AllocateEnrolmentStub)) s"$selfBaseUrl/claim-vat-enrolment/test-only" else taxEnrolmentsUrl
     baseUrl + s"/groups/$groupId/enrolments/$enrolmentKey"

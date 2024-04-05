@@ -124,4 +124,4 @@ service_timeout.line_4_start                                = You’ll need to
 service_timeout.line_4_link                                 = start your VAT enrolment claim
 service_timeout.line_4_end                                  = again.
 
-
+webchat.askHMRC = Ask HMRC (opens in a new tab)

@@ -2,9 +2,9 @@ resolvers += MavenRepository("HMRC-open-artefacts-maven2", "https://open.artefac
 resolvers += Resolver.url("HMRC-open-artefacts-ivy", url("https://open.artefacts.tax.service.gov.uk/ivy2"))(Resolver.ivyStylePatterns)
 resolvers += Resolver.typesafeRepo("releases")
 
-addSbtPlugin("uk.gov.hmrc"        % "sbt-auto-build"          % "3.16.0") //higher versions are not compatible with Scala 2.12
-addSbtPlugin("uk.gov.hmrc"        % "sbt-distributables"      % "2.2.0")
-addSbtPlugin("com.typesafe.play"  % "sbt-plugin"              % "2.8.18")
+addSbtPlugin("uk.gov.hmrc"        % "sbt-auto-build"          % "3.20.0")
+addSbtPlugin("uk.gov.hmrc"        % "sbt-distributables"      % "2.5.0")
+addSbtPlugin("org.playframework"  % "sbt-plugin"              % "3.0.1")
 addSbtPlugin("org.irundaia.sbt"   % "sbt-sassify"             % "1.4.11")
-addSbtPlugin("org.scoverage"      % "sbt-scoverage"           % "1.9.3")
-addSbtPlugin("org.scalastyle"     %% "scalastyle-sbt-plugin"  % "1.0.0")
+addSbtPlugin("org.scoverage"      % "sbt-scoverage"           % "2.0.11")
+addSbtPlugin("org.scalastyle"     %% "scalastyle-sbt-plugin"  % "1.0.0" exclude ("org.scala-lang.modules", "scala-xml_2.12"))

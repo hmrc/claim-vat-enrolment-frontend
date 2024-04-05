@@ -1,13 +1,13 @@
-import scoverage.ScoverageKeys
 import uk.gov.hmrc.DefaultBuildSettings
 import uk.gov.hmrc.DefaultBuildSettings.addTestReportOption
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
 val appName = "claim-vat-enrolment-frontend"
 
-val silencerVersion = "1.7.0"
+val silencerVersion = "1.7.16"
 
 lazy val scoverageSettings = {
+  import scoverage.ScoverageKeys
 
   val exclusionList: List[String] = List(
     "<empty>",
@@ -26,17 +26,18 @@ lazy val scoverageSettings = {
 
   Seq(
     ScoverageKeys.coverageExcludedPackages := exclusionList.mkString(";"),
-    ScoverageKeys.coverageMinimum := 90,
+    ScoverageKeys.coverageMinimumStmtTotal := 90,
     ScoverageKeys.coverageFailOnMinimum := false,
     ScoverageKeys.coverageHighlighting := true
   )
 }
 
+ThisBuild / majorVersion := 0
+ThisBuild / scalaVersion := "2.13.13"
+
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .settings(
-    majorVersion := 0,
-    scalaVersion := "2.12.12",
     PlayKeys.playDefaultPort := 9936,
     libraryDependencies ++= AppDependencies.apply(),
     TwirlKeys.templateImports ++= Seq(
@@ -59,9 +60,6 @@ lazy val microservice = Project(appName, file("."))
     // ***************
   )
   .settings(scoverageSettings)
-  .settings(publishingSettings: _*)
-  .configs(IntegrationTest)
-  .settings(DefaultBuildSettings.integrationTestSettings())
   .settings(resolvers += Resolver.jcenterRepo)
   .disablePlugins(JUnitXmlReportPlugin)
 
@@ -70,8 +68,8 @@ Test / javaOptions += "-Dlogger.resource=logback-test.xml"
 Test / parallelExecution := true
 addTestReportOption(Test, "test-reports")
 
-IntegrationTest / Keys.fork := true
-IntegrationTest / unmanagedSourceDirectories := (IntegrationTest / baseDirectory) (base => Seq(base / "it")).value
-IntegrationTest / javaOptions += "-Dlogger.resource=logback-test.xml"
-addTestReportOption(IntegrationTest, "int-test-reports")
-IntegrationTest / parallelExecution := false
+lazy val it = project
+  .enablePlugins(PlayScala)
+  .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
+  .settings(DefaultBuildSettings.itSettings())
+  .settings(libraryDependencies ++= AppDependencies.test)

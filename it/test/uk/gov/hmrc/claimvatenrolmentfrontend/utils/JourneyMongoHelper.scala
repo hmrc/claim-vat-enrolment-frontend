@@ -43,7 +43,7 @@ trait JourneyMongoHelper extends ComponentSpecHelper {
 
   // Journey configuration mongo repository methods
   def dropConfigRepo: Future[Unit] =
-    journeyConfigRepository.collection.drop.toFuture().map(_ => Unit)
+    journeyConfigRepository.collection.drop.toFuture().map(_ => ())
 
   def countConfigRepo: Future[Long] =
     journeyConfigRepository.collection.countDocuments().toFuture()
@@ -57,7 +57,7 @@ trait JourneyMongoHelper extends ComponentSpecHelper {
 
   // Journey data mongo repository methods
   def dropDataRepo: Future[Unit] =
-    journeyDataRepository.collection.drop.toFuture().map(_ => Unit)
+    journeyDataRepository.collection.drop.toFuture().map(_ => ())
 
   def countDataRepo: Future[Long] =
     journeyDataRepository.collection.countDocuments().toFuture()

@@ -43,8 +43,3 @@ case object QueryUserIdStub extends FeatureSwitch {
   override val configName: String = "feature-switch.query-user-stub"
   override val displayName: String = "Use stub for query user call"
 }
-
-//case object WebchatEnabled extends FeatureSwitch {
-//  override val configName: String = "feature-switch.webchat-enabled"
-//  override val displayName: String = "Enable Webchat"
-//}

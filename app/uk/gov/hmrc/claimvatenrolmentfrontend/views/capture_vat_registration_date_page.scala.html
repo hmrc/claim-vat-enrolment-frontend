@@ -29,6 +29,7 @@
     errorSummary: errorSummary
 )
 
+
 @(vatRegistrationDateForm: Form[LocalDate], formAction: Call)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 @layout(Some(title(vatRegistrationDateForm, "vat_registration_date.title"))) {
@@ -37,7 +38,7 @@
 
     @h1(messages("vat_registration_date.heading"))
 
-    @p(Html(messages("vat_registration_date.line_1")))
+    @p(Html(messages("vat_registration_date.line_1")), id = Some("p1"))
 
     @formWithCSRF(action = formAction) {
         @inputDate(
@@ -55,4 +56,9 @@
         ))
     }
 
+    @if(appConfig.webchatEnabled){
+        <p class="govuk-body govuk-!-margin-top-5 govuk-!-margin-bottom-8">
+            <a class="govuk-link" href="@{appConfig.webchatUrl}" target="_blank" id="webchatLink-id">@messages("webchat.askHMRC")</a>
+        </p>
+    }
 }

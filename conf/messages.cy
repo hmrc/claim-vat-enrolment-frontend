@@ -136,3 +136,5 @@ service_timeout.line_3                                      = Mae’n rhaid i ch
 service_timeout.line_4_start                                = Bydd angen i chi
 service_timeout.line_4_link                                 = ddechrau’ch cais i Ymrestru ar gyfer TAW
 service_timeout.line_4_end                                  = eto.
+
+webchat.askHMRC = Gofyn i CThEF (yn agor tab newydd)

@@ -21,9 +21,9 @@ object AppDependencies {
     "org.playframework"  %% "play-test" % current % Test,
     "com.vladsch.flexmark" % "flexmark-all" % "0.64.8" % Test,
     "org.scalatestplus.play" %% "scalatestplus-play" % "7.0.1" % Test,
-    "org.mockito" % "mockito-core" % "5.10.0" % Test,
+    "org.mockito" % "mockito-core" % "5.11.0" % Test,
     "org.scalatestplus" %% "mockito-3-4" % "3.2.10.0" % Test,
-    "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.16.1"
+    "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.17.0"
   )
 
   def apply(): Seq[ModuleID] = compile ++ test

@@ -25,8 +25,7 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.controllers.routes
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.{ComponentSpecHelper, ViewSpecHelper}
 
 import java.time.format.DateTimeFormatter
-import scala.collection.JavaConverters._
-
+import scala. jdk. CollectionConverters._
 
 trait CheckYourAnswersViewTests extends ViewSpecHelper {
   this: ComponentSpecHelper =>

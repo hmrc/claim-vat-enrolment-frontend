@@ -41,7 +41,7 @@ object AllocateEnrolmentResponseHttpParser {
   implicit object AllocateEnrolmentResponseReads extends HttpReads[AllocateEnrolmentResponse] {
     override def read(method: String, url: String, response: HttpResponse): AllocateEnrolmentResponse = {
 
-      def responseCode: Seq[String] = (response.json \\ CodeKey).map(_.as[String])
+      def responseCode: collection.Seq[String] = (response.json \\ CodeKey).map(_.as[String])
 
       response.status match {
         case CREATED => EnrolmentSuccess

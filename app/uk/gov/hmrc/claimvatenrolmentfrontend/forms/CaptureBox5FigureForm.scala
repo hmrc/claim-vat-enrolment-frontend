@@ -51,6 +51,11 @@ object CaptureBox5FigureForm {
   )
 
   val form: Form[String] = Form(
-      box5Figure -> text.verifying(box5FigureEmpty andThen box5FigureLength andThen box5FigureFormat)
+    single(
+      box5Figure -> text
+        .transform[String](_.replaceAll(",",""), identity)
+        .verifying(box5FigureEmpty andThen box5FigureLength andThen box5FigureFormat)
     )
+  )
 }
+

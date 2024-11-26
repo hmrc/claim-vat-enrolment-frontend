@@ -43,11 +43,10 @@ capture-submitted-vat-return.error.message                  = Dewiswch ‘Iawn�
 capture-box5-figure.title                                   = Beth yw cyfanswm eich Ffurflen TAW ddiweddaraf?
 capture-box5-figure.heading                                 = Beth yw cyfanswm eich Ffurflen TAW ddiweddaraf?
 capture-box5-figure.line_1                                  = Mae’r swm hwn i’w weld ym mlwch 5 o’r Ffurflen TAW ddiweddaraf i chi ei chyflwyno i CThEM.
-capture-box5-figure.line_2                                  = Mae angen i fformat y rhif hwn fod yn ddau le degol, er enghraifft £123.00.
+capture-box5-figure.line_2                                  = Nodwch swm mewn punnoedd, gan gynnwys dau le degol. Er enghraifft, £123.45 neu £312.00
 capture_box5_figure.empty.error                             = Nodwch gyfanswm eich Ffurflen TAW ddiweddaraf neu swm Blwch 5
 capture_box5_figure.invalid_length.error                    = Mae’n rhaid i’r swm o Flwch 5 fod yn llai na 14 o ddigidau
-capture_box5_figure.invalid_format.error                    = Nodwch werth hyd at 2 le degol. Er enghraifft, £100.00
-
+capture_box5_figure.invalid_format.error                    = Nodwch swm gyda dau le degol, er enghraifft £123.45 neu £312.00
 # Last Month Submitted Page
 capture-last-month-submitted.title                          = Dewiswch fis diwethaf eich cyfnod cyfrifyddu TAW diweddaraf
 capture-last-month-submitted.heading                        = Dewiswch fis diwethaf eich cyfnod cyfrifyddu TAW diweddaraf

@@ -247,6 +247,22 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
       }
     }
 
+    s"POST /$testJourneyId/box-5-figure" should {
+      "redirect to CaptureLastMonthSubmitted if the user submits a valid box 5 figure with commas" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
+
+        lazy val result = post(s"/$testJourneyId/box-5-figure")(
+          "box5_figure" -> "12,123,123.45"
+        )
+
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(routes.CaptureLastMonthSubmittedController.show(testJourneyId).url)
+        )
+      }
+    }
   }
 }
 

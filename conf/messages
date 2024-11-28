@@ -43,10 +43,10 @@ capture-submitted-vat-return.error.message                  = Select yes if you 
 capture-box5-figure.title                                   = What is your latest VAT Return total?
 capture-box5-figure.heading                                 = What is your latest VAT Return total?
 capture-box5-figure.line_1                                  = You can find this amount in box number 5 on your latest VAT Return submitted to HMRC.
-capture-box5-figure.line_2                                  = The format of this number needs to be two decimal places, for example £123.00
+capture-box5-figure.line_2                                  = Enter an amount in pounds including two decimal places. For example, £123.45 or £312.00
 capture_box5_figure.empty.error                             = Enter your latest VAT Return total or Box 5 amount
 capture_box5_figure.invalid_length.error                    = The Box 5 amount must be less than 14 digits
-capture_box5_figure.invalid_format.error                    = Enter a value to 2 decimal places. For example, £100.00
+capture_box5_figure.invalid_format.error                    = Enter an amount with two decimal places, for example £123.45 or £312.00
 
 # Last Month Submitted Page
 capture-last-month-submitted.title                          = Select the last month of your latest VAT accounting period

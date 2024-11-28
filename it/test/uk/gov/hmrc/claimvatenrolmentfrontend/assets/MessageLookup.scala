@@ -72,12 +72,12 @@ object MessageLookup {
     val title = "What is your latest VAT Return total? - Claim VAT Enrolment - GOV.UK"
     val heading = "What is your latest VAT Return total?"
     val line_1 = "You can find this amount in box number 5 on your latest VAT Return submitted to HMRC."
-    val line_2 = "The format of this number needs to be two decimal places, for example £123.00"
+    val line_2 = "Enter an amount in pounds including two decimal places. For example, £123.45 or £312.00"
 
     object Error {
       val noFigure = "Enter your latest VAT Return total or Box 5 amount"
       val invalidLength = "The Box 5 amount must be less than 14 digits"
-      val invalidFormat = "Enter a value to 2 decimal places. For example, £100.00"
+      val invalidFormat = "Enter an amount with two decimal places, for example £123.45 or £312.00"
     }
 
   }

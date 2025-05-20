@@ -4,7 +4,7 @@ import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
 val appName = "claim-vat-enrolment-frontend"
 
-val silencerVersion = "1.7.16"
+val silencerVersion = "1.7.19"
 
 lazy val scoverageSettings = {
   import scoverage.ScoverageKeys
@@ -33,7 +33,7 @@ lazy val scoverageSettings = {
 }
 
 ThisBuild / majorVersion := 0
-ThisBuild / scalaVersion := "2.13.13"
+ThisBuild / scalaVersion := "2.13.16"
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)

@@ -97,11 +97,14 @@ unmatched_user.line_1                                       = Ewch i’ch cyfrif
 unmatched_user.link                                         = reoli pwy all gael mynediad at eich trethi, eich tollau a’ch cynlluniau
 
 # Enrolment Already Allocated Error Page
-enrolment_already_allocated.title                           = Allwch chi ddim defnyddio’r gwasanaeth hwn
-enrolment_already_allocated.heading                         = Allwch chi ddim defnyddio’r gwasanaeth hwn
-enrolment_already_allocated.line_1                          = Mae’ch busnes wedi cofrestru ar gyfer TAW gyda Dynodydd Defnyddiwr (ID) arall ar gyfer Porth y Llywodraeth. Rhowch gynnig arall ar fewngofnodi gan ddefnyddio Dynodydd Defnyddiwr (ID) gwahanol.
-enrolment_already_allocated.line_2                          = Os ydych wedi colli’ch manylion,
+enrolment_already_allocated.title                           = Mae TAW y busnes hwn eisoes wedi cael ei hychwanegu at gyfrif treth busnes arall
+enrolment_already_allocated.heading                         = Mae TAW y busnes hwn eisoes wedi cael ei hychwanegu at gyfrif treth busnes arall
+enrolment_already_allocated.line_1                          = Mae TAW y busnes hwn eisoes wedi cael ei hychwanegu at gyfrif treth busnes gwahanol.
+enrolment_already_allocated.line_2                          = Cafodd ei hychwanegu gan ddefnyddio manylion gwahanol ar gyfer mewngofnodi i wasanaethau CThEF na’r rhai y gwnaethoch chi fewngofnodi gyda nhw.
+enrolment_already_allocated.line_3                          = I fwrw golwg dros a rheoli TAW y busnes hwn, rhowch gynnig arall ar fewngofnodi gan ddefnyddio manylion gwahanol ar gyfer mewngofnodi i wasanaethau CThEF.
+enrolment_already_allocated.link.prefix                     = Gallwch
 enrolment_already_allocated.link                            = ewch ati i ddod o hyd i’ch cyfrif neu ei adfer
+enrolment_already_allocated.link.suffix                     = (yn agor tab newydd).
 enrolment_already_allocated.go_back_to_bta                  = Ewch yn ôl i’ch cyfrif treth busnes
 
 # Error Pages

@@ -165,11 +165,12 @@ object MessageLookup {
 
   }
   object EnrolmentAlreadyAllocatedError {
-    val title = "You cannot use this service - Claim VAT Enrolment - GOV.UK"
-    val heading = "You cannot use this service"
-    val line_1 = "Your business is set up for VAT with another Government Gateway user ID. Try signing in again using a different user ID."
-    val link = "find or recover your account"
-    val line_2 = s"If you have lost your details, $link"
+    val title = "This business’s VAT has already been added to another business tax account - Claim VAT Enrolment - GOV.UK"
+    val heading = "This business’s VAT has already been added to another business tax account"
+    val line_1 = "This business’s VAT has been added to a different business tax account."
+    val line_2 = "It was added using different HMRC sign in details than the ones you signed in with."
+    val line_3 = "To view and manage this business’s VAT, try signing in again with other HMRC sign in details."
+    val link = "find or recover your HMRC sign in details here"
     val button_text = "Go back to your business tax account"
     val link_url = "https://www.access.service.gov.uk/account-recovery/forgot-userid-password/check-your-emails"
   }

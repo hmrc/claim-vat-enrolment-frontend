@@ -26,6 +26,8 @@ import javax.inject.{Inject, Singleton}
 @Singleton
 class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) extends FeatureSwitching {
 
+  private def loadConfig(key: String) = servicesConfig.getString(key)
+
   val welshLanguageSupportEnabled: Boolean = config.getOptional[Boolean]("features.welsh-language-support").getOrElse(false)
 
   val en: String = "en"
@@ -42,6 +44,9 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   lazy val exitSurveyServiceIdentifier = "claim-vat-enrolment"
   lazy val feedbackFrontendUrl: String = servicesConfig.getString("microservice.services.feedback-frontend.url")
   lazy val feedbackUrl = s"$feedbackFrontendUrl/feedback/$exitSurveyServiceIdentifier"
+  private lazy val basGatewayUrl: String = loadConfig(s"bas-gateway-frontend.host")
+  private val signOutUri: String = loadConfig("sign-out.uri")
+  lazy val signOutUrl: String = s"$basGatewayUrl$signOutUri"
 
   val contactFormServiceIdentifier = "cve"
   lazy val contactFrontendUrl: String = servicesConfig.getString("microservice.services.contact-frontend.url")

@@ -38,7 +38,7 @@ class SignInOutControllerISpec extends ComponentSpecHelper {
 
       result.status mustBe SEE_OTHER
 
-      result.header(HeaderNames.LOCATION) mustBe Some("http://localhost:9514/feedback/claim-vat-enrolment")
+      result.header(HeaderNames.LOCATION) mustBe Some("http://localhost:9553/bas-gateway/sign-out-without-state?continue=http://localhost:9514/feedback/claim-vat-enrolment")
     }
   }
   s"GET /keep-alive" should {

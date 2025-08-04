@@ -30,7 +30,7 @@ class SignInOutController @Inject()(val controllerComponents: ControllerComponen
   extends BaseController with AuthorisedFunctions{
 
   def signOut: Action[AnyContent] = Action.async {
-    _ => Future.successful(Redirect(appConfig.feedbackUrl).withNewSession)
+    _ => Future.successful(Redirect(s"${appConfig.signOutUrl}?continue=${appConfig.feedbackUrl}").withNewSession)
   }
 
   def keepAlive: Action[AnyContent] = Action.async { implicit request =>

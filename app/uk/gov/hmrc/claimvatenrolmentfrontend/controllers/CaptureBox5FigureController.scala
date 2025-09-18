@@ -60,7 +60,7 @@ class CaptureBox5FigureController @Inject()(mcc: MessagesControllerComponents,
     implicit request =>
       authorised().retrieve(internalId) {
         case Some(authId) =>
-          CaptureBox5FigureForm.form.bindFromRequest.fold(
+          CaptureBox5FigureForm.form.bindFromRequest().fold(
             formWithErrors =>
               Future.successful(
                 BadRequest(view(formWithErrors, routes.CaptureBox5FigureController.submit(journeyId)))

@@ -89,7 +89,7 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
                               ec: ExecutionContext): Future[AuditResult] =
     auditConnector.sendEvent(buildClaimVatEnrolmentAuditEvent(vatKnownFacts, isSuccessful, optFailureMessage))
 
-  def buildClaimVatEnrolmentAuditEvent(vatKnownFacts: VatKnownFacts,
+  private def buildClaimVatEnrolmentAuditEvent(vatKnownFacts: VatKnownFacts,
                                                isSuccessful: Boolean,
                                                optFailureMessage: Option[String]
                                               )(implicit hc: HeaderCarrier,
@@ -104,7 +104,7 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
       "businessPostcode" -> vatKnownFacts.optPostcode.map(_.sanitisedPostcode).getOrElse(""),
       "vatRegistrationDate" -> vatKnownFacts.vatRegistrationDate.format(etmpDateFormat),
       "boxFiveAmount" -> vatKnownFacts.optReturnsInformation.map(_.boxFive).getOrElse(""),
-      "latestMonthReturn" -> vatKnownFacts.optReturnsInformation.map(_.lastReturnMonth.getValue.formatted("%02d")).getOrElse(""),
+      "latestMonthReturn" -> vatKnownFacts.optReturnsInformation.map(x => formatString(x.lastReturnMonth.getValue)).getOrElse(""),
       "vatSubscriptionClaimSuccessful" -> isSuccessful.toString,
       "enrolmentAndClientDatabaseFailureReason" -> optFailureMessage.getOrElse("")
     ).filter { case (_, value) => value.nonEmpty }
@@ -115,7 +115,10 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
       tags = AuditExtensions.auditHeaderCarrier(hc).toAuditTags(transactionName, request.path),
       detail = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails(detail.toSeq: _*)
     )
+  }
 
+  private def formatString(value: Int): String = {
+    "%02d".format(value)
   }
 
   def buildPostCodeFailureAuditEvent(form: Form[Postcode])
@@ -146,7 +149,7 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
 
 object ClaimVatEnrolmentService {
 
-  type ClaimVatEnrolmentResponse = Either[ClaimVatEnrolmentFailure, String]
+  private type ClaimVatEnrolmentResponse = Either[ClaimVatEnrolmentFailure, String]
 
   sealed trait ClaimVatEnrolmentFailure
 

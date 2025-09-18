@@ -60,7 +60,7 @@ class CaptureLastMonthSubmittedController @Inject()(mcc: MessagesControllerCompo
     implicit request =>
       authorised().retrieve(internalId) {
         case Some(authId) =>
-          CaptureLastMonthSubmittedForm.form.bindFromRequest.fold(
+          CaptureLastMonthSubmittedForm.form.bindFromRequest().fold(
             formWithErrors => Future.successful(
               BadRequest(view(routes.CaptureLastMonthSubmittedController.submit(journeyId), formWithErrors))
             ),

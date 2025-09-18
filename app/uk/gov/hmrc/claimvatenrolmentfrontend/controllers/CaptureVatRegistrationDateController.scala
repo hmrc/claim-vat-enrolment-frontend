@@ -61,7 +61,7 @@ class CaptureVatRegistrationDateController @Inject()(mcc: MessagesControllerComp
     implicit request =>
       authorised().retrieve(internalId) {
         case Some(authId) =>
-          vatRegistrationDateForm.bindFromRequest.fold(
+          vatRegistrationDateForm.bindFromRequest().fold(
             formWithErrors =>
               Future.successful(
                 BadRequest(view(formWithErrors, routes.CaptureVatRegistrationDateController.submit(journeyId)))

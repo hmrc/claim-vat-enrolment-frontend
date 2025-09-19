@@ -59,7 +59,7 @@ class JourneyDataRepository @Inject()(mongoComponent: MongoComponent,
          Filters.equal(JourneyIdKey, journeyId),
          Filters.equal(AuthInternalIdKey, authInternalId)
        )
-     ).headOption.map {
+     ).headOption().map {
        case Some(doc) => Some(doc.as[VatKnownFacts])
        case _ => None
      }

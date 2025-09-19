@@ -64,7 +64,7 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
         Json.obj(
           "key" -> "LastMonthLatestStagger",
           "value" -> (vatKnownFacts.optReturnsInformation match {
-            case Some(returnsInformation) => returnsInformation.lastReturnMonth.getValue.formatted("%02d")
+            case Some(returnsInformation) => "%02d".format(returnsInformation.lastReturnMonth.getValue)
             case None => NullValue
           })
         )

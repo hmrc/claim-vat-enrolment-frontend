@@ -19,7 +19,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.views.errorPages
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import play.api.libs.ws.WSResponse
-import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.{BetaBanner, UnmatchedUserError => messages}
+import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.{UnmatchedUserError => messages}
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.{ComponentSpecHelper, ViewSpecHelper}
 
 trait UnmatchedUserErrorViewTest extends ViewSpecHelper {

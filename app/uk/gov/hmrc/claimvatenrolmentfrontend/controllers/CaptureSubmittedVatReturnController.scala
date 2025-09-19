@@ -59,7 +59,7 @@ class CaptureSubmittedVatReturnController @Inject()(mcc: MessagesControllerCompo
     implicit request =>
       authorised().retrieve(internalId) {
         case Some(authId) =>
-          CaptureSubmittedVatReturnForm.form.bindFromRequest.fold(
+          CaptureSubmittedVatReturnForm.form.bindFromRequest().fold(
             formWithErrors => Future.successful(
               BadRequest(view(routes.CaptureSubmittedVatReturnController.submit(journeyId), formWithErrors))
             ),

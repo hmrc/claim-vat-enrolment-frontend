@@ -63,7 +63,7 @@ class CaptureBusinessPostcodeController @Inject()(mcc: MessagesControllerCompone
     implicit request =>
       authorised().retrieve(internalId) {
         case Some(authId) =>
-          CaptureBusinessPostcodeForm.form.bindFromRequest.fold(
+          CaptureBusinessPostcodeForm.form.bindFromRequest().fold(
             formWithErrors => {
               cveService.buildPostCodeFailureAuditEvent(formWithErrors)
             Future.successful(

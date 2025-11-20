@@ -6,6 +6,7 @@ app.common.errorSummaryLabel                                 = There is a proble
 app.common.signOut                                           = Sign out
 app.common.continue                                          = Continue
 app.common.tryAgain                                          = Try Again
+app.common.backToBTA                                         = Go back to your Business Tax Account
 app.common.back                                              = Back
 app.common.change                                            = Change
 app.common.yes                                               = Yes
@@ -85,6 +86,13 @@ check-your-answers.last_return_month                        = The last month in 
 known_facts_mismatch.title                                  = We could not confirm your business
 known_facts_mismatch.heading                                = We could not confirm your business
 known_facts_mismatch.line_1                                 = The information you provided does not match the details we have about your business.
+
+#Third Attempt Lockout Page
+third_attempt_lockout_page.title                            = We could not confirm your business so we have locked access for 24 hours
+third_attempt_lockout_page.heading                          = We could not confirm your business so we have locked access for 24 hours
+third_attempt_lockout_page.line_1                           = The details you provided must match exactly those that we have on record. Before your next attempt, check you have the correct information. This can be found on your latest VAT Return or the VAT registration confirmation letter we sent by post.
+third_attempt_lockout_page.line_2                           = For security, access has been locked for 24 hours from the last failed attempt.
+third_attempt_lockout_page.line_3                           = The HMRC helpline will not be able to give you access within this time period.
 
 # Invalid Account Type Page
 invalid_account_type.title                                  = You are not authorised to use this service

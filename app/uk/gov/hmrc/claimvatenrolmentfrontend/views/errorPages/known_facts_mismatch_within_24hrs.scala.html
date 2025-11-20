@@ -1,0 +1,47 @@
+@*
+ * Copyright 2024 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.helpers._
+@import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.templates.layout
+
+
+@this(layout: layout,
+        h1: h1,
+        p: p,
+        govUkHeader: GovukHeader,
+        govukButton: GovukButton
+)
+
+@()(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+
+@layout(Some(titleNoForm(messages("known_facts_mismatch_within_24hrs.title")))) {
+
+    @h1(messages("known_facts_mismatch_within_24hrs.heading"))
+
+    @p {
+        @messages("known_facts_mismatch_within_24hrs.line_1")
+    }
+
+    @p {
+        @messages("known_facts_mismatch_within_24hrs.line_2")
+    }
+
+    @p {
+       @messages("known_facts_mismatch_within_24hrs.line_3")
+    }
+
+    @p {<a class='govuk-link' href="@appConfig.btaBaseUrl" id="backToBTA" target="_self">@messages("known_facts_mismatch_within_24hrs.link")</a>}
+}

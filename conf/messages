@@ -86,6 +86,14 @@ known_facts_mismatch.title                                  = We could not confi
 known_facts_mismatch.heading                                = We could not confirm your business
 known_facts_mismatch.line_1                                 = The information you provided does not match the details we have about your business.
 
+# Known Facts Mismatch Within 24hrs Page
+known_facts_mismatch_within_24hrs.title                     = Access to your VAT online account is still locked
+known_facts_mismatch_within_24hrs.heading                   = Access to your VAT online account is still locked
+known_facts_mismatch_within_24hrs.line_1                    = In the last 24 hours, business details were provided that did not match exactly those that we have on record. For security, we have locked access for 24 hours from the last failed attempt.
+known_facts_mismatch_within_24hrs.line_2                    = Before your next attempt, check you have the correct information. This can be found on your latest VAT Return or the VAT registration confirmation letter we sent by post.
+known_facts_mismatch_within_24hrs.line_3                    = The HMRC helpline will not be able to give access within 24 hours of the last failed attempt.
+known_facts_mismatch_within_24hrs.link                      = Go back to your Business Tax Account
+
 # Invalid Account Type Page
 invalid_account_type.title                                  = You are not authorised to use this service
 invalid_account_type.heading                                = You are not authorised to use this service

@@ -139,6 +139,15 @@ object MessageLookup {
 
   }
 
+  object KnownFactsMismatchWithin24hrs {
+    val title = "Access to your VAT online account is still locked - Claim VAT Enrolment - GOV.UK"
+    val heading = "Access to your VAT online account is still locked"
+    val line_1 = "In the last 24 hours, business details were provided that did not match exactly those that we have on record. For security, we have locked access for 24 hours from the last failed attempt."
+    val line_2 = "Before your next attempt, check you have the correct information. This can be found on your latest VAT Return or the VAT registration confirmation letter we sent by post."
+    val line_3 = "The HMRC helpline will not be able to give access within 24 hours of the last failed attempt."
+    val link = "Go back to your Business Tax Account"
+  }
+
   object InvalidAccountType {
     val title = "You are not authorised to use this service - Claim VAT Enrolment - GOV.UK"
     val heading = "You are not authorised to use this service"

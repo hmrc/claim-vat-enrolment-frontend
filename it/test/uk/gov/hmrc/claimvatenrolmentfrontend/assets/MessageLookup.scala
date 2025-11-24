@@ -25,6 +25,7 @@ object MessageLookup {
     val no = "No"
     val tryAgain = "Try Again"
     val signOut = "Sign out"
+    val backToBTA = "Go back to your Business Tax Account"
 
     object Error {
       val title = "There is a problem"
@@ -136,6 +137,15 @@ object MessageLookup {
     val title = "We could not confirm your business - Claim VAT Enrolment - GOV.UK"
     val heading = "We could not confirm your business"
     val line_1 = "The information you provided does not match the details we have about your business."
+
+  }
+
+  object ThirdAttemptLockout {
+    val title = "We could not confirm your business so we have locked access for 24 hours - Claim VAT Enrolment - GOV.UK"
+    val heading = "We could not confirm your business so we have locked access for 24 hours"
+    val line_1 = "The details you provided must match exactly those that we have on record. Before your next attempt, check you have the correct information. This can be found on your latest VAT Return or the VAT registration confirmation letter we sent by post."
+    val line_2 = "For security, access has been locked for 24 hours from the last failed attempt."
+    val line_3 = "The HMRC helpline will not be able to give you access within this time period."
 
   }
 

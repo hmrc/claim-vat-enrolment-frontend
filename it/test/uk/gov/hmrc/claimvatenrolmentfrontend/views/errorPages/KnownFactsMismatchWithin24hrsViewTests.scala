@@ -19,7 +19,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.views.errorPages
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import play.api.libs.ws.WSResponse
-import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.{Base, Header, KnownFactsMismatchWithin24hrs => messages}
+import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.{Header, KnownFactsMismatchWithin24hrs => messages}
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.{ComponentSpecHelper, ViewSpecHelper}
 
 trait KnownFactsMismatchWithin24hrsViewTests extends ViewSpecHelper {
@@ -45,18 +45,13 @@ trait KnownFactsMismatchWithin24hrsViewTests extends ViewSpecHelper {
 
     "have the correct text" in {
       doc.getParagraphs.get(1).text mustBe messages.line_1
-    }
-
-    "have the correct text" in {
-      doc.getParagraphs.get(1).text mustBe messages.line_1
-    }
-
-    "have the correct text" in {
-      doc.getParagraphs.get(1).text mustBe messages.line_1
+      doc.getParagraphs.get(2).text mustBe messages.line_2
+      doc.getParagraphs.get(3).text mustBe messages.line_3
     }
 
     "have a correct link " in {
-      doc.getLink(id = "backToBTA").text mustBe messages.link
+      doc.getLink(id = "back-to-bta").text mustBe messages.link
+      doc.getLink(id = "back-to-bta").attr("href") mustBe messages.link_url
     }
   }
 }

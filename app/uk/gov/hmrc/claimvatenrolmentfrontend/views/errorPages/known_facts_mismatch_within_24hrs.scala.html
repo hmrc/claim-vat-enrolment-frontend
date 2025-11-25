@@ -1,5 +1,5 @@
 @*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
 
 @()(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-@layout(Some(titleNoForm(messages("known_facts_mismatch_within_24hrs.title")))) {
+@layout(Some(titleNoForm(messages("known_facts_mismatch_within_24hrs.heading")))) {
 
     @h1(messages("known_facts_mismatch_within_24hrs.heading"))
 
@@ -43,5 +43,5 @@
        @messages("known_facts_mismatch_within_24hrs.line_3")
     }
 
-    @p {<a class='govuk-link' href="@appConfig.btaBaseUrl" id="backToBTA" target="_self">@messages("known_facts_mismatch_within_24hrs.link")</a>}
+    @p {<a class='govuk-link' href="@appConfig.addVatUrl" id="back-to-bta" target="_self">@messages("known_facts_mismatch_within_24hrs.link")</a>}
 }

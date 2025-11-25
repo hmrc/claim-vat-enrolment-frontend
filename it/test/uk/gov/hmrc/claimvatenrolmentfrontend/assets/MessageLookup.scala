@@ -146,6 +146,7 @@ object MessageLookup {
     val line_2 = "Before your next attempt, check you have the correct information. This can be found on your latest VAT Return or the VAT registration confirmation letter we sent by post."
     val line_3 = "The HMRC helpline will not be able to give access within 24 hours of the last failed attempt."
     val link = "Go back to your Business Tax Account"
+    val link_url = "/business-account/add-tax/vat/interstitial"
   }
 
   object InvalidAccountType {

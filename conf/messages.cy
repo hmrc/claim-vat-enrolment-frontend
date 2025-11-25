@@ -85,6 +85,12 @@ known_facts_mismatch.title                                  = Doedd dim modd cad
 known_facts_mismatch.heading                                = Doedd dim modd cadarnhau’ch busnes
 known_facts_mismatch.line_1                                 = Dydy’r wybodaeth rydych wedi’i nodi ddim yn cyd-fynd â’r manylion sydd gennym am eich busnes.
 
+# Different VAT Registration Numbers Error Page
+different_vat_numbers_error.title                           = Rydych wedi nodi gwahanol rifau cofrestru TAW
+different_vat_numbers_error.heading                         = Rydych wedi nodi gwahanol rifau cofrestru TAW
+different_vat_numbers_error.line_1                          = Nid yw’r rhif cofrestru TAW rydych wedi ei ddarparu yn cyd-fynd yn union â’r rhif a ddefnyddiwyd o’r blaen. Am resymau diogelwch, mae’n rhaid ailddechrau’r sesiwn hwn.
+different_vat_numbers_error.line_2                          = Er mwyn rhoi cynnig arall arni, bydd angen i chi allgofnodi ac yna mewngofnodi eto.
+
 # Invalid Account Type Page
 invalid_account_type.title                                  = Nid ydych wedi’ch awdurdodi i ddefnyddio’r gwasanaeth hwn
 invalid_account_type.heading                                = Nid ydych wedi’ch awdurdodi i ddefnyddio’r gwasanaeth hwn

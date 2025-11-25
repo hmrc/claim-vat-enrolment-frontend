@@ -139,6 +139,13 @@ object MessageLookup {
 
   }
 
+  object DifferentVatNumbersError {
+    val title = "You have entered different VAT registration numbers - Claim VAT Enrolment - GOV.UK"
+    val heading = "You have entered different VAT registration numbers"
+    val line_1 = "The VAT registration number you have provided does not match exactly the number previously used. For security, this session must be restarted."
+    val line_2 = "To make another attempt, sign out and sign in."
+  }
+
   object InvalidAccountType {
     val title = "You are not authorised to use this service - Claim VAT Enrolment - GOV.UK"
     val heading = "You are not authorised to use this service"

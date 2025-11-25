@@ -85,8 +85,7 @@ known_facts_mismatch.title                                  = Doedd dim modd cad
 known_facts_mismatch.heading                                = Doedd dim modd cadarnhau’ch busnes
 known_facts_mismatch.line_1                                 = Dydy’r wybodaeth rydych wedi’i nodi ddim yn cyd-fynd â’r manylion sydd gennym am eich busnes.
 
-#Lockout Cannot Confirm Business Page
-third_attempt_lockout_page.title                            = Doedd dim modd i ni gadarnhau’ch busnes felly rydym wedi cloi mynediad at eich cyfrif am 24 awr
+# Third Attempt Lockout Error Page
 third_attempt_lockout_page.heading                          = Doedd dim modd i ni gadarnhau’ch busnes felly rydym wedi cloi mynediad at eich cyfrif am 24 awr
 third_attempt_lockout_page.line_1                           = Mae’n rhaid i’r manylion a ddarparwyd gennych gyd-fynd yn union â’r cofnodion sydd gennym. Gwiriwch fod gennych yr wybodaeth gywir cyn ceisio eto. Mae’r wybodaeth hon ar eich Ffurflen TAW ddiweddaraf neu’r llythyr a anfonwyd gennym drwy’r post yn cadarnhau’r cofrestriad TAW.
 third_attempt_lockout_page.line_2                           = Am resymau diogelwch, mae mynediad wedi’i gloi am 24 awr, a hynny o’r amser y cafodd y cynnig aflwyddiannus diwethaf ei wneud.

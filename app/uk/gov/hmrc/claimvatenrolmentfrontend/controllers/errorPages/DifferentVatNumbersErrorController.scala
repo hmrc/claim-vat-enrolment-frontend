@@ -26,7 +26,7 @@ import scala.concurrent.Future
 
 @Singleton
 class DifferentVatNumbersErrorController @Inject()(mcc: MessagesControllerComponents,
-                                                   view: different_vat_number_error_page,
+                                                   view: different_vat_number_error_page
                                             )(implicit appConfig: AppConfig) extends FrontendController(mcc) {
 
   val show: Action[AnyContent] = Action.async {

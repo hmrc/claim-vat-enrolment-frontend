@@ -87,7 +87,6 @@ known_facts_mismatch.heading                                = We could not confi
 known_facts_mismatch.line_1                                 = The information you provided does not match the details we have about your business.
 
 # Different VAT Registration Numbers Error Page
-different_vat_numbers_error.title                            = You have entered different VAT registration numbers
 different_vat_numbers_error.heading                          = You have entered different VAT registration numbers
 different_vat_numbers_error.line_1                           = The VAT registration number you have provided does not match exactly the number previously used. For security, this session must be restarted.
 different_vat_numbers_error.line_2                           = To make another attempt, sign out and sign in.

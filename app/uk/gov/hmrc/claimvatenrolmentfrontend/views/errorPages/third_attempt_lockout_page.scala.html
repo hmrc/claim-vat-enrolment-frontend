@@ -19,36 +19,35 @@
 
 
 @this(layout: layout,
-h1: h1,
-p: p,
-govUkHeader: GovukHeader,
-govukButton: GovukButton
+        h1: h1,
+        p: p,
+        govUkHeader: GovukHeader,
+        govukButton: GovukButton
 )
 
 @()(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 @layout(Some(titleNoForm(messages("third_attempt_lockout_page.title")))) {
 
-@h1(messages("third_attempt_lockout_page.heading"))
+     @h1(messages("third_attempt_lockout_page.heading"))
 
-@p {
-@messages("third_attempt_lockout_page.line_1")
-}
+     @p {
+         @messages("third_attempt_lockout_page.line_1")
+     }
 
-@p {
-@messages("third_attempt_lockout_page.line_2")
-}
+     @p {
+         @messages("third_attempt_lockout_page.line_2")
+     }
 
-@p {
-@messages("third_attempt_lockout_page.line_3")
-}
+     @p {
+         @messages("third_attempt_lockout_page.line_3")
+     }
 
 <div class="govuk-button-group">
-@govukButton(Button(
-attributes = Map("id" -> "Go back to your Business Tax Account"),
-content = Text(messages("app.common.backToBTA")),
-href = Some(appConfig.addVatUrl)
-))
+     @govukButton(Button(
+         attributes = Map("id" -> "back-to-bta"),
+         content = Text(messages("third_attempt_lockout.go_back_to_bta")),
+         href = Some(appConfig.addVatUrl)
+     ))
 </div>
-
 }

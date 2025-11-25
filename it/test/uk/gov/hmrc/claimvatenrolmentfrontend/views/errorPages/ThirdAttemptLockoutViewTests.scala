@@ -19,7 +19,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.views.errorPages
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import play.api.libs.ws.WSResponse
-import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.{Base, Header, ThirdAttemptLockout => messages}
+import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.{Header, ThirdAttemptLockout => messages}
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.{ComponentSpecHelper, ViewSpecHelper}
 
 trait ThirdAttemptLockoutViewTests extends ViewSpecHelper {
@@ -45,18 +45,16 @@ trait ThirdAttemptLockoutViewTests extends ViewSpecHelper {
 
     "have the correct text" in {
       doc.getParagraphs.get(1).text mustBe messages.line_1
+      doc.getParagraphs.get(2).text mustBe messages.line_2
+      doc.getParagraphs.get(3).text mustBe messages.line_3
     }
 
-    "have the correct text" in {
-      doc.getParagraphs.get(1).text mustBe messages.line_2
+    "have a correct button" in {
+      doc.getSubmitButton.first.text mustBe messages.button_text
     }
 
-    "have the correct text" in {
-      doc.getParagraphs.get(1).text mustBe messages.line_3
-    }
-
-    "have a go back to your business tax account button" in {
-      doc.getSubmitButton.first.text mustBe Base.backToBTA
+    "have the correct link" in {
+      doc.getLink(id = "back-to-bta").attr("href") mustBe messages.link
     }
   }
 }

@@ -25,7 +25,6 @@ object MessageLookup {
     val no = "No"
     val tryAgain = "Try Again"
     val signOut = "Sign out"
-    val backToBTA = "Go back to your Business Tax Account"
 
     object Error {
       val title = "There is a problem"
@@ -146,6 +145,8 @@ object MessageLookup {
     val line_1 = "The details you provided must match exactly those that we have on record. Before your next attempt, check you have the correct information. This can be found on your latest VAT Return or the VAT registration confirmation letter we sent by post."
     val line_2 = "For security, access has been locked for 24 hours from the last failed attempt."
     val line_3 = "The HMRC helpline will not be able to give you access within this time period."
+    val button_text = "Go back to your Business Tax Account"
+    val link = "/business-account/add-tax/vat/interstitial"
 
   }
 

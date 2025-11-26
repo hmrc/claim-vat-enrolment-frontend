@@ -35,8 +35,7 @@ class CaptureVatApplicationNumberController @Inject()(mcc: MessagesControllerCom
                                                       view: capture_vat_application_number_page,
                                                       storeSubmittedVanService: StoreSubmittedVANService,
                                                       journeyService: JourneyService,
-                                                      val authConnector: AuthConnector,
-                                                      errorHandler: ErrorHandler
+                                                      val authConnector: AuthConnector
                                                      )(implicit val config: AppConfig, ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions with LoggingUtil {
 
   def show(journeyId: String): Action[AnyContent] = Action.async {
@@ -44,7 +43,7 @@ class CaptureVatApplicationNumberController @Inject()(mcc: MessagesControllerCom
       authorised().retrieve(internalId) {
         case Some(authId) =>
           journeyService.retrieveJourneyConfig(journeyId, authId).map {
-            case Some(value) => Ok(view(CaptureVatApplicationNumberForm.form, routes.CaptureVatApplicationNumberController.submit(journeyId)))
+            case Some(_) => Ok(view(CaptureVatApplicationNumberForm.form, routes.CaptureVatApplicationNumberController.submit(journeyId)))
             case None =>
               errorLog(s"[CaptureVatApplicationNumberController][show] - Journey config could not be retrieved from the journeyConfigRepository for journey: $journeyId")
               Redirect(errorPages.routes.ServiceTimeoutController.show())

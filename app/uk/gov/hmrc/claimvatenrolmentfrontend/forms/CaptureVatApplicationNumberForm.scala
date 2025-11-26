@@ -25,8 +25,6 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.forms.utils.ValidationHelper.{valid
 object CaptureVatApplicationNumberForm {
 
   private val vatApplicationNumber: String = "vatApplicationNumber"
-  private val vanLengthRegex: String = "^.{12}$"
-  private val vanNumberRegex: String = "^[0-9]+$"
 
   private val vatApplicationNumberEmpty: Constraint[String] = Constraint("vatApplicationNumber.not_entered")(
     vatApplicationNumber => validate(
@@ -37,14 +35,14 @@ object CaptureVatApplicationNumberForm {
 
   private val vatApplicationNumberLength: Constraint[String] = Constraint("vatApplicationNumber.invalid_length")(
     vatApplicationNumber => validateNot(
-      constraint = vatApplicationNumber.replaceAll(" ", "") matches vanLengthRegex,
+      constraint = vatApplicationNumber.replaceAll(" ", "").length == 12,
       errMsg = "capture-vat-application-number.error.message.invalid_length"
     )
   )
 
   private val vatApplicationNumberFormat: Constraint[String] = Constraint("vatApplicationNumber.invalid_format")(
     vatApplicationNumber => validateNot(
-      constraint = vatApplicationNumber.replaceAll(" ", "") matches vanNumberRegex,
+      constraint = vatApplicationNumber.replaceAll(" ", "").forall(_.isDigit),
       errMsg = "capture-vat-application-number.error.message.invalid_format"
     )
   )
@@ -52,7 +50,7 @@ object CaptureVatApplicationNumberForm {
   val form: Form[String] = Form(
     single(
       vatApplicationNumber -> text.verifying(vatApplicationNumberEmpty andThen
-        vatApplicationNumberLength andThen vatApplicationNumberFormat)
+        vatApplicationNumberFormat andThen vatApplicationNumberLength)
     )
   )
 }

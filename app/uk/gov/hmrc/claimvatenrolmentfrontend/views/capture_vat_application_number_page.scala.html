@@ -24,17 +24,16 @@
     errorSummary: errorSummary,
     formWithCSRF: FormWithCSRF,
     inputText: inputText,
-    govukRadios : GovukRadios,
     govukButton: GovukButton
 )
 
 @(form: Form[_],formAction: Call)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-@layout(Some(title(form, "capture-vat-application-number.title"))) {
+@layout(Some(title(form, "capture-vat-application-number.title_heading"))) {
 
     @errorSummary(form.errors)
 
-    @h1(messages("capture-vat-application-number.heading"))
+    @h1(messages("capture-vat-application-number.title_heading"))
 
     @p {
         @messages("capture-vat-application-number.line_1")
@@ -53,7 +52,7 @@
             label = messages("capture-vat-application-number.heading"),
             isPageHeading = false,
             hasFieldTitleText = false,
-            hint = Some(Html(s"""<p style="color:#626a6e" class="govuk-body">${messages("capture-vat-application-number.hint")}</p>"""))
+            hint = Some(Html(s"""<p style="color:#505a5f">${messages("capture-vat-application-number.hint")}</p>"""))
         )
 
         @govukButton(Button(

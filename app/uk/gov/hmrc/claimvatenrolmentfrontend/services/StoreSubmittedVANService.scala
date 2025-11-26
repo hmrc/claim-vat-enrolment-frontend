@@ -18,7 +18,6 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.StoreSubmittedVANService.SubmittedVatApplicationNumberKey
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
@@ -32,13 +31,10 @@ class StoreSubmittedVANService @Inject()(journeyDataRepository: JourneyDataRepos
                              authInternalId: String): Future[Boolean] =
     journeyDataRepository.updateJourneyData(
       journeyId = journeyId,
-      dataKey = SubmittedVatApplicationNumberKey,
+      dataKey = JourneyDataRepository.SubmittedVatApplicationNumberKey,
       data = Json.toJson(submittedVan),
       authInternalId = authInternalId
     )
 }
 
-object StoreSubmittedVANService {
-  val SubmittedVatApplicationNumberKey = "submittedVatApplicationNumber"
-}
 

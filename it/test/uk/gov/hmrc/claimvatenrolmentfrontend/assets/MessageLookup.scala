@@ -90,7 +90,7 @@ object MessageLookup {
     val hint = "It is 12 numbers and begins with ‘099’, for example 099 123456789."
 
     object Error {
-      val invalidLength = "The VAT application number is 12 numbers long"
+      val invalidLength = "The VAT application number must be 12 numbers"
       val nothing = "Enter the VAT application number"
       val invalidFormat = "The VAT registration number must only contain numbers"
     }

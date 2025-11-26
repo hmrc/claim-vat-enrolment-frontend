@@ -40,14 +40,13 @@ capture-submitted-vat-return.heading                        = Ydych chi’n cyfl
 capture-submitted-vat-return.error.message                  = Dewiswch ‘Iawn’ os ydych yn cyflwyno Ffurflenni TAW
 
 # VAT Application Number Page
-capture-vat-application-number.title                          = Beth yw rhif eich cais TAW?
-capture-vat-application-number.heading                        = Beth yw rhif eich cais TAW?
+capture-vat-application-number.title_heading                  = Beth yw rhif eich cais TAW?
 capture-vat-application-number.line_1                         = Dyma’r cyfeirnod unigryw sy’n cael ei greu wrth wneud cais i gofrestru ar gyfer TAW.
 capture-vat-application-number.line_2                         = Cafodd rhif y cais TAW ei ddangos ar y sgrin ar ôl i gais i gofrestru ar gyfer TAW gael ei wneud. Cafodd ei e-bostio atoch hefyd a bydd ar eich llythyr cofrestru TAW a anfonwyd gennym drwy’r post.
 capture-vat-application-number.hint                           = Mae’n 12 rhif ac mae’n dechrau gyda ‘099’, er enghraifft 099123456789.
-capture-vat-application-number.error.message.invalid          = The VAT application number must be 12 numbers
-capture-vat-application-number.error.message.invalid_format   = The VAT application number must only contain numbers
-capture-vat-application-number.error.message.nothing          = Enter the VAT application number
+capture-vat-application-number.error.message.invalid_length   = Mae rhif y cais TAW yn 12 rhif
+capture-vat-application-number.error.message.invalid_format   = Mae’n rhaid i rif y cais TAW gynnwys rhifau yn unig
+capture-vat-application-number.error.message.nothing          = Nodwch rif y cais TAW
 
 ## Box 5 Figure Page
 capture-box5-figure.title                                   = Beth yw cyfanswm eich Ffurflen TAW ddiweddaraf?

@@ -23,9 +23,9 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.views.errorPages.DifferentVatNumber
 
 class DifferentVatNumbersErrorControllerISpec extends ComponentSpecHelper with DifferentVatNumbersErrorViewTests with AuthStub {
 
-  "GET /error/different-VAT-registration-numbers" should {
+  "GET /error/different-vat-registration-numbers" should {
     lazy val result = {
-      get("/error/different-VAT-registration-numbers")
+      get("/error/different-vat-registration-numbers")
     }
 
     "return OK" in {

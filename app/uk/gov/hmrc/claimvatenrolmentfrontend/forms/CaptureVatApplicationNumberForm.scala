@@ -28,7 +28,7 @@ object CaptureVatApplicationNumberForm {
 
   private val vatApplicationNumberEmpty: Constraint[String] = Constraint("vatApplicationNumber.not_entered")(
     vatApplicationNumber => validate(
-      constraint = vatApplicationNumber.isEmpty,
+      constraint = vatApplicationNumber.replaceAll(" ", "").isEmpty,
       errMsg = "capture-vat-application-number.error.message.nothing"
     )
   )

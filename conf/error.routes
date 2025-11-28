@@ -12,6 +12,8 @@ GET         /can-not-confirm-business            uk.gov.hmrc.claimvatenrolmentfr
 
 # Different VAT Registration Numbers Error
 GET        /different-vat-registration-numbers    uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.DifferentVatNumbersErrorController.show()
+# Third Attempt Lockout Error
+GET         /can-not-confirm-business-now-locked    uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.ThirdAttemptLockoutController.show()
 
 # Service Timeout Error
 GET        /service-timeout                     uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.ServiceTimeoutController.show()

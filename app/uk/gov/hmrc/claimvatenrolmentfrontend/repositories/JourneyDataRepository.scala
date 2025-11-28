@@ -107,6 +107,7 @@ object JourneyDataRepository {
   val SubmittedVatReturnKey: String = "submittedVatReturn"
   val Box5FigureKey: String = "box5Figure"
   val LastMonthSubmittedKey: String = "lastMonthSubmitted"
+  val SubmittedVatApplicationNumberKey = "submittedVatApplicationNumber"
 
   implicit lazy val vatKnownFactsReads: Reads[VatKnownFacts] =
     (json: JsValue) => for {

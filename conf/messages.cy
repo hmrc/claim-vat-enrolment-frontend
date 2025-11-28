@@ -39,6 +39,15 @@ capture-submitted-vat-return.title                          = Ydych chi’n cyfl
 capture-submitted-vat-return.heading                        = Ydych chi’n cyflwyno Ffurflenni TAW ar hyn o bryd?
 capture-submitted-vat-return.error.message                  = Dewiswch ‘Iawn’ os ydych yn cyflwyno Ffurflenni TAW
 
+# VAT Application Number Page
+capture-vat-application-number.title_heading                  = Beth yw rhif eich cais TAW?
+capture-vat-application-number.line_1                         = Dyma’r cyfeirnod unigryw sy’n cael ei greu wrth wneud cais i gofrestru ar gyfer TAW.
+capture-vat-application-number.line_2                         = Cafodd rhif y cais TAW ei ddangos ar y sgrin ar ôl i gais i gofrestru ar gyfer TAW gael ei wneud. Cafodd ei e-bostio atoch hefyd a bydd ar eich llythyr cofrestru TAW a anfonwyd gennym drwy’r post.
+capture-vat-application-number.hint                           = Mae’n 12 rhif ac mae’n dechrau gyda ‘099’, er enghraifft 099123456789.
+capture-vat-application-number.error.message.invalid_length   = Mae rhif y cais TAW yn 12 rhif
+capture-vat-application-number.error.message.invalid_format   = Mae’n rhaid i rif y cais TAW gynnwys rhifau yn unig
+capture-vat-application-number.error.message.nothing          = Nodwch rif y cais TAW
+
 ## Box 5 Figure Page
 capture-box5-figure.title                                   = Beth yw cyfanswm eich Ffurflen TAW ddiweddaraf?
 capture-box5-figure.heading                                 = Beth yw cyfanswm eich Ffurflen TAW ddiweddaraf?
@@ -89,6 +98,12 @@ known_facts_mismatch.line_1                                 = Dydy’r wybodaeth
 different_vat_numbers_error.heading                         = Rydych wedi nodi gwahanol rifau cofrestru TAW
 different_vat_numbers_error.line_1                          = Nid yw’r rhif cofrestru TAW rydych wedi ei ddarparu yn cyd-fynd yn union â’r rhif a ddefnyddiwyd o’r blaen. Am resymau diogelwch, mae’n rhaid ailddechrau’r sesiwn hwn.
 different_vat_numbers_error.line_2                          = Er mwyn rhoi cynnig arall arni, bydd angen i chi allgofnodi ac yna mewngofnodi eto.
+# Third Attempt Lockout Error Page
+third_attempt_lockout_page.heading                          = Doedd dim modd i ni gadarnhau’ch busnes felly rydym wedi cloi mynediad at eich cyfrif am 24 awr
+third_attempt_lockout_page.line_1                           = Mae’n rhaid i’r manylion a ddarparwyd gennych gyd-fynd yn union â’r cofnodion sydd gennym. Gwiriwch fod gennych yr wybodaeth gywir cyn ceisio eto. Mae’r wybodaeth hon ar eich Ffurflen TAW ddiweddaraf neu’r llythyr a anfonwyd gennym drwy’r post yn cadarnhau’r cofrestriad TAW.
+third_attempt_lockout_page.line_2                           = Am resymau diogelwch, mae mynediad wedi’i gloi am 24 awr, a hynny o’r amser y cafodd y cynnig aflwyddiannus diwethaf ei wneud.
+third_attempt_lockout_page.line_3                           = Ni fydd llinell gymorth CThEF yn gallu rhoi mynediad i chi o fewn y cyfnod hwn.
+third_attempt_lockout.go_back_to_bta                        = Ewch yn ôl i’ch Cyfrif Treth Busnes
 
 # Invalid Account Type Page
 invalid_account_type.title                                  = Nid ydych wedi’ch awdurdodi i ddefnyddio’r gwasanaeth hwn

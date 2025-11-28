@@ -25,6 +25,10 @@ POST        /:journeyId/business-postcode             uk.gov.hmrc.claimvatenrolm
 GET         /:journeyId/box-5-figure                  uk.gov.hmrc.claimvatenrolmentfrontend.controllers.CaptureBox5FigureController.show(journeyId)
 POST        /:journeyId/box-5-figure                  uk.gov.hmrc.claimvatenrolmentfrontend.controllers.CaptureBox5FigureController.submit(journeyId)
 
+#  Capture VAT application number
+GET         /:journeyId/vat-application-number        uk.gov.hmrc.claimvatenrolmentfrontend.controllers.CaptureVatApplicationNumberController.show(journeyId)
+POST        /:journeyId/vat-application-number        uk.gov.hmrc.claimvatenrolmentfrontend.controllers.CaptureVatApplicationNumberController.submit(journeyId)
+
 #  Capture Submitted VAT Return
 GET         /:journeyId/submitted-vat-return          uk.gov.hmrc.claimvatenrolmentfrontend.controllers.CaptureSubmittedVatReturnController.show(journeyId)
 POST        /:journeyId/submitted-vat-return          uk.gov.hmrc.claimvatenrolmentfrontend.controllers.CaptureSubmittedVatReturnController.submit(journeyId)

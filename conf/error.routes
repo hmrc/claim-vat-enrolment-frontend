@@ -12,6 +12,8 @@ GET         /can-not-confirm-business            uk.gov.hmrc.claimvatenrolmentfr
 
 # Known Facts Mismatch Within 24hrs Error
 GET         /access-still-locked                 uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.KnownFactsMismatchWithin24hrsController.show()
+# Third Attempt Lockout Error
+GET         /can-not-confirm-business-now-locked    uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.ThirdAttemptLockoutController.show()
 
 # Service Timeout Error
 GET        /service-timeout                     uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.ServiceTimeoutController.show()

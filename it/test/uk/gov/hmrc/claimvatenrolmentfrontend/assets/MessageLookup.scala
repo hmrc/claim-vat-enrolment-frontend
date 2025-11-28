@@ -159,6 +159,9 @@ object MessageLookup {
     val heading = "You have entered different VAT registration numbers"
     val line_1 = "The VAT registration number you have provided does not match exactly the number previously used. For security, this session must be restarted."
     val line_2 = "To make another attempt, sign out and sign in."
+
+  }
+
   object ThirdAttemptLockout {
     val title = "We could not confirm your business so we have locked access for 24 hours - Claim VAT Enrolment - GOV.UK"
     val heading = "We could not confirm your business so we have locked access for 24 hours"

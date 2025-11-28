@@ -99,6 +99,7 @@ known_facts_mismatch.line_1                                 = The information yo
 different_vat_numbers_error.heading                          = You have entered different VAT registration numbers
 different_vat_numbers_error.line_1                           = The VAT registration number you have provided does not match exactly the number previously used. For security, this session must be restarted.
 different_vat_numbers_error.line_2                           = To make another attempt, sign out and sign in.
+
 # Third Attempt Lockout Error Page
 third_attempt_lockout_page.heading                          = We could not confirm your business so we have locked access for 24 hours
 third_attempt_lockout_page.line_1                           = The details you provided must match exactly those that we have on record. Before your next attempt, check you have the correct information. This can be found on your latest VAT Return or the VAT registration confirmation letter we sent by post.

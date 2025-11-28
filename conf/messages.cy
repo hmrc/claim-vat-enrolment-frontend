@@ -98,6 +98,7 @@ known_facts_mismatch.line_1                                 = Dydy’r wybodaeth
 different_vat_numbers_error.heading                         = Rydych wedi nodi gwahanol rifau cofrestru TAW
 different_vat_numbers_error.line_1                          = Nid yw’r rhif cofrestru TAW rydych wedi ei ddarparu yn cyd-fynd yn union â’r rhif a ddefnyddiwyd o’r blaen. Am resymau diogelwch, mae’n rhaid ailddechrau’r sesiwn hwn.
 different_vat_numbers_error.line_2                          = Er mwyn rhoi cynnig arall arni, bydd angen i chi allgofnodi ac yna mewngofnodi eto.
+
 # Third Attempt Lockout Error Page
 third_attempt_lockout_page.heading                          = Doedd dim modd i ni gadarnhau’ch busnes felly rydym wedi cloi mynediad at eich cyfrif am 24 awr
 third_attempt_lockout_page.line_1                           = Mae’n rhaid i’r manylion a ddarparwyd gennych gyd-fynd yn union â’r cofnodion sydd gennym. Gwiriwch fod gennych yr wybodaeth gywir cyn ceisio eto. Mae’r wybodaeth hon ar eich Ffurflen TAW ddiweddaraf neu’r llythyr a anfonwyd gennym drwy’r post yn cadarnhau’r cofrestriad TAW.

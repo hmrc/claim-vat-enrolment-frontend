@@ -101,6 +101,7 @@ known_facts_mismatch_within_24hrs.line_1                    = In the last 24 hou
 known_facts_mismatch_within_24hrs.line_2                    = Before your next attempt, check you have the correct information. This can be found on your latest VAT Return or the VAT registration confirmation letter we sent by post.
 known_facts_mismatch_within_24hrs.line_3                    = The HMRC helpline will not be able to give access within 24 hours of the last failed attempt.
 known_facts_mismatch_within_24hrs.link                      = Go back to your Business Tax Account
+
 # Third Attempt Lockout Error Page
 third_attempt_lockout_page.heading                          = We could not confirm your business so we have locked access for 24 hours
 third_attempt_lockout_page.line_1                           = The details you provided must match exactly those that we have on record. Before your next attempt, check you have the correct information. This can be found on your latest VAT Return or the VAT registration confirmation letter we sent by post.

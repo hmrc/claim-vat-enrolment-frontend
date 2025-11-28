@@ -162,6 +162,8 @@ object MessageLookup {
     val line_3 = "The HMRC helpline will not be able to give access within 24 hours of the last failed attempt."
     val link = "Go back to your Business Tax Account"
     val link_url = "/business-account/add-tax/vat/interstitial"
+  }
+
   object ThirdAttemptLockout {
     val title = "We could not confirm your business so we have locked access for 24 hours - Claim VAT Enrolment - GOV.UK"
     val heading = "We could not confirm your business so we have locked access for 24 hours"

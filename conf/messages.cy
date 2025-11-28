@@ -100,6 +100,7 @@ known_facts_mismatch_within_24hrs.line_1                    = Yn ystod y 24 awr 
 known_facts_mismatch_within_24hrs.line_2                    = Gwiriwch fod gennych yr wybodaeth gywir cyn ceisio eto. Mae’r wybodaeth hon ar eich Ffurflen TAW ddiweddaraf neu’r llythyr a anfonwyd gennym drwy’r post yn cadarnhau’r cofrestriad TAW.
 known_facts_mismatch_within_24hrs.line_3                    = Ni fydd llinell gymorth CThEF yn gallu rhoi mynediad i chi o fewn y cyfnod hwn.
 known_facts_mismatch_within_24hrs.link                      = Ewch yn ôl i’ch Cyfrif Treth Busnes
+
 # Third Attempt Lockout Error Page
 third_attempt_lockout_page.heading                          = Doedd dim modd i ni gadarnhau’ch busnes felly rydym wedi cloi mynediad at eich cyfrif am 24 awr
 third_attempt_lockout_page.line_1                           = Mae’n rhaid i’r manylion a ddarparwyd gennych gyd-fynd yn union â’r cofnodion sydd gennym. Gwiriwch fod gennych yr wybodaeth gywir cyn ceisio eto. Mae’r wybodaeth hon ar eich Ffurflen TAW ddiweddaraf neu’r llythyr a anfonwyd gennym drwy’r post yn cadarnhau’r cofrestriad TAW.

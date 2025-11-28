@@ -159,7 +159,16 @@ object MessageLookup {
     val heading = "You have entered different VAT registration numbers"
     val line_1 = "The VAT registration number you have provided does not match exactly the number previously used. For security, this session must be restarted."
     val line_2 = "To make another attempt, sign out and sign in."
+  }
 
+  object KnownFactsMismatchWithin24hrs {
+    val title = "Access to your VAT online account is still locked - Claim VAT Enrolment - GOV.UK"
+    val heading = "Access to your VAT online account is still locked"
+    val line_1 = "In the last 24 hours, business details were provided that did not match exactly those that we have on record. For security, we have locked access for 24 hours from the last failed attempt."
+    val line_2 = "Before your next attempt, check you have the correct information. This can be found on your latest VAT Return or the VAT registration confirmation letter we sent by post."
+    val line_3 = "The HMRC helpline will not be able to give access within 24 hours of the last failed attempt."
+    val link = "Go back to your Business Tax Account"
+    val link_url = "/business-account/add-tax/vat/interstitial"
   }
 
   object ThirdAttemptLockout {

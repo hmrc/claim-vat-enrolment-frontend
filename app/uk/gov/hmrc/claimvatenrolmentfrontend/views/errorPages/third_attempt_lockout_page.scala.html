@@ -1,5 +1,5 @@
 @*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,19 +27,27 @@
 
 @()(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-@layout(Some(titleNoForm(messages("known_facts_mismatch.title")))) {
+@layout(Some(titleNoForm(messages("third_attempt_lockout_page.heading")))) {
 
-    @h1(messages("known_facts_mismatch.heading"))
+     @h1(messages("third_attempt_lockout_page.heading"))
 
-    @p {
-        @messages("known_facts_mismatch.line_1")
-    }
+     @p {
+         @messages("third_attempt_lockout_page.line_1")
+     }
+
+     @p {
+         @messages("third_attempt_lockout_page.line_2")
+     }
+
+     @p {
+         @messages("third_attempt_lockout_page.line_3")
+     }
 
 <div class="govuk-button-group">
-    @govukButton(Button(
-        attributes = Map("id" -> "Try Again"),
-        content = Text(messages("app.common.tryAgain")),
-        href = Some(appConfig.businessTaxAccountAddVatUrl)
-    ))
+     @govukButton(Button(
+         attributes = Map("id" -> "back-to-bta"),
+         content = Text(messages("third_attempt_lockout.go_back_to_bta")),
+         href = Some(appConfig.addVatUrl)
+     ))
 </div>
 }

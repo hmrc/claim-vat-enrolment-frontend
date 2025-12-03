@@ -41,6 +41,10 @@ trait CaptureSubmittedVatReturnViewTests extends ViewSpecHelper {
       doc.getH1Elements.first.text mustBe messages.heading
     }
 
+    "have the correct hint" in {
+      doc.getHintText.text mustBe messages.hint
+    }
+
     "have a continue button" in {
       doc.getSubmitButton.first.text mustBe Base.continue
     }

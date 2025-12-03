@@ -35,8 +35,9 @@ capture-business-postcode.link_text                         = Nid oes gan y busn
 capture-business-postcode.error.emptyPostcode               = Nodwch y cod post ble mae’ch busnes wedi’i gofrestru ar gyfer TAW
 
 # Submitted VAT Return Page
-capture-submitted-vat-return.title                          = Ydych chi’n cyflwyno Ffurflenni TAW ar hyn o bryd?
-capture-submitted-vat-return.heading                        = Ydych chi’n cyflwyno Ffurflenni TAW ar hyn o bryd?
+capture-submitted-vat-return.title                          = A ydych chi, neu rywun arall, wedi cyflwyno Ffurflenni TAW ar gyfer y busnes hwn?
+capture-submitted-vat-return.heading                        = A ydych chi, neu rywun arall, wedi cyflwyno Ffurflenni TAW ar gyfer y busnes hwn?
+capture-submitted-vat-return.hint                           = Dewiswch ‘na’ os nad oes Ffurflen TAW wedi’i chyflwyno ar gyfer y busnes hwn eto.
 capture-submitted-vat-return.error.message                  = Dewiswch ‘Iawn’ os ydych yn cyflwyno Ffurflenni TAW
 
 # VAT Application Number Page

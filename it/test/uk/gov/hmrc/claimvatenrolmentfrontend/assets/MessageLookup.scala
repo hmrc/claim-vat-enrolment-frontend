@@ -98,8 +98,9 @@ object MessageLookup {
   }
 
   object CaptureSubmittedVATReturn {
-    val title = "Are you currently submitting VAT Returns? - Claim VAT Enrolment - GOV.UK"
-    val heading = "Are you currently submitting VAT Returns?"
+    val title = "Have you, or someone else, submitted VAT Returns for this business? - Claim VAT Enrolment - GOV.UK"
+    val heading = "Have you, or someone else, submitted VAT Returns for this business?"
+    val hint = "If a VAT Return has not yet been submitted for this business, select no."
 
     object Error {
       val errorMessage = "Select yes if you are submitting VAT returns"

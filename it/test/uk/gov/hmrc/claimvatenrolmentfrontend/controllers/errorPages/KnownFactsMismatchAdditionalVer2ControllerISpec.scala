@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +22,13 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.errorPages.KnownFactsMismatchViewTests
 
-class KnownFactsMismatchControllerISpec extends ComponentSpecHelper with KnownFactsMismatchViewTests with AuthStub {
+class KnownFactsMismatchAdditionalVer2ControllerISpec extends ComponentSpecHelper with KnownFactsMismatchViewTests with AuthStub {
 
   override def additionalConfig: Map[String, String] = Map(
-    "feature-switch.knownFactsCheckFlag" -> "false"
+    "feature-switch.knownFactsCheckFlag" -> "true"
   )
 
-  "GET /error/can-not-confirm-business" should {
+  "GET /error/can-not-confirm-business for KnownFactsCheckFlag Enabled" should {
 
     lazy val result = {
       stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
@@ -39,7 +39,6 @@ class KnownFactsMismatchControllerISpec extends ComponentSpecHelper with KnownFa
       result.status mustBe OK
     }
 
-    testKnownFactsMismatchView(result)
+    testKnownFactsMismatchViewWithKnownFactsCheckFlagEnabled(result)
   }
-
 }

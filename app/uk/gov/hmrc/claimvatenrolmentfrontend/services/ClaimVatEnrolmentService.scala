@@ -18,9 +18,11 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
 import play.api.data.Form
 import play.api.mvc.Request
+import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.AllocateEnrolmentConnector.etmpDateFormat
 import uk.gov.hmrc.claimvatenrolmentfrontend.httpparsers.QueryUsersHttpParser.{NoUsersFound, UsersFound}
 import uk.gov.hmrc.claimvatenrolmentfrontend.models._
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneySubmissionRepository
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.ClaimVatEnrolmentService._
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 import uk.gov.hmrc.play.audit.AuditExtensions
@@ -33,6 +35,8 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
                                          allocateEnrolmentService: AllocateEnrolmentService,
+                                         config: AppConfig,
+                                         submissionRepo: JourneySubmissionRepository,
                                          journeyService: JourneyService) {
 
   def claimVatEnrolment(credentialId: String,
@@ -55,29 +59,59 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
             sendAuditEvent(journeyData, isSuccessful = false, Some(MultipleEnrolmentsInvalid.message))
             Future.successful(Left(CannotAssignMultipleMtdvatEnrolments))
           case InvalidKnownFacts =>
-            callEnrolmentStoreProxy(journeyData)
+            callEnrolmentStoreProxy(journeyId, journeyData)
           case EnrolmentFailure(_) =>
-            callEnrolmentStoreProxy(journeyData, enrolmentFailure = true)
+            callEnrolmentStoreProxy(journeyId, journeyData, enrolmentFailure = true)
         }
       case None => Future.successful(Left(JourneyDataFailure))
     }
   }
 
-  private def callEnrolmentStoreProxy(journeyData: VatKnownFacts,
+  private def callEnrolmentStoreProxy(journeyId: String,
+                                      journeyData: VatKnownFacts,
                                       enrolmentFailure: Boolean = false
                                      )(implicit hc: HeaderCarrier,
-                                      request: Request[_],
-                                      ec: ExecutionContext): Future[ClaimVatEnrolmentResponse] = {
+                                       request: Request[_],
+                                       ec: ExecutionContext): Future[ClaimVatEnrolmentResponse] = {
+
     allocateEnrolmentService.getUserIds(journeyData.vatNumber).map {
       case NoUsersFound if enrolmentFailure =>
         sendAuditEvent(journeyData, isSuccessful = false, Some(NoUsersFound.message))
         throw new InternalServerException(NoUsersFound.message)
       case NoUsersFound =>
-        sendAuditEvent(journeyData, isSuccessful = false, Some(InvalidKnownFacts.message))
-        Left(KnownFactsMismatch)
+        if(config.isKnownFactsCheckEnabled){
+          callKnownFactsMismatchLogic(journeyId, journeyData).map(_)
+          //Left(KnownFactsMismatch)
+        } else {
+          sendAuditEvent(journeyData, isSuccessful = false, Some(InvalidKnownFacts.message))
+          Left(KnownFactsMismatch)
+        }
       case UsersFound =>
         sendAuditEvent(journeyData, isSuccessful = false, Some(UsersFound.message))
         Left(EnrolmentAlreadyAllocated)
+    }
+  }
+
+  private def callKnownFactsMismatchLogic(journeyId: String,
+                                          journeyData: VatKnownFacts)(implicit hc: HeaderCarrier,
+                                                                      request: Request[_],
+                                                                      ec: ExecutionContext): Future[ClaimVatEnrolmentResponse] = {
+
+    val accountStatusUnLocked = "UnLocked"
+    val accountStatusLocked = "Locked"
+
+    submissionRepo.findSubmissionData(journeyId, journeyData.vatNumber).flatMap {
+      case Some(data) if (data.submissionNumber == 1) =>
+        submissionRepo.updateSubmissionData(journeyId, journeyData.vatNumber, data.submissionNumber + 1, accountStatusUnLocked)
+        //sendAuditEvent
+        Future.successful(Left(KnownFactsMismatch))
+      case Some(data) if(data.submissionNumber == 2) =>
+        submissionRepo.updateSubmissionData(journeyId, journeyData.vatNumber, data.submissionNumber + 1, accountStatusLocked)
+        //sendAuditEvent
+        Future.successful(Left(KnownFactsMismatch))
+      case _ => submissionRepo.insertSubmissionData(journeyId, journeyData.vatNumber, 1, accountStatusUnLocked)
+        //sendAuditEvent
+        Future.successful(Left(KnownFactsMismatch))
     }
   }
 

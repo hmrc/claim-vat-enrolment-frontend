@@ -31,15 +31,34 @@
 
     @h1(messages("known_facts_mismatch.heading"))
 
+  @if(appConfig.knownFactsCheckFlag){
+    @p {
+      @messages("known_facts_mismatch.ver2.line_1")
+    }
+    @p {
+      @messages("known_facts_mismatch.ver2.line_2")
+    }
+  } else {
     @p {
         @messages("known_facts_mismatch.line_1")
     }
+  }
 
-<div class="govuk-button-group">
-    @govukButton(Button(
-        attributes = Map("id" -> "Try Again"),
-        content = Text(messages("app.common.tryAgain")),
-        href = Some(appConfig.businessTaxAccountAddVatUrl)
-    ))
-</div>
+  @if(appConfig.knownFactsCheckFlag){
+    <div class="govuk-button-group">
+        @govukButton(Button(
+            attributes = Map("id" -> "Try Again"),
+            content = Text(messages("app.common.tryAgain")),
+            href = Some(appConfig.addVatUrl)
+        ))
+    </div>
+  } else {
+    <div class="govuk-button-group">
+        @govukButton(Button(
+            attributes = Map("id" -> "Try Again"),
+            content = Text(messages("app.common.tryAgain")),
+            href = Some(appConfig.businessTaxAccountAddVatUrl)
+        ))
+    </div>
+  }
 }

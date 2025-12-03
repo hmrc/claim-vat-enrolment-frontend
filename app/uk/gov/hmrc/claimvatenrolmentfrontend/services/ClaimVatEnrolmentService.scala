@@ -18,9 +18,11 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
 import play.api.data.Form
 import play.api.mvc.Request
+import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.AllocateEnrolmentConnector.etmpDateFormat
 import uk.gov.hmrc.claimvatenrolmentfrontend.httpparsers.QueryUsersHttpParser.{NoUsersFound, UsersFound}
 import uk.gov.hmrc.claimvatenrolmentfrontend.models._
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneySubmissionRepository
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.ClaimVatEnrolmentService._
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 import uk.gov.hmrc.play.audit.AuditExtensions

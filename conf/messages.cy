@@ -94,6 +94,11 @@ known_facts_mismatch.title                                  = Doedd dim modd cad
 known_facts_mismatch.heading                                = Doedd dim modd cadarnhau’ch busnes
 known_facts_mismatch.line_1                                 = Dydy’r wybodaeth rydych wedi’i nodi ddim yn cyd-fynd â’r manylion sydd gennym am eich busnes.
 
+# Known Facts Mismatch Page - ver2 (knownFactsCheckFlag)
+known_facts_mismatch.ver2.title_heading                     = Doedd dim modd cadarnhau’ch busnes
+known_facts_mismatch.ver2.line_1                            = Nid yw’r manylion a ddarparwyd gennych yr un fath â’r cofnodion sydd gennym. Mae’n rhaid iddynt gyd-fynd yn union â’r manylion sydd ar y llythyr a anfonwyd gennym drwy’r post yn cadarnhau’r cofrestriad TAW.
+known_facts_mismatch.ver2.line_2                            = Gwiriwch eich manylion a rhowch gynnig arall arni.
+
 # Known Facts Mismatch Within 24hrs Page
 known_facts_mismatch_within_24hrs.heading                   = Mae mynediad at eich cyfrif TAW ar-lein yn dal i fod wedi’i gloi
 known_facts_mismatch_within_24hrs.line_1                    = Yn ystod y 24 awr ddiwethaf, cafodd manylion busnes eu darparu nad oeddent yn cyd-fynd yn union â’r cofnodion sydd gennym. Am resymau diogelwch, mae mynediad wedi’i gloi am 24 awr, a hynny o’r amser y cafodd y cynnig aflwyddiannus diwethaf ei wneud.

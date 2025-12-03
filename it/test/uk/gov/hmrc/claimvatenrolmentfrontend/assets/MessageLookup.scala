@@ -152,6 +152,9 @@ object MessageLookup {
     val heading = "We could not confirm your business"
     val line_1 = "The information you provided does not match the details we have about your business."
 
+    val ver2TitleHeading = "We could not confirm your business"
+    val ver2Line_1 = "The details you provided are not the same as those that we have on record. They must match exactly the details on the VAT registration confirmation letter that we sent by post."
+    val ver2Line_2 = "Check your details and try again."
   }
 
   object KnownFactsMismatchWithin24hrs {

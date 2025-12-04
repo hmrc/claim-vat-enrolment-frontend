@@ -83,4 +83,9 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
 
   lazy val isKnownFactsCheckEnabled: Boolean = isEnabled(KnownFactsCheckFlag)
 
+  def enableConfig(featureSwitching: FeatureSwitching) = {
+    featureSwitching.enable(KnownFactsCheckFlag)
+  }
+
+
 }

@@ -17,10 +17,9 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.assets
 
 import play.api.libs.json.{JsObject, Json}
-
 import uk.gov.hmrc.auth.core.retrieve.Credentials
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, Postcode, ReturnsInformation, VatKnownFacts}
-import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{JourneyIdKey, AuthInternalIdKey}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, JourneySubmission, Postcode, ReturnsInformation, VatKnownFacts}
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{AuthInternalIdKey, JourneyIdKey}
 
 import java.time.{LocalDate, Month}
 import java.util.UUID
@@ -41,6 +40,9 @@ object TestConstants {
   val testCredentials: Credentials = Credentials(testCredentialId, "GovernmentGateway")
   val testJourneyConfig: JourneyConfig = JourneyConfig(testContinueUrl)
 
+  val testSubmissionUpdateStatusTrue: Boolean = true
+  val testSubmissionUpdateStatusFalse: Boolean = false
+
   val testKey = "testKey"
   val testData = "test"
   val testSecondKey = "secondKey"
@@ -53,6 +55,22 @@ object TestConstants {
   val testFifthData = "fifthTest"
 
   val updatedData = "updated"
+
+  val testSubmissionNumber1: Int = 1
+  val testSubmissionNumber2: Int = 2
+  val testSubmissionNumber3: Int = 3
+  val testAccountStatusUnLocked: String= "UnLocked"
+  val testAccountStatusLocked: String= "Locked"
+
+  val accountStatusKey: String = "accountStatus"
+
+  val testSubmissionDataAttempt1: JourneySubmission =
+      JourneySubmission(
+        journeyId = testJourneyId,
+        vrn = testVatNumber,
+        submissionNumber = testSubmissionNumber1,
+        accountStatus = testAccountStatusUnLocked
+      )
 
   val testFullVatKnownFacts: VatKnownFacts =
     VatKnownFacts(

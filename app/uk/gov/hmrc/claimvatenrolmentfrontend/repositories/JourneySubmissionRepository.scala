@@ -23,12 +23,11 @@ import org.mongodb.scala.model._
 import play.api.libs.json._
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.JourneySubmission
-import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{JourneyIdKey, VatNumberKey}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneySubmissionRepository._
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
-import java.time.{Instant, LocalDate}
+import java.time.Instant
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -46,8 +45,8 @@ class JourneySubmissionRepository @Inject()(mongoComponent: MongoComponent,
   def findSubmissionData(journeyId: String, vrn: String): Future[Option[JourneySubmission]] = {
     collection.find[JsObject](
       Filters.and(
-        Filters.equal(JourneyIdKey, journeyId),
-        Filters.equal(VatNumberKey, vrn)
+        Filters.equal(JourneySubmissionIdKey, journeyId),
+        Filters.equal(SubmissionVrnKey, vrn)
       )
     ).headOption().map {
       case Some(doc) => Some(doc.as[JourneySubmission])
@@ -58,8 +57,8 @@ class JourneySubmissionRepository @Inject()(mongoComponent: MongoComponent,
   def insertSubmissionData(journeyId: String, vrn: String, submissionNumber: Int, accountStatus: String): Future[String] = {
     collection.insertOne(
       Json.obj(
-        JourneyIdKey -> journeyId,
-        VatNumberKey -> vrn,
+        JourneySubmissionIdKey -> journeyId,
+        SubmissionVrnKey -> vrn,
         SubmissionNumberKey -> submissionNumber,
         AccountStatusKey -> accountStatus,
         LastAttemptAtKey -> Json.obj( "$date" -> Instant.now.toEpochMilli)
@@ -67,25 +66,25 @@ class JourneySubmissionRepository @Inject()(mongoComponent: MongoComponent,
     ).toFuture().map(_ => journeyId)
   }
 
-  def updateSubmissionData(journeyId: String, vrn: String, submissionNumber: Int, accountStatus: String): Future[String] =
+  def updateSubmissionData(journeyId: String, vrn: String, submissionNumber: Int, accountStatus: String): Future[Boolean] =
     collection.updateOne(
       filterSubmissionData(journeyId, vrn),
       combine(Updates.set(SubmissionNumberKey, submissionNumber),
           Updates.set(AccountStatusKey, accountStatus),
           Updates.set(LastAttemptAtKey, Json.obj("$date" -> Instant.now.toEpochMilli))),
       UpdateOptions().upsert(false)
-    ).toFuture().map(_ => journeyId)
+    ).toFuture().map(_.getMatchedCount == 1 )
 
   private def filterSubmissionData(journeyId: String, vrn: String): Bson =
     Filters.and(
-      Filters.equal(JourneyIdKey, journeyId),
-      Filters.equal(VatNumberKey, vrn)
+      Filters.equal(JourneySubmissionIdKey, journeyId),
+      Filters.equal(SubmissionVrnKey, vrn)
     )
 
  def isBlockedJourney(vrn: String): Future[Boolean] = {
    collection.find[JsObject](
      Filters.and(
-       Filters.equal(VatNumberKey, vrn),
+       Filters.equal(SubmissionVrnKey, vrn),
        Filters.equal(AccountStatusKey, eq("Locked"))
      )
    ).headOption().map(_.isDefined)
@@ -94,28 +93,27 @@ class JourneySubmissionRepository @Inject()(mongoComponent: MongoComponent,
 }
 
 object JourneySubmissionRepository {
-  val JourneyIdKey: String = "journeyId"
-  val VatNumberKey: String = "vrn"
+  val JourneySubmissionIdKey: String = "journeyId"
+  val SubmissionVrnKey: String = "vrn"
   val SubmissionNumberKey: String = "submissionNumber"
   val AccountStatusKey: String = "accountStatus"
   val LastAttemptAtKey = "lastAttemptAt"
+  val UniqueId = "_id"
 
   implicit lazy val reads: Reads[JourneySubmission] =
     (json: JsValue) => for {
-      journeyId <- (json \ JourneyIdKey).validate[String]
-      vrn <- (json \ VatNumberKey).validate[String]
+      journeyId <- (json \ JourneySubmissionIdKey).validate[String]
+      vrn <- (json \ SubmissionVrnKey).validate[String]
       submissionNumber <- (json \ SubmissionNumberKey).validate[Int]
       accountStatus <- (json \ AccountStatusKey).validate[String]
-      lastAttemptAt <- (json \ LastAttemptAtKey).validate[LocalDate]
-    } yield JourneySubmission(journeyId, vrn, submissionNumber, accountStatus, lastAttemptAt)
+    } yield JourneySubmission(journeyId, vrn, submissionNumber, accountStatus)
 
   implicit lazy val writes: OWrites[JourneySubmission] =
     (journeySubmission: JourneySubmission) => Json.obj(
-      JourneyIdKey -> journeySubmission.journeyId,
-      VatNumberKey -> journeySubmission.vrn,
+      JourneySubmissionIdKey -> journeySubmission.journeyId,
+      SubmissionVrnKey -> journeySubmission.vrn,
       SubmissionNumberKey -> journeySubmission.submissionNumber,
-      AccountStatusKey -> journeySubmission.accountStatus,
-      LastAttemptAtKey -> journeySubmission.lastAttemptAt)
+      AccountStatusKey -> journeySubmission.accountStatus)
 
   def timeToLiveIndex(timeToLiveDuration: Long): IndexModel =
     IndexModel(

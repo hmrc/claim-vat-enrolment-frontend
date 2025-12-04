@@ -17,9 +17,8 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.models
 
 import play.api.libs.json._
-import java.time.LocalDate
 
-case class JourneySubmission(journeyId: String, vrn: String, submissionNumber: Int, accountStatus: String, lastAttemptAt: LocalDate)
+case class JourneySubmission(journeyId: String, vrn: String, submissionNumber: Int, accountStatus: String)
 
 object JourneySubmission {
   implicit val format: OFormat[JourneySubmission] = Json.format[JourneySubmission]

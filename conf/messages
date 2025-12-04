@@ -35,8 +35,8 @@ capture-business-postcode.link_text                         = The business does 
 capture-business-postcode.error.emptyPostcode               = Enter the postcode where your business is registered for VAT
 
 # Submitted VAT Return Page Old
-capture-submitted-vat-return.old.title                      = Are you currently submitting VAT returns?
-capture-submitted-vat-return.old.heading                    = Are you currently submitting VAT returns?
+capture-submitted-vat-return.old.title                      = Are you currently submitting VAT Returns?
+capture-submitted-vat-return.old.heading                    = Are you currently submitting VAT Returns?
 capture-submitted-vat-return.error.message                  = Select yes if you are submitting VAT returns
 
 # Submitted VAT Return Page New

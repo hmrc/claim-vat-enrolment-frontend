@@ -27,10 +27,12 @@ import play.api.libs.ws.{DefaultWSCookie, WSClient, WSCookie, WSRequest, WSRespo
 import play.api.mvc.{Cookie, Session, SessionCookieBaker}
 import play.api.test.Helpers._
 import play.api.test.Injecting
+import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.{FeatureSwitching, FeatureSwitchingModule}
 import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.models.FeatureSwitch
 import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.http.SessionKeys
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto
 
 trait ComponentSpecHelper extends AnyWordSpec with Matchers
@@ -45,6 +47,8 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
   val mockHost: String = WiremockHelper.wiremockHost
   val mockPort: String = WiremockHelper.wiremockPort.toString
   val mockUrl: String = s"http://$mockHost:$mockPort"
+
+  def additionalConfig: Map[String, String] = Map.empty
 
   val config: Map[String, String] = Map(
     "auditing.enabled" -> "false",
@@ -66,7 +70,7 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
   )
 
   override lazy val app: Application = new GuiceApplicationBuilder()
-    .configure(config)
+    .configure(config ++ additionalConfig)
     .build
 
   implicit val ws: WSClient = app.injector.instanceOf[WSClient]

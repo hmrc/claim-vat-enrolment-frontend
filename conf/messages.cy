@@ -94,6 +94,12 @@ known_facts_mismatch.title                                  = Doedd dim modd cad
 known_facts_mismatch.heading                                = Doedd dim modd cadarnhau’ch busnes
 known_facts_mismatch.line_1                                 = Dydy’r wybodaeth rydych wedi’i nodi ddim yn cyd-fynd â’r manylion sydd gennym am eich busnes.
 
+# Known Facts Mismatch Page - ver2 (knownFactsCheckFlag)
+known_facts_mismatch.ver2.title_heading                     = Doedd dim modd cadarnhau’ch busnes
+known_facts_mismatch.ver2.line_1                            = Nid yw’r manylion a ddarparwyd gennych yr un fath â’r cofnodion sydd gennym. Mae’n rhaid iddynt gyd-fynd yn union â’r manylion sydd ar y llythyr a anfonwyd gennym drwy’r post yn cadarnhau’r cofrestriad TAW.
+known_facts_mismatch.ver2.line_2                            = Gwiriwch eich manylion a rhowch gynnig arall arni.
+
+
 # Different VAT Registration Numbers Error Page
 different_vat_numbers_error.heading                         = Rydych wedi nodi gwahanol rifau cofrestru TAW
 different_vat_numbers_error.line_1                          = Nid yw’r rhif cofrestru TAW rydych wedi ei ddarparu yn cyd-fynd yn union â’r rhif a ddefnyddiwyd o’r blaen. Am resymau diogelwch, mae’n rhaid ailddechrau’r sesiwn hwn.

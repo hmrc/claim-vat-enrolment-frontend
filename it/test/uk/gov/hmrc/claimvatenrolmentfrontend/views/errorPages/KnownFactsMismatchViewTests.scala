@@ -51,4 +51,32 @@ trait KnownFactsMismatchViewTests extends ViewSpecHelper {
       doc.getSubmitButton.first.text mustBe Base.tryAgain
     }
   }
+
+  def testKnownFactsMismatchViewWithKnownFactsCheckFlagEnabled(result: => WSResponse): Unit = {
+
+    lazy val doc: Document = {
+      Jsoup.parse(result.body)
+    }
+
+    "have a view with the correct title" in {
+      doc.title mustBe messages.title
+    }
+
+    "have a sign out link in the header" in {
+      doc.getSignOutText mustBe Header.signOut
+    }
+
+    "have the correct heading" in {
+      doc.getH1Elements.first.text mustBe messages.ver2TitleHeading
+    }
+
+    "have the correct text" in {
+      doc.getParagraphs.get(1).text mustBe messages.ver2Line_1
+      doc.getParagraphs.get(2).text mustBe messages.ver2Line_2
+    }
+
+    "have a try again button" in {
+      doc.getSubmitButton.first.text mustBe Base.tryAgain
+    }
+  }
 }

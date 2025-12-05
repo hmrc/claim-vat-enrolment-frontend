@@ -84,7 +84,7 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
           callKnownFactsMismatchLogic(journeyId, journeyData)
         } else {
           sendAuditEvent(journeyData, isSuccessful = false, Some(InvalidKnownFacts.message))
-          Future.successful(Left(KnownFactsMismatch))
+          Future.successful(Left(KnownFactsMismatchLevel1))
         }
       case UsersFound =>
         sendAuditEvent(journeyData, isSuccessful = false, Some(UsersFound.message))
@@ -103,14 +103,14 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
       case Some(data) if data.submissionNumber == 1 =>
         submissionRepo.updateSubmissionData(journeyId, journeyData.vatNumber, data.submissionNumber + 1, accountStatusUnLocked)
         sendAuditEventKnownFactsCheck(journeyData, data.submissionNumber + 1, accountStatusUnLocked, Some(InvalidKnownFacts.message))
-        Future.successful(Left(KnownFactsMismatch))
+        Future.successful(Left(KnownFactsMismatchLevel1))
       case Some(data) if data.submissionNumber == 2 =>
         submissionRepo.updateSubmissionData(journeyId, journeyData.vatNumber, data.submissionNumber + 1, accountStatusLocked)
         sendAuditEventKnownFactsCheck(journeyData, data.submissionNumber + 1, accountStatusLocked, Some(InvalidKnownFacts.message))
-        Future.successful(Left(KnownFactsMismatch))
+        Future.successful(Left(KnownFactsMismatchLevel2))
       case _ => submissionRepo.insertSubmissionData(journeyId, journeyData.vatNumber, 1, accountStatusUnLocked)
         sendAuditEventKnownFactsCheck(journeyData, 1, accountStatusUnLocked, Some(InvalidKnownFacts.message))
-        Future.successful(Left(KnownFactsMismatch))
+        Future.successful(Left(KnownFactsMismatchLevel1))
     }
   }
 
@@ -206,7 +206,9 @@ object ClaimVatEnrolmentService {
 
   case object CannotAssignMultipleMtdvatEnrolments extends ClaimVatEnrolmentFailure
 
-  case object KnownFactsMismatch extends ClaimVatEnrolmentFailure
+  case object KnownFactsMismatchLevel1 extends ClaimVatEnrolmentFailure
+
+  case object KnownFactsMismatchLevel2 extends ClaimVatEnrolmentFailure
 
   case object JourneyConfigFailure extends ClaimVatEnrolmentFailure
 

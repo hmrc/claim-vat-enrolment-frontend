@@ -11,10 +11,10 @@ This is a Scala/Play frontend to allow users to claim vat enrolment from HMRC.
 > The below instructions are for Mac/Linux only. Windows users will have to use SBT to run the service on port `9936`.
 
 1. Make sure any dependent services are running using the following service-manager command
-`sm --start CLAIM_VAT_ENROLMENT_ALL -r`
+`sm2 --start CLAIM_VAT_ENROLMENT_ALL`
 
 2. Stop the frontend in service manager using
- `sm --stop CLAIM_VAT_ENROLMENT_FRONTEND`
+ `sm2 --stop CLAIM_VAT_ENROLMENT_FRONTEND`
  
 3. Run the frontend locally using
 `./run.sh` or 
@@ -87,7 +87,7 @@ This stub returns different responses based on the vatNumber.
 
 
 ### Unit and Integration tests
-To run the unit and integration tests, you can either use ```sbt test it:test``` or ```sbt clean coverage test it:test scalastyle coverageReport```.
+To run the unit and integration tests, you can either use ```sbt test it/test``` or ```sbt clean coverage test it/test scalastyle coverageReport```.
 
 ### License
 

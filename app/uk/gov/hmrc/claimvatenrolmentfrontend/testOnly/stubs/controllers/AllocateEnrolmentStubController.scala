@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.testOnly.stubs.controllers
 
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsError, JsValue, Json, OFormat}
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 

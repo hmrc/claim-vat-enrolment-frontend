@@ -87,7 +87,7 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
 
-        result mustBe Left(KnownFactsMismatch)
+        result mustBe Left(KnownFactsMismatchLevel1)
         verifyAuditEvent
         auditEventCaptor.getValue.detail mustBe testAuditDetails(testFullVatKnownFacts.get, isSuccessful = false, Some(InvalidKnownFacts.message))
       }
@@ -102,7 +102,7 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
 
-        result mustBe Left(KnownFactsMismatch)
+        result mustBe Left(KnownFactsMismatchLevel1)
         verifyAuditEvent
         verifyInsertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber1, testAccountStatusUnLocked)
 
@@ -119,7 +119,7 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
 
-        result mustBe Left(KnownFactsMismatch)
+        result mustBe Left(KnownFactsMismatchLevel2)
         verifyAuditEvent
         verifyUpdateSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked)
 

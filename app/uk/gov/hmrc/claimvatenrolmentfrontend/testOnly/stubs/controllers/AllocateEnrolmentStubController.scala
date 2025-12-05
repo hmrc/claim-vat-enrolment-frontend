@@ -77,6 +77,6 @@ def stubMatch(groupId: String, enrolmentKey: String): Action[JsValue] = Action.a
             }
           }
         )
-      }
+    }
   }
 }

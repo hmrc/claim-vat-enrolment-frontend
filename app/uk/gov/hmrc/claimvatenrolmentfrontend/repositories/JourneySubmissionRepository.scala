@@ -36,10 +36,21 @@ import scala.concurrent.{ExecutionContext, Future}
 class JourneySubmissionRepository @Inject()(mongoComponent: MongoComponent,
                                       appConfig: AppConfig
                                      )(implicit ec: ExecutionContext) extends PlayMongoRepository[JsObject](
-  collectionName = "claim-vat-enrolment-frontend-invalid-submission-data",
+  collectionName = "cve-frontend-invalid-submission-data",
   mongoComponent = mongoComponent,
   domainFormat = implicitly[Format[JsObject]],
-  indexes = Seq(timeToLiveIndex(appConfig.ttlLockSeconds))
+  indexes = Seq(IndexModel(
+                  keys = ascending(LastAttemptAtKey),
+                  indexOptions = IndexOptions()
+                    .name("CVEInvalidDataLockExpires")
+                    .expireAfter(appConfig.ttlLockSeconds, TimeUnit.SECONDS)),
+
+                IndexModel(
+                  keys = ascending(JourneySubmissionIdKey, SubmissionVrnKey),
+                  indexOptions = IndexOptions()
+                    .name("JourneyIdAndVrnIndex")
+                    .unique(true))
+              )
 ) {
 
   def findSubmissionData(journeyId: String, vrn: String): Future[Option[JourneySubmission]] = {
@@ -114,14 +125,6 @@ object JourneySubmissionRepository {
       SubmissionVrnKey -> journeySubmission.vrn,
       SubmissionNumberKey -> journeySubmission.submissionNumber,
       AccountStatusKey -> journeySubmission.accountStatus)
-
-  def timeToLiveIndex(timeToLiveDuration: Long): IndexModel =
-    IndexModel(
-      keys = ascending(LastAttemptAtKey),
-      indexOptions = IndexOptions()
-        .name("CVEInvalidDataLockExpires")
-        .expireAfter(timeToLiveDuration, TimeUnit.SECONDS)
-    )
 }
 
 

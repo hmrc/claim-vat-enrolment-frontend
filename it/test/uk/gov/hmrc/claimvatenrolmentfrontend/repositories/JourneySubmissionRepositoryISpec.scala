@@ -41,7 +41,7 @@ class JourneySubmissionRepositoryISpec extends JourneyMongoHelper {
     }
   }
 
-  s"getSubmissionData($testJourneyId)" should {
+  s"getSubmissionData(${testJourneyId})" should {
     "successfully return a full SubmissionData" in {
         await(insertSubmissionData(
           testJourneyId,

@@ -35,6 +35,7 @@ trait JourneyMongoHelper extends ComponentSpecHelper {
   override def beforeEach(): Unit = {
     await(dropConfigRepo)
     await(dropDataRepo)
+    await(dropSubmissionDataRepo)
     super.beforeEach()
   }
 
@@ -119,5 +120,9 @@ trait JourneyMongoHelper extends ComponentSpecHelper {
       ) ++ Json.toJsObject(submissionData)
     ).toFuture().map(_ => journeyId)
   }
+
+  // Journey data mongo repository methods
+  def dropSubmissionDataRepo: Future[Unit] =
+    journeySubmissionRepository.collection.drop.toFuture().map(_ => ())
 
 }

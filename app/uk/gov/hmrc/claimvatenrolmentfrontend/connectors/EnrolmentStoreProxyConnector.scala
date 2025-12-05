@@ -31,7 +31,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class EnrolmentStoreProxyConnector @Inject()(http: HttpClient,
                                              appConfig: AppConfig)(implicit ec: ExecutionContext) extends LoggingUtil {
 
-
   def getUserIds(vatNumber: String)(implicit hc: HeaderCarrier, request: Request[_]): Future[QueryUsersSuccess] = {
     infoLog(s"[EnrolmentStoreProxyConnector][getUserIds] Getting user IDs")
     http.GET[QueryUsersSuccess](

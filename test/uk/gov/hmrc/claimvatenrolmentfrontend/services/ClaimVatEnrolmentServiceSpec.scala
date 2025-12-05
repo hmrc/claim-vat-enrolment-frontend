@@ -18,30 +18,37 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.AllocateEnrolmentConnector.etmpDateFormat
 import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.mocks.MockAuditConnector
+import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.{FeatureSwitching, KnownFactsCheckFlag}
 import uk.gov.hmrc.claimvatenrolmentfrontend.helpers.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.httpparsers.QueryUsersHttpParser.{NoUsersFound, UsersFound}
 import uk.gov.hmrc.claimvatenrolmentfrontend.models._
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.ClaimVatEnrolmentService.{CannotAssignMultipleMtdvatEnrolments, EnrolmentAlreadyAllocated, JourneyConfigFailure, JourneyDataFailure, KnownFactsMismatch}
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.mocks.MockJourneySubmissionRepository
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.ClaimVatEnrolmentService._
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.mocks.{MockAllocateEnrolmentService, MockJourneyService}
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with Matchers with MockJourneyService with MockAllocateEnrolmentService with MockAuditConnector {
+class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with MockJourneyService
+  with MockAllocateEnrolmentService with MockAuditConnector with MockJourneySubmissionRepository with FeatureSwitching {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   implicit val request: Request[AnyContent] = FakeRequest()
   implicit val responseVatKnownFacts: Future[Option[VatKnownFacts]] = Future.successful(testFullVatKnownFacts)
   implicit val responseJourneyConfig: Future[Option[JourneyConfig]] = Future.successful(testJourneyConfig)
+  implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
-  object TestService extends ClaimVatEnrolmentService(mockAuditConnector, mockAllocateEnrolmentService, mockJourneyService)
+  object TestService extends ClaimVatEnrolmentService(mockAuditConnector, mockAllocateEnrolmentService, appConfig,
+    mockJourneyService, mockJourneySubmissionRepository)
 
   def testAuditDetails(vatKnownFacts: VatKnownFacts,
                        isSuccessful: Boolean,
@@ -72,15 +79,50 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with Matchers with MockJo
     }
 
     "return a Left(KnownFactsMismatch)" when {
-      "the enrolment cannot be claimed due to invalid known facts" in {
+      "the enrolment cannot be claimed due to invalid known facts with KnownFactsCheck is disabled" in {
         mockRetrieveJourneyData(testJourneyId, testInternalId)
         mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(InvalidKnownFacts))
         mockGetUserIds(testVatNumber)(Future.successful(NoUsersFound))
+        disable(KnownFactsCheckFlag)
 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
 
-        result mustBe Left(KnownFactsMismatch)
+        result mustBe Left(KnownFactsMismatchLevel1)
         verifyAuditEvent
+        auditEventCaptor.getValue.detail mustBe testAuditDetails(testFullVatKnownFacts.get, isSuccessful = false, Some(InvalidKnownFacts.message))
+      }
+
+      "the enrolment cannot be claimed due to invalid known facts with KnownFactsCheck is enabled" in {
+        mockRetrieveJourneyData(testJourneyId, testInternalId)
+        mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(InvalidKnownFacts))
+        mockGetUserIds(testVatNumber)(Future.successful(NoUsersFound))
+        mockInsertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber1, testAccountStatusUnLocked)(Future.successful(testJourneyId))
+        mockFindSubmissionData(testJourneyId, testVatNumber)(Future.successful(None))
+        enable(KnownFactsCheckFlag)
+
+        val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
+
+        result mustBe Left(KnownFactsMismatchLevel1)
+        verifyAuditEvent
+        verifyInsertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber1, testAccountStatusUnLocked)
+
+        auditEventCaptor.getValue.detail mustBe testAuditDetails(testFullVatKnownFacts.get, isSuccessful = false, Some(InvalidKnownFacts.message))
+      }
+
+      "the enrolment cannot be claimed due to 3 consecutive invalid known facts with KnownFactsCheck is enabled" in {
+        mockRetrieveJourneyData(testJourneyId, testInternalId)
+        mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(InvalidKnownFacts))
+        mockGetUserIds(testVatNumber)(Future.successful(NoUsersFound))
+        mockFindSubmissionData(testJourneyId, testVatNumber)(Future.successful(test2ndSubmission))
+        mockUpdateSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked)(Future.successful(testSubmissionUpdateTrueStatus))
+        enable(KnownFactsCheckFlag)
+
+        val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
+
+        result mustBe Left(KnownFactsMismatchLevel2)
+        verifyAuditEvent
+        verifyUpdateSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked)
+
         auditEventCaptor.getValue.detail mustBe testAuditDetails(testFullVatKnownFacts.get, isSuccessful = false, Some(InvalidKnownFacts.message))
       }
     }

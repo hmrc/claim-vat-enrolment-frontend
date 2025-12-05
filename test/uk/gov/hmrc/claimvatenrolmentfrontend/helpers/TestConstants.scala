@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.helpers
 
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, Postcode, ReturnsInformation, VatKnownFacts}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, JourneySubmission, Postcode, ReturnsInformation, VatKnownFacts}
 
 import java.time.{LocalDate, Month}
 import java.util.UUID
@@ -35,7 +35,7 @@ object TestConstants {
   val testLastMonthSubmitted: Month = Month.MARCH
   val testPostcode: Postcode = Postcode("AA11AA")
   val testLastReturnMonth: Month = Month.JANUARY
-  val testFullVatKnownFacts: Option[VatKnownFacts] =
+  val testFullVatKnownFacts: Option[VatKnownFacts] = {
     Some(VatKnownFacts(
       vatNumber = testVatNumber,
       optPostcode = Some(testPostcode),
@@ -46,6 +46,18 @@ object TestConstants {
           lastReturnMonth = testLastReturnMonth
         ))
     ))
+  }
+  val testSubmissionUpdateTrueStatus: Boolean = true
+  val testSubmissionUpdateFalseStatus: Boolean = false
+  val testSubmissionNumber1: Int = 1
+  val testSubmissionNumber2: Int = 2
+  val testSubmissionNumber3: Int = 3
+  val testAccountStatusUnLocked: String = "UnLocked"
+  val testAccountStatusLocked: String = "Locked"
+
+  val test2ndSubmission: Option[JourneySubmission] = Some(JourneySubmission(testJourneyId, testVatNumber, testSubmissionNumber2, testAccountStatusUnLocked))
+
+  val test3rdSubmission: Option[JourneySubmission] = Some(JourneySubmission(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked))
 
   val testJourneyConfig: Option[JourneyConfig] = Some(JourneyConfig(testContinueUrl))
 

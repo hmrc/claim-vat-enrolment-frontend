@@ -18,7 +18,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.config
 
 import play.api.Configuration
 import play.api.i18n.Lang
-import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.{AllocateEnrolmentStub, FeatureSwitching, QueryUserIdStub}
+import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.{AllocateEnrolmentStub, FeatureSwitching, KnownFactsCheckFlag, QueryUserIdStub}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.{Inject, Singleton}
@@ -34,6 +34,7 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   val cy: String = "cy"
   val defaultLanguage: Lang = Lang(en)
   val timeToLiveSeconds: Int = servicesConfig.getInt("mongodb.timeToLiveSeconds")
+  val ttlLockSeconds: Int = servicesConfig.getInt("mongodb.ttlLockSeconds")
 
   lazy val timeout: Int = servicesConfig.getInt("timeout.timeout")
   lazy val countdown: Int = servicesConfig.getInt("timeout.countdown")
@@ -78,6 +79,12 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   def queryUsersUrl(vatNumber: String): String = {
     val baseUrl = if (isEnabled(QueryUserIdStub)) s"$selfBaseUrl/claim-vat-enrolment/test-only" else enrolmentStoreProxyUrl
     baseUrl + s"/enrolments/HMRC-MTD-VAT~VRN~$vatNumber/users"
+  }
+
+  lazy val isKnownFactsCheckEnabled: Boolean = isEnabled(KnownFactsCheckFlag)
+
+  def enableConfig(featureSwitching: FeatureSwitching) = {
+    featureSwitching.enable(KnownFactsCheckFlag)
   }
 
 

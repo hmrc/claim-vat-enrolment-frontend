@@ -34,10 +34,14 @@ capture-business-postcode.hint                              = For example, AB1 2
 capture-business-postcode.link_text                         = The business does not have a UK postcode
 capture-business-postcode.error.emptyPostcode               = Enter the postcode where your business is registered for VAT
 
-# Submitted VAT Return Page
-capture-submitted-vat-return.title                          = Are you currently submitting VAT Returns?
-capture-submitted-vat-return.heading                        = Are you currently submitting VAT Returns?
+# Submitted VAT Return Page Old
+capture-submitted-vat-return.old.title                      = Are you currently submitting VAT Returns?
+capture-submitted-vat-return.old.heading                    = Are you currently submitting VAT Returns?
 capture-submitted-vat-return.error.message                  = Select yes if you are submitting VAT returns
+
+# Submitted VAT Return Page New
+capture-submitted-vat-return.new.heading                    = Have you, or someone else, submitted VAT Returns for this business?
+capture-submitted-vat-return.hint                           = If a VAT Return has not yet been submitted for this business, select no.
 
 # VAT Application Number Page
 capture-vat-application-number.title_heading                  = What is your VAT application number?

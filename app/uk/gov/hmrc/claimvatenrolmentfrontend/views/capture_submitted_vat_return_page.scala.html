@@ -28,7 +28,12 @@
 
 @(formAction: Call, form: Form[_])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-@layout(Some(title(form, "capture-submitted-vat-return.title"))) {
+@layout(Some(title(form,
+  if (appConfig.knownFactsCheckFlag)
+     "capture-submitted-vat-return.new.heading"
+  else
+     "capture-submitted-vat-return.old.title"
+  ))) {
 
     @errorSummary(form.errors)
 
@@ -36,11 +41,25 @@
         @govukRadios(Radios(
             fieldset = Some(Fieldset(
                 legend = Some(Legend(
-                    content = Text(messages("capture-submitted-vat-return.heading")),
+                    content = Text(
+                      messages(
+                        if (appConfig.knownFactsCheckFlag)
+                           "capture-submitted-vat-return.new.heading"
+                        else
+                           "capture-submitted-vat-return.old.heading"
+                    )
+                      ),
                     classes = "govuk-fieldset__legend--l",
                     isPageHeading = true
                 ))
             )),
+                hint =
+                  if (appConfig.knownFactsCheckFlag)
+                     Some(Hint(
+                     content = Text(messages("capture-submitted-vat-return.hint"))
+                     ))
+                  else None,
+
             idPrefix = Some("vat_return"),
             name = "vat_return",
             items = Seq(

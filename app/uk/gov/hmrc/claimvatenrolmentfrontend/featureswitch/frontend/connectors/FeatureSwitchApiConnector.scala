@@ -39,7 +39,8 @@ class FeatureSwitchApiConnector @Inject()(httpClient: HttpClient)(implicit ec: E
               case JsSuccess(settings, _) => settings
               case JsError(errors) => throw new Exception(errors.head.toString)
             }
-          case _ => throw new Exception(s"Could not retrieve feature switches from $featureSwitchProviderUrl")
+          case _ =>
+            throw new Exception(s"Could not retrieve feature switches from $featureSwitchProviderUrl")
         }
     )
   }

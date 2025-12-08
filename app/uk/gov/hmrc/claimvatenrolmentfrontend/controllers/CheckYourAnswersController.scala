@@ -69,8 +69,10 @@ class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
           claimVatEnrolmentService.claimVatEnrolment(credentialId, groupId, internalId, journeyId).map {
             case Right(_) =>
               Redirect(routes.SignUpCompleteController.signUpComplete(journeyId))
-            case Left(KnownFactsMismatch) =>
+            case Left(KnownFactsMismatchLevel1) =>
               Redirect(errorPages.routes.KnownFactsMismatchController.show())
+            case Left(KnownFactsMismatchLevel2) =>
+              Redirect(errorPages.routes.ThirdAttemptLockoutController.show())
             case Left(EnrolmentAlreadyAllocated) =>
               Redirect(errorPages.routes.EnrolmentAlreadyAllocatedController.show())
             case Left(CannotAssignMultipleMtdvatEnrolments) =>

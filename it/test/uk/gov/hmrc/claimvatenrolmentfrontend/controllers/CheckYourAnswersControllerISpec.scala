@@ -40,6 +40,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
 
   def extraConfig: Map[String, String] = Map(
     "auditing.enabled" -> "true",
+    "feature-switch.knownFactsCheckWithVanFlag" -> "false",
     "auditing.consumer.baseUri.host" -> mockHost,
     "auditing.consumer.baseUri.port" -> mockPort
   )

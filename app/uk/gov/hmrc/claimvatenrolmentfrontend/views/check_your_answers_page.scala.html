@@ -36,12 +36,22 @@
         classes = "govuk-!-margin-bottom-9",
         rows = Seq(
             SummaryListRow(
-                key = Key(content = Text(messages("check-your-answers.vat_number"))),
+                key = Key(content = Text(messages(
+            if (appConfig.KnownFactsCheckWithVanFlag)
+                "check-your-answers.ver2.vat_number"
+            else
+                "check-your-answers.vat_number"
+            ))),
                 value = Value(content = Text(vatKnownFacts.vatNumber)),
                 actions = None
             ),
             SummaryListRow(
-                key = Key(content = Text(messages("check-your-answers.registration_date"))),
+                key = Key(content = Text(messages(
+            if (appConfig.KnownFactsCheckWithVanFlag)
+                "check-your-answers.ver2.registration_date"
+            else
+                "check-your-answers.registration_date"
+            ))),
                 value = Value(content = Text(dateFormat(vatKnownFacts.vatRegistrationDate))),
                 actions = Some(Actions(items = Seq(
                     ActionItem(
@@ -88,7 +98,23 @@
                             visuallyHiddenText = Some(messages("check-your-answers.vat_returns"))
                         )
                     )))
+                )
+        ) ++
+        (
+            if (appConfig.KnownFactsCheckWithVanFlag) {
+                Seq(SummaryListRow(
+                    key = Key(content = Text(messages("check-your-answers.vat_application_number"))),
+                    value = Value(content = Text(messages("app.common.no"))),
+                    actions = Some(Actions(items = Seq(
+                         ActionItem(
+                             href = Routes.CaptureVatApplicationNumberController.show(journeyId).url,
+                             content = Text(messages("app.common.change")),
+                             visuallyHiddenText = Some(messages("check-your-answers.new.vat_application_number"))
+                         )
+                    )))
                 ))
+            } else Seq.empty
+        )
         }) ++ vatKnownFacts.optReturnsInformation.map {
             returnsInformation =>
                 SummaryListRow(

@@ -93,6 +93,11 @@ check-your-answers.vat_returns                              = Rydych yn cyflwyno
 check-your-answers.box_five                                 = Cyfanswm eich Ffurflen TAW neu’ch swm o Flwch 5
 check-your-answers.last_return_month                        = Y mis diwethaf yn eich cyfnod cyfrifyddu diweddaraf
 
+# Check Your Answers Page - ver2 (knownFactsCheckWithVanFlag)
+check-your-answers.ver2.vat_number                          = Rhif cofrestru TAW
+check-your-answers.ver2.registration_date                   = Dyddiad Cofrestru TAW
+check-your-answers.vat_application_number                   = Rhif y cais TAW
+
 # Known Facts Mismatch Page
 known_facts_mismatch.title                                  = Doedd dim modd cadarnhau’ch busnes
 known_facts_mismatch.heading                                = Doedd dim modd cadarnhau’ch busnes

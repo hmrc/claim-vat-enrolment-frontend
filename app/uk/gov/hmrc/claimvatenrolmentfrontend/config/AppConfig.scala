@@ -67,6 +67,7 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   lazy val webchatEnabled: Boolean = config.getOptional[Boolean]("feature-switch.webchat-enabled").getOrElse(false)
 
   lazy val knownFactsCheckFlag: Boolean = servicesConfig.getBoolean("feature-switch.knownFactsCheckFlag")
+  lazy val KnownFactsCheckWithVanFlag: Boolean = servicesConfig.getBoolean("feature-switch.knownFactsCheckWithVanFlag")
 
   def allocateEnrolmentUrl(groupId: String, enrolmentKey: String): String = {
     val baseUrl = if (isEnabled(AllocateEnrolmentStub)) s"$selfBaseUrl/claim-vat-enrolment/test-only" else taxEnrolmentsUrl

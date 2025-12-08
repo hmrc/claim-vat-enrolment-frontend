@@ -266,7 +266,6 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
 
     "redirect to AttemptLocked if the enrolment returns BAD_REQUEST for 3 invalid attempts consecutively" in {
       enable(KnownFactsCheckFlag) //enable the knownFactsCheck Feature-Switch for the CVE-CR
-      enable(KnownFactsCheckFlag) //enable the knownFactsCheck Feature-Switch for the CVE-CR
 
       stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 

@@ -22,6 +22,7 @@ import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.{routes => errorRoutes}
+import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.KnownFactsCheckFlag
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.AllocateEnrolmentResponseHttpParser.MultipleEnrolmentsInvalidKey
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository._
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.{AllocationEnrolmentStub, AuthStub, EnrolmentStoreProxyStub}
@@ -46,7 +47,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .configure(config ++ extraConfig)
-    .build
+    .build()
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -66,6 +67,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
         stubAudit
         get(s"/$testJourneyId/check-your-answers-vat")
       }
+
       "return OK" in {
         result.status mustBe OK
       }
@@ -258,6 +260,42 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
       result must have(
         httpStatus(SEE_OTHER),
         redirectUri(errorRoutes.KnownFactsMismatchController.show().url)
+      )
+      verifyAudit()
+    }
+
+    "redirect to AttemptLocked if the enrolment returns BAD_REQUEST for 3 invalid attempts consecutively" in {
+      enable(KnownFactsCheckFlag) //enable the knownFactsCheck Feature-Switch for the CVE-CR
+      enable(KnownFactsCheckFlag) //enable the knownFactsCheck Feature-Switch for the CVE-CR
+
+      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+
+      await(journeyDataRepository.collection.insertOne(
+        Json.obj(
+          "_id" -> testJourneyId,
+          "authInternalId" -> testInternalId,
+          "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
+        ) ++ Json.toJsObject(testFullVatKnownFacts)
+      ).toFuture())
+      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(BAD_REQUEST, Json.obj())
+      stubGetUserIds(testVatNumber)(NO_CONTENT)
+      stubAudit
+
+      await(journeySubmissionRepository.collection.insertOne(
+          Json.obj(
+            "journeyId"       ->  testJourneyId,
+            "vrn"             ->  testVatNumber,
+            "submissionNumber"  -> testSubmissionNumber2,
+            "accountStatus"     -> testAccountStatusUnLocked
+          ) ++ Json.toJsObject(testSubmissionDataAttempt2)
+      ).toFuture())
+
+      lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
+
+      result must have(
+        httpStatus(SEE_OTHER),
+        redirectUri(errorRoutes.ThirdAttemptLockoutController.show().url)
       )
       verifyAudit()
     }

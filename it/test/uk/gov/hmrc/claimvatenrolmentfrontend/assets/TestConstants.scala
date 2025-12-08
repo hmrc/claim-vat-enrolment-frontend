@@ -72,6 +72,22 @@ object TestConstants {
         accountStatus = testAccountStatusUnLocked
       )
 
+  val testSubmissionDataAttempt2: JourneySubmission =
+    JourneySubmission(
+      journeyId = testJourneyId,
+      vrn = testVatNumber,
+      submissionNumber = testSubmissionNumber2,
+      accountStatus = testAccountStatusUnLocked
+    )
+
+  val testSubmissionDataAttempt3: JourneySubmission =
+    JourneySubmission(
+      journeyId = testJourneyId,
+      vrn = testVatNumber,
+      submissionNumber = testSubmissionNumber3,
+      accountStatus = testAccountStatusLocked
+    )
+
   val testFullVatKnownFacts: VatKnownFacts =
     VatKnownFacts(
       vatNumber = testVatNumber,

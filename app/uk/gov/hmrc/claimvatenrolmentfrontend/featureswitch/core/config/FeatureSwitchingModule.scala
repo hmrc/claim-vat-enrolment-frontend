@@ -25,7 +25,7 @@ import javax.inject.Singleton
 @Singleton
 class FeatureSwitchingModule extends Module with FeatureSwitchRegistry {
 
-  val switches: Seq[FeatureSwitch] = Seq(AllocateEnrolmentStub, QueryUserIdStub, KnownFactsCheckFlag)
+  val switches: Seq[FeatureSwitch] = Seq(AllocateEnrolmentStub, QueryUserIdStub, KnownFactsCheckFlag, KnownFactsCheckWithVanFlag)
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
     Seq(
@@ -47,4 +47,9 @@ case object QueryUserIdStub extends FeatureSwitch {
 case object KnownFactsCheckFlag extends FeatureSwitch {
   override val configName: String = "feature-switch.knownFactsCheckFlag"
   override val displayName: String = "Feature switch for Additional Known Facts Check and Retry"
+}
+
+case object KnownFactsCheckWithVanFlag extends FeatureSwitch {
+  override val configName: String = "feature-switch.knownFactsCheckWithVanFlag"
+  override val displayName: String = "Feature switch for including Vat Application Number with Known Facts Check and Retry"
 }

@@ -54,7 +54,6 @@ class CaptureVatApplicationNumberController @Inject()(mcc: MessagesControllerCom
       }
   }
 
-  // TODO submit logic will be changed in further user stories
   def submit(journeyId: String): Action[AnyContent] = Action.async {
     implicit request =>
       authorised().retrieve(internalId) {
@@ -72,7 +71,7 @@ class CaptureVatApplicationNumberController @Inject()(mcc: MessagesControllerCom
               ).map {
                 matched =>
                   if (matched) {
-                    Redirect(routes.CaptureBusinessPostcodeController.show(journeyId).url) // TODO change this as per flow
+                    Redirect(routes.CheckYourAnswersController.show(journeyId).url)
                   } else {
                     errorLog(s"[CaptureVatApplicationNumberController][submit] - The date of Vat registration could not be updated for journey $journeyId")
                     throw new InternalServerException(s"The date of Vat registration could not be updated for journey $journeyId")

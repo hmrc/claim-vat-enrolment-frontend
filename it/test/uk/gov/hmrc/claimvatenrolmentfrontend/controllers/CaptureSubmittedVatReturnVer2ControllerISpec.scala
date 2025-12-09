@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,10 +26,10 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.views.CaptureSubmittedVatReturnView
 
 import java.time.Instant
 
-class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with CaptureSubmittedVatReturnViewTests with AuthStub {
+class CaptureSubmittedVatReturnVer2ControllerISpec extends JourneyMongoHelper with CaptureSubmittedVatReturnViewTests with AuthStub {
 
   override def additionalConfig: Map[String, String] = Map(
-    "feature-switch.knownFactsCheckFlag" -> "false",
+    "feature-switch.knownFactsCheckFlag" -> "true",
     "feature-switch.knownFactsCheckWithVanFlag" -> "true"
   )
 
@@ -44,7 +44,7 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
       result.status mustBe OK
     }
 
-    testCaptureSubmittedVatReturnOldViewTests(result)
+    testCaptureSubmittedVatReturnViewTests(result)
 
     "Show an error page" when {
       "There is no Journey Config" in {
@@ -111,7 +111,7 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
       }
     }
 
-    "redirect to Check Your Answers Page" when {
+    "redirect to Capture Vat Application Number page" when {
       "the user changes their answer to no" in {
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
         await(journeyDataRepository.collection.insertOne(
@@ -125,7 +125,7 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
 
         result must have(
           httpStatus(SEE_OTHER),
-          redirectUri(routes.CheckYourAnswersController.show(testJourneyId).url)
+          redirectUri(routes.CaptureVatApplicationNumberController.show(testJourneyId).url)
         )
         await(
           journeyDataRepository.getJourneyData(testJourneyId, testInternalId)
@@ -145,7 +145,7 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
 
         result must have(
           httpStatus(SEE_OTHER),
-          redirectUri(routes.CheckYourAnswersController.show(testJourneyId).url)
+          redirectUri(routes.CaptureVatApplicationNumberController.show(testJourneyId).url)
         )
         await(
           journeyDataRepository.getJourneyData(testJourneyId, testInternalId)

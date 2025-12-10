@@ -67,6 +67,13 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
             case Some(returnsInformation) => "%02d".format(returnsInformation.lastReturnMonth.getValue)
             case None => NullValue
           })
+        ),
+        Json.obj(
+          "key" -> "FB_NUM",
+          "value" -> (vatKnownFacts.formBundleReference match {
+            case Some(formBundleReferenceVal) => formBundleReferenceVal
+            case None => NullValue
+          })
         )
       )
     )

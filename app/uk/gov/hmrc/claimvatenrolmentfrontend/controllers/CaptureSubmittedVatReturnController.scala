@@ -76,7 +76,11 @@ class CaptureSubmittedVatReturnController @Inject()(mcc: MessagesControllerCompo
                     } else {
                       journeyService.removeAdditionalVatReturnFields(journeyId, authId).map {
                         removeMatched => if (removeMatched) {
-                          Redirect(routes.CheckYourAnswersController.show(journeyId).url)
+                          if (config.knownFactsCheckFlag && config.knownFactsCheckWithVanFlag) {
+                            Redirect(routes.CaptureVatApplicationNumberController.show(journeyId).url)
+                          } else {
+                            Redirect(routes.CheckYourAnswersController.show(journeyId).url)
+                          }
                         } else {
                           errorLog(s"[CaptureSubmittedVatReturnController][submit] - The additional Vat return fields could not be removed for journey $journeyId")
                           throw new InternalServerException(s"The additional Vat return fields could not be removed for journey $journeyId")

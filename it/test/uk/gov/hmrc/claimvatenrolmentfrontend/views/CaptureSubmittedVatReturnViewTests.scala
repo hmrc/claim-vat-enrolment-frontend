@@ -51,6 +51,28 @@ trait CaptureSubmittedVatReturnViewTests extends ViewSpecHelper {
 
   }
 
+  def testCaptureSubmittedVatReturnOldViewTests(result: => WSResponse): Unit = {
+
+    lazy val doc: Document = Jsoup.parse(result.body)
+
+    "have a sign out link in the header" in {
+      doc.getSignOutText mustBe Header.signOut
+    }
+
+    "have a view with the correct title" in {
+      doc.title mustBe messages.titleOld
+    }
+
+    "have the correct heading" in {
+      doc.getH1Elements.first.text mustBe messages.headingOld
+    }
+
+    "have a continue button" in {
+      doc.getSubmitButton.first.text mustBe Base.continue
+    }
+
+  }
+
   def testCaptureSubmittedVatReturnErrorViewTests(result: => WSResponse): Unit = {
 
     lazy val doc: Document = Jsoup.parse(result.body)

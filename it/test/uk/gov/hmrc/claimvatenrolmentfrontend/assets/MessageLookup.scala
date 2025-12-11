@@ -106,6 +106,8 @@ object MessageLookup {
       val errorMessage = "Select yes if you are submitting VAT returns"
     }
 
+    val titleOld = "Are you currently submitting VAT Returns? - Claim VAT Enrolment - GOV.UK"
+    val headingOld = "Are you currently submitting VAT Returns?"
   }
 
   object CaptureLastMonthSubmitted {

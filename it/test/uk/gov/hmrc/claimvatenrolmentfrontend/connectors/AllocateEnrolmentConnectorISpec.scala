@@ -36,7 +36,7 @@ class AllocateEnrolmentConnectorISpec extends ComponentSpecHelper with Allocatio
 
   private implicit val request = FakeRequest()
 
-  val testVatKnownFacts: VatKnownFacts = VatKnownFacts(testVatNumber, Some(testPostcode), LocalDate.of(2021, 1, 1), Some(ReturnsInformation(testBoxFive, testLastReturnMonth)))
+  val testVatKnownFacts: VatKnownFacts = VatKnownFacts(testVatNumber, Some(testPostcode), LocalDate.of(2021, 1, 1), Some(testVatAppNumber), Some(ReturnsInformation(testBoxFive, testLastReturnMonth)))
 
   "allocateEnrolment" should {
     "return EnrolmentSuccess" when {

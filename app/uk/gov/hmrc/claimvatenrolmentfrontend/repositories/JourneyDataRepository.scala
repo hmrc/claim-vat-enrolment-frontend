@@ -117,6 +117,7 @@ object JourneyDataRepository {
       }
       vatRegistrationDate <- (json \ VatRegistrationDateKey).validate[LocalDate]
       submittedVatReturn <- (json \ SubmittedVatReturnKey).validate[Boolean]
+      submittedVatApplicationNumber <- (json \ SubmittedVatApplicationNumberKey).validateOpt[String]
       optReturnsInformation <- if (submittedVatReturn) {
         for {
           boxFiveFigure <- (json \ Box5FigureKey).validate[String]
@@ -125,7 +126,7 @@ object JourneyDataRepository {
       } else {
         JsSuccess(None)
       }
-    } yield VatKnownFacts(vatNumber, optPostcode, vatRegistrationDate, optReturnsInformation)
+    } yield VatKnownFacts(vatNumber, optPostcode, vatRegistrationDate, submittedVatApplicationNumber, optReturnsInformation)
 
   implicit lazy val vatKnownFactsWrites: OWrites[VatKnownFacts] =
     (vatKnownFacts: VatKnownFacts) => Json.obj(
@@ -140,7 +141,8 @@ object JourneyDataRepository {
           LastMonthSubmittedKey -> vatKnownFacts.optReturnsInformation.map(_.lastReturnMonth.getValue)
         )
       } else {
-        Json.obj(SubmittedVatReturnKey -> false)
+        Json.obj(SubmittedVatReturnKey -> false,
+        SubmittedVatApplicationNumberKey -> vatKnownFacts.submittedVatApplicationNumber)
       }
     }
 

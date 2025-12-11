@@ -21,6 +21,7 @@ import java.time.{LocalDate, Month}
 case class VatKnownFacts(vatNumber: String,
                          optPostcode: Option[Postcode],
                          vatRegistrationDate: LocalDate,
+                         submittedVatApplicationNumber: Option[String],
                          optReturnsInformation: Option[ReturnsInformation])
 
 case class ReturnsInformation(boxFive: String, lastReturnMonth: Month)

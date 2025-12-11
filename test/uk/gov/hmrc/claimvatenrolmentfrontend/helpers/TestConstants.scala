@@ -31,6 +31,7 @@ object TestConstants {
   val testVatReturn: Boolean = true
   val testInternalId: String = UUID.randomUUID().toString
   val testVatNumber: String = UUID.randomUUID().toString
+  val testVatAppNumber: String = UUID.randomUUID().toString
   val testBoxFive: String = "1000.00"
   val testLastMonthSubmitted: Month = Month.MARCH
   val testPostcode: Postcode = Postcode("AA11AA")
@@ -40,6 +41,7 @@ object TestConstants {
       vatNumber = testVatNumber,
       optPostcode = Some(testPostcode),
       vatRegistrationDate = testVatRegDate,
+      submittedVatApplicationNumber = Some(testVatAppNumber),
       optReturnsInformation =
         Some(ReturnsInformation(
           boxFive = testBoxFive,

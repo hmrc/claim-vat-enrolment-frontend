@@ -37,7 +37,7 @@
         rows = Seq(
             SummaryListRow(
                 key = Key(content = Text(messages(
-            if (appConfig.KnownFactsCheckWithVanFlag)
+            if (appConfig.knownFactsCheckWithVanFlag)
                 "check-your-answers.ver2.vat_number"
             else
                 "check-your-answers.vat_number"
@@ -47,7 +47,7 @@
             ),
             SummaryListRow(
                 key = Key(content = Text(messages(
-            if (appConfig.KnownFactsCheckWithVanFlag)
+            if (appConfig.knownFactsCheckWithVanFlag)
                 "check-your-answers.ver2.registration_date"
             else
                 "check-your-answers.registration_date"
@@ -101,10 +101,10 @@
                 )
         ) ++
         (
-            if (appConfig.KnownFactsCheckWithVanFlag) {
+            if (appConfig.knownFactsCheckWithVanFlag) {
                 Seq(SummaryListRow(
                     key = Key(content = Text(messages("check-your-answers.vat_application_number"))),
-                    value = Value(content = Text(messages("app.common.no"))),
+                    value = Value(content = Text(vatKnownFacts.submittedVatApplicationNumber.getOrElse(""))),
                     actions = Some(Actions(items = Seq(
                          ActionItem(
                              href = Routes.CaptureVatApplicationNumberController.show(journeyId).url,

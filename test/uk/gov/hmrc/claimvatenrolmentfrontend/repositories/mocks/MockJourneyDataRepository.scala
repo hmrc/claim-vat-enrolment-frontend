@@ -55,6 +55,14 @@ trait MockJourneyDataRepository extends MockitoSugar with BeforeAndAfterEach {
       ArgumentMatchers.eq(authId)
     )).thenReturn(response)
 
+  def mockGetVrnInfo(journeyId: String,
+                     authId: String
+                    )(response: Future[Option[String]]): OngoingStubbing[_] =
+    when(mockJourneyDataRepository.getVRNInfo(
+      ArgumentMatchers.eq(journeyId),
+      ArgumentMatchers.eq(authId)
+    )).thenReturn(response)
+
   def mockUpdateJourneyData(journeyId: String,
                             dataKey: String,
                             data: JsValue,

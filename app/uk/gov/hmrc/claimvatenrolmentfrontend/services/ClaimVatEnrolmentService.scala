@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,9 +61,9 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
             Future.successful(Left(CannotAssignMultipleMtdvatEnrolments))
           case InvalidKnownFacts =>
             callEnrolmentStoreProxy(journeyId, journeyData)
-          case EnrolmentFailure(_) => {
+          case EnrolmentFailure(_) =>
             callEnrolmentStoreProxy(journeyId, journeyData, enrolmentFailure = true)
-        }}
+        }
       case None => Future.successful(Left(JourneyDataFailure))
     }
   }
@@ -117,11 +117,11 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
   private def sendAuditEventKnownFactsCheck(vatKnownFacts: VatKnownFacts,
                                             submissionNumber: Int,
                                             accountStatus: String,
-                             optFailureMessage: Option[String] = None
+                                            optFailureMessage: Option[String] = None
                             )(implicit hc: HeaderCarrier,
                               request: Request[_],
                               ec: ExecutionContext): Future[AuditResult] =
-    auditConnector.sendEvent(buildClaimVatEnrolmentAuditEvent(vatKnownFacts, isSuccessful = false, optFailureMessage, submissionNumber, accountStatus))
+    auditConnector.sendEvent(buildClaimVatEnrolmentAuditEvent(vatKnownFacts, isSuccessful = false, optFailureMessage, Some(submissionNumber), Some(accountStatus)))
 
   private def sendAuditEvent(vatKnownFacts: VatKnownFacts,
                              isSuccessful: Boolean,
@@ -134,8 +134,8 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
   private def buildClaimVatEnrolmentAuditEvent(vatKnownFacts: VatKnownFacts,
                                                isSuccessful: Boolean,
                                                optFailureMessage: Option[String],
-                                               submissionNumber: Int = 0,
-                                               accountStatus: String = ""
+                                               submissionNumber: Option[Int] = None,
+                                               accountStatus: Option[String] = Some("")
                                               )(implicit hc: HeaderCarrier,
                                                 request: Request[_]): DataEvent = {
 
@@ -152,9 +152,10 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
       "vatSubscriptionClaimSuccessful" -> isSuccessful.toString,
       "enrolmentAndClientDatabaseFailureReason" -> optFailureMessage.getOrElse("")
     ) ++
-      ( if (config.isKnownFactsCheckEnabled)
-          Map("submissionNumber"-> submissionNumber.toString, "accountStatus"-> accountStatus)
-         else Map.empty )
+      ( if (config.isKnownFactsCheckEnabled) {
+          Map("submissionNumber"-> submissionNumber.getOrElse(0).toString,
+               "accountStatus"-> accountStatus.getOrElse(""))
+      } else {Map.empty})
 
     val updatedDetail: Map[String, String] = detail.filter {case(_, value) => value.nonEmpty}
 

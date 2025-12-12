@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,11 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.repositories
 import play.api.libs.json._
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, Updates, UpdateOptions}
+import org.mongodb.scala.model.Projections.include
+import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, UpdateOptions, Updates}
 import org.mongodb.scala.model.Updates.{combine, unset}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.{VatKnownFacts, Postcode, ReturnsInformation}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.{Postcode, ReturnsInformation, VatKnownFacts}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository._
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
@@ -53,7 +54,6 @@ class JourneyDataRepository @Inject()(mongoComponent: MongoComponent,
     ).toFuture().map(_ => journeyId)
 
    def getJourneyData(journeyId: String, authInternalId: String): Future[Option[VatKnownFacts]] = {
-
      collection.find[JsObject](
        Filters.and(
          Filters.equal(JourneyIdKey, journeyId),
@@ -63,8 +63,18 @@ class JourneyDataRepository @Inject()(mongoComponent: MongoComponent,
        case Some(doc) => Some(doc.as[VatKnownFacts])
        case _ => None
      }
-
    }
+
+  def getVRNInfo(journeyId: String, authInternalId: String): Future[Option[String]] = {
+    val res = collection.find[JsObject](
+      Filters.and(
+        Filters.equal(JourneyIdKey, journeyId),
+        Filters.equal(AuthInternalIdKey, authInternalId)
+      )
+    ).projection(include("vatNumber"))
+     .first().toFutureOption().map(_.flatMap(js => (js \ "vatNumber").asOpt[String]))
+    res
+  }
 
   def updateJourneyData(journeyId: String, dataKey: String, data: JsValue, authInternalId: String): Future[Boolean] =
     collection.updateOne(

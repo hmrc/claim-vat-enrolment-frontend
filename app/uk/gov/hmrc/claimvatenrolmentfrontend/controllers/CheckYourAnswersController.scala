@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,16 +21,16 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{credentials, groupIdentifier, internalId}
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, ~}
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
-import uk.gov.hmrc.claimvatenrolmentfrontend.config.{AppConfig, ErrorHandler}
+import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.ClaimVatEnrolmentService._
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.{ClaimVatEnrolmentService, JourneyService}
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.{ClaimVatEnrolmentService, JourneyService, JourneyValidateService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.check_your_answers_page
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.LoggingUtil
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
@@ -38,7 +38,7 @@ class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
                                            journeyService: JourneyService,
                                            claimVatEnrolmentService: ClaimVatEnrolmentService,
                                            val authConnector: AuthConnector,
-                                           errorHandler: ErrorHandler
+                                           journeyValidateService: JourneyValidateService
                                           )(implicit appConfig: AppConfig,
                                             ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions with LoggingUtil {
 
@@ -46,11 +46,14 @@ class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
     implicit request =>
       authorised().retrieve(internalId) {
         case Some(authId) =>
-          journeyService.retrieveJourneyData(journeyId, authId).map {
-            case Some(journeyData) => Ok(view(routes.CheckYourAnswersController.submit(journeyId), journeyId, journeyData))
+          journeyService.retrieveJourneyData(journeyId, authId).flatMap {
+            case Some(journeyData) =>
+              journeyValidateService.continueIfJourneyIsNotLocked(journeyId, authId)(
+                Ok(view(routes.CheckYourAnswersController.submit(journeyId), journeyId, journeyData))
+              )
             case None =>
               errorLog(s"[CheckYourAnswersController][show] - Journey data could not be retrieved from the journeyDataRepository for journey: $journeyId")
-              Redirect(errorPages.routes.ServiceTimeoutController.show())
+              Future.successful(Redirect(errorPages.routes.ServiceTimeoutController.show()))
           }.recover {
             case _: JsResultException =>
               warnLog(s"[CheckYourAnswersController][show] - A JsResultException was thrown while retrieving the journey data from the journeyDataRepository for journey: $journeyId")

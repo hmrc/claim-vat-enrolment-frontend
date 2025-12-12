@@ -63,5 +63,4 @@ trait MockJourneyService extends MockitoSugar with BeforeAndAfterEach {
       ArgumentMatchers.eq(journeyId),
       ArgumentMatchers.eq(authInternalId))(any())
     ).thenReturn(Future.successful(None))
-
 }

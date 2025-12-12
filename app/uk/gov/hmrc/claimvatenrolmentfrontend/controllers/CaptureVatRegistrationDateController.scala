@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
-import uk.gov.hmrc.claimvatenrolmentfrontend.config.{AppConfig, ErrorHandler}
+import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.VatRegistrationDateForm.vatRegistrationDateForm
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, StoreVatRegistrationDateService}
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, JourneyValidateService, StoreVatRegistrationDateService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_vat_registration_date_page
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -36,7 +36,7 @@ class CaptureVatRegistrationDateController @Inject()(mcc: MessagesControllerComp
                                                      storeVatRegistrationDateService: StoreVatRegistrationDateService,
                                                      journeyService: JourneyService,
                                                      val authConnector: AuthConnector,
-                                                     errorHandler: ErrorHandler
+                                                     journeyValidateService: JourneyValidateService
                                                     )(implicit ec: ExecutionContext,
                                                       appConfig: AppConfig) extends FrontendController(mcc) with AuthorisedFunctions with LoggingUtil{
 
@@ -44,18 +44,20 @@ class CaptureVatRegistrationDateController @Inject()(mcc: MessagesControllerComp
     implicit request =>
       authorised().retrieve(internalId) {
         case Some(authId) =>
-          journeyService.retrieveJourneyConfig(journeyId, authId).map {
-            case Some(value) => Ok(view(vatRegistrationDateForm, routes.CaptureVatRegistrationDateController.submit(journeyId)))
+          journeyService.retrieveJourneyConfig(journeyId, authId).flatMap {
+            case Some(_) =>
+              journeyValidateService.continueIfJourneyIsNotLocked(journeyId, authId)(
+                Ok(view(vatRegistrationDateForm, routes.CaptureVatRegistrationDateController.submit(journeyId)))
+              )
             case None =>
               errorLog(s"[CaptureVatRegistrationDateController][show] - Journey config could not be retrieved from the journeyConfigRepository for journey: $journeyId")
-              Redirect(errorPages.routes.ServiceTimeoutController.show())
+              Future.successful(Redirect(errorPages.routes.ServiceTimeoutController.show()))
           }
         case None =>
           errorLog(s"[CaptureVatRegistrationDateController][show] - Internal ID could not be retrieved from Auth for journey: $journeyId")
           throw new InternalServerException(s"Internal ID could not be retrieved from Auth for journey: $journeyId")
       }
   }
-
 
   def submit(journeyId: String): Action[AnyContent] = Action.async {
     implicit request =>

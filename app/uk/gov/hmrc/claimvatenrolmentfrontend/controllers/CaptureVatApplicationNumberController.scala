@@ -21,7 +21,7 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureVatApplicationNumberForm
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, StoreSubmittedVANService}
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, JourneyValidateService, StoreSubmittedVANService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_vat_application_number_page
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -35,18 +35,22 @@ class CaptureVatApplicationNumberController @Inject()(mcc: MessagesControllerCom
                                                       view: capture_vat_application_number_page,
                                                       storeSubmittedVanService: StoreSubmittedVANService,
                                                       journeyService: JourneyService,
-                                                      val authConnector: AuthConnector
+                                                      val authConnector: AuthConnector,
+                                                      journeyValidateService: JourneyValidateService
                                                      )(implicit val config: AppConfig, ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions with LoggingUtil {
 
   def show(journeyId: String): Action[AnyContent] = Action.async {
     implicit request =>
       authorised().retrieve(internalId) {
         case Some(authId) =>
-          journeyService.retrieveJourneyConfig(journeyId, authId).map {
-            case Some(_) => Ok(view(CaptureVatApplicationNumberForm.form, routes.CaptureVatApplicationNumberController.submit(journeyId)))
+          journeyService.retrieveJourneyConfig(journeyId, authId).flatMap {
+            case Some(_) =>
+              journeyValidateService.continueIfJourneyIsNotLocked(journeyId, authId)(
+                Ok(view(CaptureVatApplicationNumberForm.form, routes.CaptureVatApplicationNumberController.submit(journeyId)))
+              )
             case None =>
               errorLog(s"[CaptureVatApplicationNumberController][show] - Journey config could not be retrieved from the journeyConfigRepository for journey: $journeyId")
-              Redirect(errorPages.routes.ServiceTimeoutController.show())
+              Future.successful(Redirect(errorPages.routes.ServiceTimeoutController.show()))
           }
         case None =>
           errorLog(s"CaptureVatApplicationNumberController][show] - Internal ID could not be retrieved from Auth for journey: $journeyId")

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
-import uk.gov.hmrc.claimvatenrolmentfrontend.config.{AppConfig, ErrorHandler}
+import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureBox5FigureForm
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, StoreBox5FigureService}
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, JourneyValidateService, StoreBox5FigureService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_box5_figure_page
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -36,7 +36,7 @@ class CaptureBox5FigureController @Inject()(mcc: MessagesControllerComponents,
                                             storeBox5FigureService: StoreBox5FigureService,
                                             journeyService: JourneyService,
                                             val authConnector: AuthConnector,
-                                            errorHandler: ErrorHandler
+                                            journeyValidateService: JourneyValidateService
                                            )(implicit val config: AppConfig,
                                              ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions with LoggingUtil {
 
@@ -44,12 +44,15 @@ class CaptureBox5FigureController @Inject()(mcc: MessagesControllerComponents,
     implicit request =>
       authorised().retrieve(internalId) {
         case Some(authId) =>
-          journeyService.retrieveJourneyConfig(journeyId, authId).map {
-            case Some(value) => Ok(view(CaptureBox5FigureForm.form, routes.CaptureBox5FigureController.submit(journeyId)))
-            case None =>
-              errorLog(s"[CaptureBox5FigureController][show] - Journey config could not be retrieved from the journeyConfigRepository for journey: $journeyId")
-              Redirect(errorPages.routes.ServiceTimeoutController.show())
-          }
+          journeyService.retrieveJourneyConfig(journeyId, authId).flatMap {
+              case Some(_) =>
+                journeyValidateService.continueIfJourneyIsNotLocked(journeyId, authId)(
+                  Ok(view(CaptureBox5FigureForm.form, routes.CaptureBox5FigureController.submit(journeyId)))
+                )
+              case None =>
+                errorLog(s"[CaptureBox5FigureController][show] - Journey config could not be retrieved from the journeyConfigRepository for journey: $journeyId")
+                Future.successful(Redirect(errorPages.routes.ServiceTimeoutController.show()))
+            }
         case None =>
           errorLog(s"[CaptureBox5FigureController][show] - Internal ID could not be retrieved from Auth for journey: $journeyId")
           throw new InternalServerException(s"Internal ID could not be retrieved from Auth for journey: $journeyId")

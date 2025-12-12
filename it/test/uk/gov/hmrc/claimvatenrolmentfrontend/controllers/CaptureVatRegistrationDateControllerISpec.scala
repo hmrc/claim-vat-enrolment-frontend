@@ -19,6 +19,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
+import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.KnownFactsCheckFlag
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.JourneyMongoHelper
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.CaptureVatRegistrationDateViewTests
@@ -37,6 +38,29 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
       result.status mustBe OK
     }
     testCaptureVatRegistrationDateViewTests(result)
+
+    "When a Blocked VRN is passed in the request" when {
+
+      lazy val result = {
+        enable(KnownFactsCheckFlag)
+
+        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+
+        await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
+        await(insertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked, testSubmissionDataAttempt3))
+
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        get(s"/$testJourneyId/vat-registration-date")
+      }
+
+      "show the access blocked page" in {
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorPages.routes.KnownFactsMismatchWithin24hrsController.show().url)
+        )
+      }
+    }
 
     "Show an error page" when {
       "there is no Journey Config" in {
@@ -108,7 +132,6 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
         redirectUri(routes.CaptureBusinessPostcodeController.show(testJourneyId).url)
       )
     }
-
 
     "when the user has submitted an empty form, the page" should {
       lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testInternalId)))

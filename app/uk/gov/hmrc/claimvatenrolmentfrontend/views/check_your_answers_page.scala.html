@@ -37,20 +37,22 @@
         rows = Seq(
             SummaryListRow(
                 key = Key(content = Text(messages(
-            if (appConfig.knownFactsCheckWithVanFlag)
+            if (appConfig.knownFactsCheckFlag && appConfig.knownFactsCheckWithVanFlag) {
                 "check-your-answers.ver2.vat_number"
-            else
+            } else {
                 "check-your-answers.vat_number"
+            }
             ))),
                 value = Value(content = Text(vatKnownFacts.vatNumber)),
                 actions = None
             ),
             SummaryListRow(
                 key = Key(content = Text(messages(
-            if (appConfig.knownFactsCheckWithVanFlag)
+            if (appConfig.knownFactsCheckFlag && appConfig.knownFactsCheckWithVanFlag) {
                 "check-your-answers.ver2.registration_date"
-            else
+            } else {
                 "check-your-answers.registration_date"
+            }
             ))),
                 value = Value(content = Text(dateFormat(vatKnownFacts.vatRegistrationDate))),
                 actions = Some(Actions(items = Seq(
@@ -101,10 +103,10 @@
                 )
         ) ++
         (
-            if (appConfig.knownFactsCheckWithVanFlag) {
+                if (appConfig.knownFactsCheckFlag && appConfig.knownFactsCheckWithVanFlag) {
                 Seq(SummaryListRow(
                     key = Key(content = Text(messages("check-your-answers.vat_application_number"))),
-                    value = Value(content = Text(vatKnownFacts.submittedVatApplicationNumber.getOrElse(""))),
+                    value = Value(content = Text(vatKnownFacts.formBundleReference.getOrElse(""))),
                     actions = Some(Actions(items = Seq(
                          ActionItem(
                              href = Routes.CaptureVatApplicationNumberController.show(journeyId).url,
@@ -113,7 +115,9 @@
                          )
                     )))
                 ))
-            } else Seq.empty
+                } else {
+                  Seq.empty
+                }
         )
         }) ++ vatKnownFacts.optReturnsInformation.map {
             returnsInformation =>

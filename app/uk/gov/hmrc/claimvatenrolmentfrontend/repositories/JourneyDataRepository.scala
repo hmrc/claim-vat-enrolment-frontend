@@ -117,7 +117,6 @@ object JourneyDataRepository {
       }
       vatRegistrationDate <- (json \ VatRegistrationDateKey).validate[LocalDate]
       submittedVatReturn <- (json \ SubmittedVatReturnKey).validate[Boolean]
-      submittedVatApplicationNumber <- (json \ SubmittedVatApplicationNumberKey).validateOpt[String]
       optReturnsInformation <- if (submittedVatReturn) {
         for {
           boxFiveFigure <- (json \ Box5FigureKey).validate[String]
@@ -142,8 +141,7 @@ object JourneyDataRepository {
           LastMonthSubmittedKey -> vatKnownFacts.optReturnsInformation.map(_.lastReturnMonth.getValue)
         )
       } else {
-        Json.obj(SubmittedVatReturnKey -> false,
-        SubmittedVatApplicationNumberKey -> vatKnownFacts.submittedVatApplicationNumber)
+        Json.obj(SubmittedVatReturnKey -> false)
       }
     } ++ Json.obj(
       SubmittedVatApplicationNumberKey -> vatKnownFacts.formBundleReference

@@ -45,7 +45,7 @@ class AllocateEnrolmentConnectorISpec extends ComponentSpecHelper with Allocatio
       "enrolment store returns a success" when {
         "the stub Allocate Enrolment feature switch is disable" when {
           "all fields are populated" in {
-            stubAllocateEnrolment(testVatKnownFacts, testCredentialId, testGroupId)(CREATED, Json.obj())
+            stubAllocateEnrolment(testVatKnownFacts, testCredentialId, includeFormBundleReference = true, testGroupId)(CREATED, Json.obj())
 
             val result = await(allocateEnrolmentConnector.allocateEnrolment(testVatKnownFacts, testCredentialId, testGroupId))
 
@@ -53,7 +53,7 @@ class AllocateEnrolmentConnectorISpec extends ComponentSpecHelper with Allocatio
           }
           "the user is overseas and so has not provided a postcode" in {
             val testVatKnownFactsNoPostcode = testVatKnownFacts.copy(optPostcode = None)
-            stubAllocateEnrolment(testVatKnownFactsNoPostcode, testCredentialId, testGroupId)(CREATED, Json.obj())
+            stubAllocateEnrolment(testVatKnownFactsNoPostcode, testCredentialId, includeFormBundleReference = true, testGroupId)(CREATED, Json.obj())
 
             val result = await(allocateEnrolmentConnector.allocateEnrolment(testVatKnownFactsNoPostcode, testCredentialId, testGroupId))
 
@@ -62,7 +62,7 @@ class AllocateEnrolmentConnectorISpec extends ComponentSpecHelper with Allocatio
           "the user has not yet filed and so has not provided any returns information" in {
             val testVatKnownFactsNoReturnsInformation = testVatKnownFacts.copy(optReturnsInformation = None)
 
-            stubAllocateEnrolment(testVatKnownFactsNoReturnsInformation, testCredentialId, testGroupId)(CREATED, Json.obj())
+            stubAllocateEnrolment(testVatKnownFactsNoReturnsInformation, testCredentialId, includeFormBundleReference = true, testGroupId)(CREATED, Json.obj())
 
             val result = await(allocateEnrolmentConnector.allocateEnrolment(testVatKnownFactsNoReturnsInformation, testCredentialId, testGroupId))
 
@@ -71,7 +71,7 @@ class AllocateEnrolmentConnectorISpec extends ComponentSpecHelper with Allocatio
           "the user is both overseas, and has not yet filed" in {
             val testVatKnownFactsNoReturnsInformationOrPostcode = testVatKnownFacts.copy(optReturnsInformation = None, optPostcode = None)
 
-            stubAllocateEnrolment(testVatKnownFactsNoReturnsInformationOrPostcode, testCredentialId, testGroupId)(CREATED, Json.obj())
+            stubAllocateEnrolment(testVatKnownFactsNoReturnsInformationOrPostcode, testCredentialId, includeFormBundleReference = true, testGroupId)(CREATED, Json.obj())
 
             val result = await(allocateEnrolmentConnector.allocateEnrolment(testVatKnownFactsNoReturnsInformationOrPostcode, testCredentialId, testGroupId))
 
@@ -125,14 +125,14 @@ class AllocateEnrolmentConnectorISpec extends ComponentSpecHelper with Allocatio
     "return Multiple Enrolments Invalid" when {
       "the stub Allocate Enrolment feature switch and QueryUserIdStub are disable " when {
         "tax enrolments returns a single error indicating multiple enrolments" in {
-          stubAllocateEnrolment(testVatKnownFacts, testCredentialId, testGroupId)(CONFLICT, Json.obj("code" -> "MULTIPLE_ENROLMENTS_INVALID"))
+          stubAllocateEnrolment(testVatKnownFacts, testCredentialId, includeFormBundleReference = true, testGroupId)(CONFLICT, Json.obj("code" -> "MULTIPLE_ENROLMENTS_INVALID"))
 
           val result = await(allocateEnrolmentConnector.allocateEnrolment(testVatKnownFacts, testCredentialId, testGroupId))
 
           result mustBe MultipleEnrolmentsInvalid
         }
         "tax enrolments returns multiple errors including an error indicating multiple enrolments" in {
-          stubAllocateEnrolment(testVatKnownFacts, testCredentialId, testGroupId)(
+          stubAllocateEnrolment(testVatKnownFacts, testCredentialId, includeFormBundleReference = true, testGroupId)(
             status = CONFLICT,
             jsonBody = Json.obj(
               "code" -> "MULTIPLE_ERRORS",
@@ -190,7 +190,7 @@ class AllocateEnrolmentConnectorISpec extends ComponentSpecHelper with Allocatio
         }
 
         "return EnrolmentFailure" in {
-          stubAllocateEnrolment(testVatKnownFacts, testCredentialId, testGroupId)(BAD_REQUEST, Json.obj())
+          stubAllocateEnrolment(testVatKnownFacts, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj())
 
           val result = await(allocateEnrolmentConnector.allocateEnrolment(testVatKnownFacts, testCredentialId, testGroupId))
 

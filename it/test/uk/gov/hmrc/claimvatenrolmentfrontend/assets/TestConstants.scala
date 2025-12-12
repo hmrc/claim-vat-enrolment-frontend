@@ -30,7 +30,6 @@ object TestConstants {
   val testVatNumber: String = "123456782"
   val testVatRegDate: LocalDate = LocalDate.now()
   val testPostcode: Postcode = Postcode("AA11AA")
-  val testVatAppNumber: String = "0990123456789"
   val testLastReturnMonth: Month = Month.JANUARY
   val testBoxFive: String = "1000.00"
   val testFormBundleReference: String = "123456789101"
@@ -95,7 +94,6 @@ object TestConstants {
       vatNumber = testVatNumber,
       optPostcode = Some(testPostcode),
       vatRegistrationDate = testVatRegDate,
-      submittedVatApplicationNumber = None,
       optReturnsInformation =
         Some(ReturnsInformation(
           boxFive = testBoxFive,
@@ -127,7 +125,6 @@ object TestConstants {
       vatNumber = testVatNumber,
       optPostcode = None,
       vatRegistrationDate = testVatRegDate,
-      submittedVatApplicationNumber = None,
       optReturnsInformation = Some(ReturnsInformation(
         boxFive = testBoxFive,
         lastReturnMonth = testLastReturnMonth

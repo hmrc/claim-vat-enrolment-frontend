@@ -49,7 +49,7 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
       ec)
   }
 
-  private def prepareRequestBody(vatKnownFacts: VatKnownFacts, credentialId: String, isVersion2: Boolean) = {
+  private def prepareRequestBody(vatKnownFacts: VatKnownFacts, credentialId: String, includeFormBundleReference: Boolean) = {
 
     def knownFactsJson: JsArray = {
       val formBundleReferenceJson = Json.obj(
@@ -87,7 +87,7 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
           })
         ))
 
-      if (isVersion2) {
+      if (includeFormBundleReference) {
         otherKnownFacts ++ Json.arr(formBundleReferenceJson)
       } else {
         otherKnownFacts

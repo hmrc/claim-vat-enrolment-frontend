@@ -33,6 +33,7 @@ object TestConstants {
   val testVatAppNumber: String = "0990123456789"
   val testLastReturnMonth: Month = Month.JANUARY
   val testBoxFive: String = "1000.00"
+  val testFormBundleReference: String = "123456789101"
   val testJourneyId: String = UUID.randomUUID().toString
   val testInternalId: String = UUID.randomUUID().toString
   val testContinueUrl: String = "/test-continue-url"
@@ -99,7 +100,8 @@ object TestConstants {
         Some(ReturnsInformation(
           boxFive = testBoxFive,
           lastReturnMonth = testLastReturnMonth
-        ))
+        )),
+      formBundleReference = Some(testFormBundleReference)
     )
 
   val testVatKnownFactsNoReturns: VatKnownFacts =
@@ -107,8 +109,8 @@ object TestConstants {
       vatNumber = testVatNumber,
       optPostcode = Some(testPostcode),
       vatRegistrationDate = testVatRegDate,
-      submittedVatApplicationNumber = None,
-      optReturnsInformation = None
+      optReturnsInformation = None,
+      formBundleReference = Some(testFormBundleReference)
     )
 
   val testVatKnownFactsNoReturnsNoPostcode: VatKnownFacts =
@@ -116,8 +118,8 @@ object TestConstants {
       vatNumber = testVatNumber,
       optPostcode = None,
       vatRegistrationDate = testVatRegDate,
-      submittedVatApplicationNumber = None,
-      optReturnsInformation = None
+      optReturnsInformation = None,
+      formBundleReference = Some(testFormBundleReference)
     )
 
   val testVatKnownFactsNoPostcode: VatKnownFacts =
@@ -129,7 +131,17 @@ object TestConstants {
       optReturnsInformation = Some(ReturnsInformation(
         boxFive = testBoxFive,
         lastReturnMonth = testLastReturnMonth
-      ))
+      )),
+      formBundleReference = Some(testFormBundleReference)
+    )
+
+  val testVatKnownFactsNoFormBundleReference: VatKnownFacts =
+    VatKnownFacts(
+      vatNumber = testVatNumber,
+      optPostcode = Some(Postcode("AA11AA")),
+      vatRegistrationDate = testVatRegDate,
+      optReturnsInformation = None,
+      formBundleReference = None
     )
 
   val emptyJourneyDataJson: JsObject = Json.obj(

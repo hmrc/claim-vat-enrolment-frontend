@@ -17,6 +17,7 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.connectors
 
 import play.api.libs.json.Json
+import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
@@ -34,9 +35,10 @@ class AllocateEnrolmentConnectorISpec extends ComponentSpecHelper with Allocatio
 
   private implicit val headerCarrier: HeaderCarrier = HeaderCarrier()
 
-  private implicit val request = FakeRequest()
+  private implicit val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
 
-  val testVatKnownFacts: VatKnownFacts = VatKnownFacts(testVatNumber, Some(testPostcode), LocalDate.of(2021, 1, 1), Some(testVatAppNumber), Some(ReturnsInformation(testBoxFive, testLastReturnMonth)))
+  val testVatKnownFacts: VatKnownFacts = VatKnownFacts(testVatNumber, Some(testPostcode), LocalDate.of(2021, 1, 1),
+    Some(ReturnsInformation(testBoxFive, testLastReturnMonth)), Some(testFormBundleReference))
 
   "allocateEnrolment" should {
     "return EnrolmentSuccess" when {

@@ -107,7 +107,7 @@ object JourneyDataRepository {
   val SubmittedVatReturnKey: String = "submittedVatReturn"
   val Box5FigureKey: String = "box5Figure"
   val LastMonthSubmittedKey: String = "lastMonthSubmitted"
-  val SubmittedVatApplicationNumberKey = "submittedVatApplicationNumber"
+  val SubmittedVatApplicationNumberKey = "formBundleReference"
 
   implicit lazy val vatKnownFactsReads: Reads[VatKnownFacts] =
     (json: JsValue) => for {
@@ -126,7 +126,8 @@ object JourneyDataRepository {
       } else {
         JsSuccess(None)
       }
-    } yield VatKnownFacts(vatNumber, optPostcode, vatRegistrationDate, submittedVatApplicationNumber, optReturnsInformation)
+      optFormBundleReference <- (json \ SubmittedVatApplicationNumberKey).validateOpt[String]
+    } yield VatKnownFacts(vatNumber, optPostcode, vatRegistrationDate, optReturnsInformation, optFormBundleReference)
 
   implicit lazy val vatKnownFactsWrites: OWrites[VatKnownFacts] =
     (vatKnownFacts: VatKnownFacts) => Json.obj(
@@ -144,7 +145,9 @@ object JourneyDataRepository {
         Json.obj(SubmittedVatReturnKey -> false,
         SubmittedVatApplicationNumberKey -> vatKnownFacts.submittedVatApplicationNumber)
       }
-    }
+    } ++ Json.obj(
+      SubmittedVatApplicationNumberKey -> vatKnownFacts.formBundleReference
+    )
 
   def timeToLiveIndex(timeToLiveDuration: Long): IndexModel =
     IndexModel(

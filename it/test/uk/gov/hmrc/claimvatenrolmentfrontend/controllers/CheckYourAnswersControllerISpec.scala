@@ -74,6 +74,59 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
       testCheckYourAnswersViewFull(result)
     }
 
+    "a Blocked VRN is passed in the request without JourneyData" should {
+
+      lazy val result = {
+        enable(KnownFactsCheckFlag)
+
+        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+
+        await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
+        await(insertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked, testSubmissionDataAttempt3))
+
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        get(s"/$testJourneyId/check-your-answers-vat")
+      }
+
+      "show the access blocked page" in {
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(routes.CaptureVatRegistrationDateController.show(testJourneyId).url)
+        )
+      }
+    }
+
+    "a Blocked VRN is passed in the request with JourneyData" should {
+
+      lazy val result = {
+        enable(KnownFactsCheckFlag)
+
+        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+
+        await(journeyDataRepository.collection.insertOne(
+          Json.obj(
+            "_id" -> testJourneyId,
+            "authInternalId" -> testInternalId,
+            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
+          ) ++ Json.toJsObject(testVatKnownFactsNoPostcode)
+        ).toFuture())
+
+        await(insertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked, testSubmissionDataAttempt3))
+
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        get(s"/$testJourneyId/check-your-answers-vat")
+      }
+
+      "show the access blocked page" in {
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorPages.routes.KnownFactsMismatchWithin24hrsController.show().url)
+        )
+      }
+    }
+
     "there is a VatKnownFacts with no postcode stored in the database" should {
       lazy val result = {
         await(journeyDataRepository.collection.insertOne(

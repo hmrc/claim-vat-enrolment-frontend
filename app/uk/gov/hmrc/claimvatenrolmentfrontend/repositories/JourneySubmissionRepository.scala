@@ -96,11 +96,10 @@ class JourneySubmissionRepository @Inject()(mongoComponent: MongoComponent,
    collection.find[JsObject](
      Filters.and(
        Filters.equal(SubmissionVrnKey, vrn),
-       Filters.equal(AccountStatusKey, eq("Locked"))
+       Filters.equal(AccountStatusKey, "Locked")
      )
    ).headOption().map(_.isDefined)
  }
-
 }
 
 object JourneySubmissionRepository {

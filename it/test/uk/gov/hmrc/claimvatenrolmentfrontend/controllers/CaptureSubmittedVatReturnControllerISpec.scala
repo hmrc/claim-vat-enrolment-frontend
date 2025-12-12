@@ -19,6 +19,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
+import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.KnownFactsCheckFlag
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository._
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.JourneyMongoHelper
@@ -40,6 +41,28 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
     }
 
     testCaptureSubmittedVatReturnViewTests(result)
+
+    "return a access blocked page" when {
+      lazy val result = {
+        enable(KnownFactsCheckFlag)
+
+        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+
+        await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
+        await(insertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked, testSubmissionDataAttempt3))
+
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+        get(s"/$testJourneyId/submitted-vat-return")
+      }
+
+      "a Blocked VRN is accessed" in {
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorPages.routes.KnownFactsMismatchWithin24hrsController.show().url)
+        )
+      }
+    }
 
     "Show an error page" when {
       "There is no Journey Config" in {

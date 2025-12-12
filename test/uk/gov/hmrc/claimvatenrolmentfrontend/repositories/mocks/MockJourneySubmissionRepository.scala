@@ -44,8 +44,8 @@ trait MockJourneySubmissionRepository extends MockitoSugar with BeforeAndAfterEa
       ArgumentMatchers.eq(vrn)
     )).thenReturn(response)
 
-  def mockIsBlockedJourney(vrn: String)(response: Future[Boolean]): OngoingStubbing[_] =
-    when(mockJourneySubmissionRepository.isBlockedJourney(
+  def mockIsVrnBlocked(vrn: String)(response: Future[Boolean]): OngoingStubbing[_] =
+    when(mockJourneySubmissionRepository.isVrnBlocked(
       ArgumentMatchers.eq(vrn)
     )).thenReturn(response)
 

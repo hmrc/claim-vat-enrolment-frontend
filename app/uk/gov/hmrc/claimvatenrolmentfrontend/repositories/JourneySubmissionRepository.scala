@@ -92,7 +92,7 @@ class JourneySubmissionRepository @Inject()(mongoComponent: MongoComponent,
       Filters.equal(SubmissionVrnKey, vrn)
     )
 
- def isBlockedJourney(vrn: String): Future[Boolean] = {
+ def isVrnBlocked(vrn: String): Future[Boolean] = {
    collection.find[JsObject](
      Filters.and(
        Filters.equal(SubmissionVrnKey, vrn),

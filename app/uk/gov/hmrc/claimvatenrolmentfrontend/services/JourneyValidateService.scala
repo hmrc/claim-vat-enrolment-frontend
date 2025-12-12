@@ -43,7 +43,7 @@ class JourneyValidateService @Inject()(
       if (config.isKnownFactsCheckEnabled) {
         journeyDataRepository.getVRNInfo(journeyId, authInternalId).flatMap {
           case Some(vrn) =>
-              journeySubmissionRepository.isBlockedJourney(vrn)
+              journeySubmissionRepository.isVrnBlocked(vrn)
           case None =>
             errorLog(s"[JourneyValidateService][journeyIsLocked] - Journey data was not found for journey ID $journeyId")
             Future.successful(false)

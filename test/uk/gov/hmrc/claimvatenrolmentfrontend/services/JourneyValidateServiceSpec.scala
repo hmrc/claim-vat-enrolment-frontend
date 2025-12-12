@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
+import org.scalatest.PrivateMethodTester
 import org.scalatest.matchers.must.Matchers
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.mvc._
@@ -27,12 +27,12 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.{FeatureSwitching, KnownFactsCheckFlag}
 import uk.gov.hmrc.claimvatenrolmentfrontend.helpers.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.mocks.{MockJourneyDataRepository, MockJourneySubmissionRepository}
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.mocks.MockJourneyValidationService
 import uk.gov.hmrc.http.HeaderCarrier
-
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
 class JourneyValidateServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with MockJourneyDataRepository
-                with MockJourneySubmissionRepository with FeatureSwitching {
+                with MockJourneySubmissionRepository with FeatureSwitching with PrivateMethodTester with MockJourneyValidationService {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   implicit val request: Request[_] = FakeRequest()
@@ -40,32 +40,65 @@ class JourneyValidateServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite wi
 
   implicit val ec: ExecutionContextExecutor = scala.concurrent.ExecutionContext.global
 
-  class TestService(flag: Boolean) extends JourneyValidateService(mockJourneyDataRepository, mockJourneySubmissionRepository, appConfig){
-    override def isJourneyLocked(journeyId: String, authInternalId: String)(implicit request: Request[_]) =
-      Future.successful(flag)
-  }
+  object TestService extends JourneyValidateService(mockJourneyDataRepository, mockJourneySubmissionRepository, appConfig)
 
-  "the journey continue" when {
-    "knownFactsCheck is disabled" in {
-      disable(KnownFactsCheckFlag)
+  "continueIfJourneyIsNotLocked" should {
 
-      val result = new TestService(false).continueIfJourneyIsNotLocked(testJourneyId, testInternalId)(continueResult)
+    "redirect to the KnownFactsMismatchWithin24hrs Error Page" when {
+      "isJourneyLocked method returns 'true'" in {
+        enable(KnownFactsCheckFlag)
+        mockGetVrnInfo(testJourneyId, testInternalId)(Future.successful(Some(testVatNumber)))
+        mockIsVrnBlocked(testVatNumber)(Future.successful(true))
 
-      result.map(_.header.status mustBe 200)
+        val result = TestService.continueIfJourneyIsNotLocked(testJourneyId, testInternalId)(continueResult)(request)
 
-      contentAsString(result) shouldBe "next action executed"
+        result.map(_.header.status mustBe Some(SEE_OTHER))
+        result.map(_.header.headers.get("location") mustBe "/claim-vat-enrolment/error/access-still-locked")
+      }
     }
-  }
 
-  "the journey redirect to errorPage " when {
-    "knownFactsCheck is enabled" in {
-      enable(KnownFactsCheckFlag)
+    "redirect to the successive Page" when {
+      "isJourneyLocked method returns 'false'" in {
+        enable(KnownFactsCheckFlag)
+        mockGetVrnInfo(testJourneyId, testInternalId)(Future.successful(Some(testVatNumber)))
+        mockIsVrnBlocked(testVatNumber)(Future.successful(false))
 
-      mockGetVrnInfo(testJourneyId, testInternalId)(Future.successful(None))
+        val result = TestService.continueIfJourneyIsNotLocked(testJourneyId, testInternalId)(continueResult)(request)
 
-      val result = new TestService(true).continueIfJourneyIsNotLocked(testJourneyId, testInternalId)(continueResult)
+        result.map(_.header.status mustBe Some(SEE_OTHER))
+        result.map(_.header.headers.get("location") mustBe "/claim-vat-enrolment/error/access-still-locked")
+      }
 
-      result.map(_.header.status mustBe Some(SEE_OTHER))
+      "isJourneyLocked method returns 'false', no record exists at Invalid-Submission Repo" in {
+        enable(KnownFactsCheckFlag)
+        mockGetVrnInfo(testJourneyId, testInternalId)(Future.successful(None))
+
+        val result = TestService.continueIfJourneyIsNotLocked(testJourneyId, testInternalId)(continueResult)
+        result.map(_.header.status mustBe OK)
+        contentAsString(result) mustBe "next action executed"
+      }
+
+      "isJourneyLocked method returns 'false' & KnownFactsCheckFlag is disabled" in {
+        disable(KnownFactsCheckFlag)
+
+        val result = TestService.continueIfJourneyIsNotLocked(testJourneyId, testInternalId)(continueResult)
+
+        result.map(_.header.status mustBe OK)
+        contentAsString(result) mustBe "next action executed"
+      }
+    }
+
+    "return an error (or whatever happens here" when {
+      "isJourneyLocked method returns an error (if journeyDataRepository.getVRNInfo or journeySubmissionRepository.isVrnBlocked fail)" in {
+        enable(KnownFactsCheckFlag)
+        mockGetVrnInfo(testJourneyId, testInternalId)(Future.failed(new RuntimeException("Internal Server Error")))
+
+        val result = TestService.continueIfJourneyIsNotLocked(testJourneyId, testInternalId)(continueResult)
+        result.failed.map { ex =>
+            ex mustBe a[RuntimeException]
+            ex.getMessage mustBe "Internal Server Error"
+        }
+      }
     }
   }
 }

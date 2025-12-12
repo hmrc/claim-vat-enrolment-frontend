@@ -30,10 +30,11 @@ trait AllocationEnrolmentStub extends WireMockMethods {
 
   def stubAllocateEnrolment(claimVatEnrolmentInfo: VatKnownFacts,
                             credentialId: String,
+                            includeFormBundleReference: Boolean,
                             groupId: String)(status: Int, jsonBody: JsObject): StubMapping = {
     val enrolmentKey = s"HMRC-MTD-VAT~VRN~${claimVatEnrolmentInfo.vatNumber}"
 
-    val allocateEnrolmentJsonBody = enrolmentJsonStubData(claimVatEnrolmentInfo, credentialId)
+    val allocateEnrolmentJsonBody = enrolmentJsonStubData(claimVatEnrolmentInfo, credentialId, includeFormBundleReference)
 
     when(
       method = POST,
@@ -45,45 +46,49 @@ trait AllocationEnrolmentStub extends WireMockMethods {
     ).thenReturn(status, jsonBody)
   }
 
-  private def enrolmentJsonStubData(claimVatEnrolmentInfo: VatKnownFacts, credentialId: String) = {
+  private def enrolmentJsonStubData(claimVatEnrolmentInfo: VatKnownFacts, credentialId: String, includeFormBundleReference: Boolean = true) = {
+    val baseKnownFacts = Json.arr(
+      Json.obj(
+        "key" -> "VATRegistrationDate",
+        "value" -> claimVatEnrolmentInfo.vatRegistrationDate.format(etmpDateFormat)
+      ),
+      Json.obj(
+        "key" -> "Postcode",
+        "value" -> (claimVatEnrolmentInfo.optPostcode match {
+          case Some(postcode) => postcode.sanitisedPostcode
+          case None => NullValue
+        })
+      ),
+      Json.obj(
+        "key" -> "BoxFiveValue",
+        "value" -> (claimVatEnrolmentInfo.optReturnsInformation match {
+          case Some(returnsInformation) => returnsInformation.boxFive
+          case None => NullValue
+        })
+      ),
+      Json.obj(
+        "key" -> "LastMonthLatestStagger",
+        "value" -> (claimVatEnrolmentInfo.optReturnsInformation match {
+          case Some(returnsInformation) => returnsInformation.lastReturnMonth.getValue.formatted("%02d")
+          case None => NullValue
+        })
+      )
+    )
+    val fbNum = Json.obj(
+      "key" -> "FB_NUM",
+      "value" -> claimVatEnrolmentInfo.formBundleReference
+    )
+    val verifiers =
+      if (includeFormBundleReference)
+        baseKnownFacts ++ Json.arr(fbNum)
+      else
+        baseKnownFacts
+
     Json.obj(
       "userId" -> credentialId,
       "friendlyName" -> "Making Tax Digital - VAT",
       "type" -> "principal",
-      "verifiers" -> Json.arr(
-        Json.obj(
-          "key" -> "VATRegistrationDate",
-          "value" -> claimVatEnrolmentInfo.vatRegistrationDate.format(etmpDateFormat)
-        ),
-        Json.obj(
-          "key" -> "Postcode",
-          "value" -> (claimVatEnrolmentInfo.optPostcode match {
-            case Some(postcode) => postcode.sanitisedPostcode
-            case None => NullValue
-          })
-        ),
-        Json.obj(
-          "key" -> "BoxFiveValue",
-          "value" -> (claimVatEnrolmentInfo.optReturnsInformation match {
-            case Some(returnsInformation) => returnsInformation.boxFive
-            case None => NullValue
-          })
-        ),
-        Json.obj(
-          "key" -> "LastMonthLatestStagger",
-          "value" -> (claimVatEnrolmentInfo.optReturnsInformation match {
-            case Some(returnsInformation) => returnsInformation.lastReturnMonth.getValue.formatted("%02d")
-            case None => NullValue
-          })
-        ),
-        Json.obj(
-          "key" -> "FB_NUM",
-          "value" -> (claimVatEnrolmentInfo.formBundleReference match {
-            case formBundleReference if formBundleReference.nonEmpty => formBundleReference
-            case _ => NullValue
-          })
-        )
-      )
+      "verifiers" -> verifiers
     )
   }
 

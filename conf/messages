@@ -94,6 +94,11 @@ check-your-answers.vat_returns                              = You are currently 
 check-your-answers.box_five                                 = Your VAT return total or Box 5 amount
 check-your-answers.last_return_month                        = The last month in your latest accounting period
 
+# Check Your Answers Page - ver2 (knownFactsCheckWithVanFlag)
+check-your-answers.ver2.vat_number                          = VAT registration number
+check-your-answers.ver2.registration_date                   = Date of VAT registration
+check-your-answers.vat_application_number                   = VAT application number
+
 # Known Facts Mismatch Page
 known_facts_mismatch.title                                  = We could not confirm your business
 known_facts_mismatch.heading                                = We could not confirm your business

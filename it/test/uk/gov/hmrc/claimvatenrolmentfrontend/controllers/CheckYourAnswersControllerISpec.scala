@@ -41,6 +41,8 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
 
   def extraConfig: Map[String, String] = Map(
     "auditing.enabled" -> "true",
+    "feature-switch.knownFactsCheckWithVanFlag" -> "false",
+    "feature-switch.knownFactsCheckFlag" -> "false",
     "auditing.consumer.baseUri.host" -> mockHost,
     "auditing.consumer.baseUri.port" -> mockPort
   )
@@ -206,7 +208,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ).toFuture())
       await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
-      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(CREATED, Json.obj())
+      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(CREATED, Json.obj())
       stubAudit
 
       lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
@@ -228,7 +230,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ).toFuture())
       await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
-      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(CONFLICT, Json.obj("code" -> MultipleEnrolmentsInvalidKey))
+      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(CONFLICT, Json.obj("code" -> MultipleEnrolmentsInvalidKey))
       stubAudit
 
       lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
@@ -250,7 +252,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ).toFuture())
       await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
-      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(BAD_REQUEST, Json.obj())
+      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(BAD_REQUEST, Json.obj())
       stubGetUserIds(testVatNumber)(NO_CONTENT)
       stubAudit
 
@@ -277,7 +279,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ).toFuture())
       await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
-      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(BAD_REQUEST, Json.obj())
+      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(BAD_REQUEST, Json.obj())
       stubGetUserIds(testVatNumber)(NO_CONTENT)
       stubAudit
 
@@ -309,7 +311,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ).toFuture())
       await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
-      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(BAD_REQUEST, Json.obj())
+      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(BAD_REQUEST, Json.obj())
       stubGetUserIds(testVatNumber)(OK)
       stubAudit
 
@@ -333,7 +335,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ).toFuture())
       await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
-      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(INTERNAL_SERVER_ERROR, Json.obj())
+      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(INTERNAL_SERVER_ERROR, Json.obj())
       stubGetUserIds(testVatNumber)(OK)
       stubAudit
 
@@ -356,7 +358,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ).toFuture())
       await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
-      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(INTERNAL_SERVER_ERROR, Json.obj())
+      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(INTERNAL_SERVER_ERROR, Json.obj())
       stubGetUserIds(testVatNumber)(NO_CONTENT)
       stubAudit
 
@@ -372,7 +374,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
     "Redirect to an error page when there is no journeyData" in {
       stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
-      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(BAD_REQUEST, Json.obj())
+      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(BAD_REQUEST, Json.obj())
       stubGetUserIds(testVatNumber)(NO_CONTENT)
       stubAudit
 
@@ -394,7 +396,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ).toFuture())
 
-      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, testGroupId)(CREATED, Json.obj())
+      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(CREATED, Json.obj())
       lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 
       result must have(

@@ -139,7 +139,9 @@ class CaptureSubmittedVatReturnVer2ControllerISpec extends JourneyMongoHelper wi
             "_id" -> testJourneyId,
             "authInternalId" -> testInternalId,
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-          ) ++ Json.obj("vatRegPostcode" -> testPostcode.stringValue, "vatRegistrationDate" -> testVatRegDate, "vatNumber" -> testVatNumber)
+          ) ++ Json.obj("vatRegPostcode" -> testPostcode.stringValue, "vatRegistrationDate" -> testVatRegDate,
+            "vatNumber" -> testVatNumber)
+            ++ Json.obj("formBundleReference" -> Some(testFormBundleReference))
         ).toFuture())
         lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "no")
 
@@ -150,6 +152,28 @@ class CaptureSubmittedVatReturnVer2ControllerISpec extends JourneyMongoHelper wi
         await(
           journeyDataRepository.getJourneyData(testJourneyId, testInternalId)
         ) mustBe Some(testVatKnownFactsNoReturns)
+      }
+
+      "the user selects no and vat application number is empty" in {
+        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        await(journeyDataRepository.collection.insertOne(
+          Json.obj(
+            "_id" -> testJourneyId,
+            "authInternalId" -> testInternalId,
+            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
+          ) ++ Json.obj("vatRegPostcode" -> testPostcode.stringValue, "vatRegistrationDate" -> testVatRegDate,
+            "vatNumber" -> testVatNumber)
+            ++ Json.obj("formBundleReference" -> None)
+        ).toFuture())
+        lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "no")
+
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(routes.CaptureVatApplicationNumberController.show(testJourneyId).url)
+        )
+        await(
+          journeyDataRepository.getJourneyData(testJourneyId, testInternalId)
+        ) mustBe Some(testVatKnownFactsNoFormBundleReference)
       }
     }
     "raise an internal server error" when {

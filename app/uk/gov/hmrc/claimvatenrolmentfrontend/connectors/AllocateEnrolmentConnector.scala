@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.connectors
 
-import play.api.libs.json.{JsObject, Json, Writes}
+import play.api.libs.json.{JsArray, JsObject, Json, Writes}
 import play.api.mvc.Request
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.AllocateEnrolmentConnector._
@@ -38,11 +38,29 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
     infoLog(s"[AllocateEnrolmentConnector][allocateEnrolment] Allocating enrolment")
     val enrolmentKey = s"HMRC-MTD-VAT~VRN~${vatKnownFacts.vatNumber}"
 
-    val requestBody = Json.obj(
-      "userId" -> credentialId,
-      "friendlyName" -> "Making Tax Digital - VAT",
-      "type" -> "principal",
-      "verifiers" -> Json.arr(
+    val requestBody = prepareRequestBody(vatKnownFacts, credentialId, appConfig.knownFactsCheckFlag && appConfig.knownFactsCheckWithVanFlag)
+
+    http.POST[JsObject, AllocateEnrolmentResponse](
+      url = appConfig.allocateEnrolmentUrl(groupId, enrolmentKey),
+      body = requestBody
+    )(implicitly[Writes[JsObject]],
+      AllocateEnrolmentResponseReads,
+      hc,
+      ec)
+  }
+
+  private def prepareRequestBody(vatKnownFacts: VatKnownFacts, credentialId: String, includeFormBundleReference: Boolean) = {
+
+    def knownFactsJson: JsArray = {
+      val formBundleReferenceJson = Json.obj(
+        "key" -> "FB_NUM",
+        "value" -> (vatKnownFacts.formBundleReference match {
+          case Some(formBundleReferenceVal) => formBundleReferenceVal
+          case None => NullValue
+        })
+      )
+
+      val otherKnownFacts = Json.arr(
         Json.obj(
           "key" -> "VATRegistrationDate",
           "value" -> vatKnownFacts.vatRegistrationDate.format(etmpDateFormat)
@@ -67,18 +85,23 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
             case Some(returnsInformation) => "%02d".format(returnsInformation.lastReturnMonth.getValue)
             case None => NullValue
           })
-        )
-      )
-    )
+        ))
 
-    http.POST[JsObject, AllocateEnrolmentResponse](
-      url = appConfig.allocateEnrolmentUrl(groupId, enrolmentKey),
-      body = requestBody
-    )(implicitly[Writes[JsObject]],
-      AllocateEnrolmentResponseReads,
-      hc,
-      ec)
+      if (includeFormBundleReference) {
+        otherKnownFacts ++ Json.arr(formBundleReferenceJson)
+      } else {
+        otherKnownFacts
+      }
+    }
+
+    Json.obj(
+      "userId" -> credentialId,
+      "friendlyName" -> "Making Tax Digital - VAT",
+      "type" -> "principal",
+      "verifiers" -> knownFactsJson
+    )
   }
+
 }
 
 object AllocateEnrolmentConnector {

@@ -32,6 +32,7 @@ object TestConstants {
   val testInternalId: String = UUID.randomUUID().toString
   val testVatNumber: String = UUID.randomUUID().toString
   val testBoxFive: String = "1000.00"
+  val testFormBundleReference: String = "123456789101"
   val testLastMonthSubmitted: Month = Month.MARCH
   val testPostcode: Postcode = Postcode("AA11AA")
   val testLastReturnMonth: Month = Month.JANUARY
@@ -44,7 +45,8 @@ object TestConstants {
         Some(ReturnsInformation(
           boxFive = testBoxFive,
           lastReturnMonth = testLastReturnMonth
-        ))
+        )),
+      formBundleReference = Some(testFormBundleReference)
     ))
   }
   val testSubmissionUpdateTrueStatus: Boolean = true

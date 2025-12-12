@@ -33,38 +33,7 @@ trait AllocationEnrolmentStub extends WireMockMethods {
                             groupId: String)(status: Int, jsonBody: JsObject): StubMapping = {
     val enrolmentKey = s"HMRC-MTD-VAT~VRN~${claimVatEnrolmentInfo.vatNumber}"
 
-    val allocateEnrolmentJsonBody = Json.obj(
-      "userId" -> credentialId,
-      "friendlyName" -> "Making Tax Digital - VAT",
-      "type" -> "principal",
-      "verifiers" -> Json.arr(
-        Json.obj(
-          "key" -> "VATRegistrationDate",
-          "value" ->  claimVatEnrolmentInfo.vatRegistrationDate.format(etmpDateFormat)
-        ),
-        Json.obj(
-          "key" -> "Postcode",
-          "value" -> (claimVatEnrolmentInfo.optPostcode match {
-            case Some(postcode) => postcode.sanitisedPostcode
-            case None => NullValue
-          })
-        ),
-        Json.obj(
-          "key" -> "BoxFiveValue",
-          "value" -> (claimVatEnrolmentInfo.optReturnsInformation match {
-            case Some(returnsInformation) => returnsInformation.boxFive
-            case None => NullValue
-          })
-        ),
-        Json.obj(
-          "key" -> "LastMonthLatestStagger",
-          "value" -> (claimVatEnrolmentInfo.optReturnsInformation match {
-            case Some(returnsInformation) => returnsInformation.lastReturnMonth.getValue.formatted("%02d")
-            case None => NullValue
-          })
-        )
-      )
-    )
+    val allocateEnrolmentJsonBody = enrolmentJsonStubData(claimVatEnrolmentInfo, credentialId)
 
     when(
       method = POST,
@@ -76,19 +45,15 @@ trait AllocationEnrolmentStub extends WireMockMethods {
     ).thenReturn(status, jsonBody)
   }
 
-  def stubAllocateEnrolmentForStub(claimVatEnrolmentInfo: VatKnownFacts,
-                            credentialId: String,
-                            groupId: String)(status: Int, jsonBody: JsObject): StubMapping = {
-    val enrolmentKey = s"HMRC-MTD-VAT~VRN~${claimVatEnrolmentInfo.vatNumber}"
-
-    val allocateEnrolmentJsonBody = Json.obj(
+  private def enrolmentJsonStubData(claimVatEnrolmentInfo: VatKnownFacts, credentialId: String) = {
+    Json.obj(
       "userId" -> credentialId,
       "friendlyName" -> "Making Tax Digital - VAT",
       "type" -> "principal",
       "verifiers" -> Json.arr(
         Json.obj(
           "key" -> "VATRegistrationDate",
-          "value" ->  claimVatEnrolmentInfo.vatRegistrationDate.format(etmpDateFormat)
+          "value" -> claimVatEnrolmentInfo.vatRegistrationDate.format(etmpDateFormat)
         ),
         Json.obj(
           "key" -> "Postcode",
@@ -110,9 +75,24 @@ trait AllocationEnrolmentStub extends WireMockMethods {
             case Some(returnsInformation) => returnsInformation.lastReturnMonth.getValue.formatted("%02d")
             case None => NullValue
           })
+        ),
+        Json.obj(
+          "key" -> "FB_NUM",
+          "value" -> (claimVatEnrolmentInfo.formBundleReference match {
+            case formBundleReference if formBundleReference.nonEmpty => formBundleReference
+            case _ => NullValue
+          })
         )
       )
     )
+  }
+
+  def stubAllocateEnrolmentForStub(claimVatEnrolmentInfo: VatKnownFacts,
+                                   credentialId: String,
+                                   groupId: String)(status: Int, jsonBody: JsObject): StubMapping = {
+    val enrolmentKey = s"HMRC-MTD-VAT~VRN~${claimVatEnrolmentInfo.vatNumber}"
+
+    val allocateEnrolmentJsonBody = enrolmentJsonStubData(claimVatEnrolmentInfo, credentialId)
 
     when(
       method = POST,

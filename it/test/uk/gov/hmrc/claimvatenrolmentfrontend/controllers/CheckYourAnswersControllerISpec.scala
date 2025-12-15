@@ -80,19 +80,16 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
         enable(KnownFactsCheckFlag)
 
         await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
-
-        await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
         await(insertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked, testSubmissionDataAttempt3))
-
         stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
 
         get(s"/$testJourneyId/check-your-answers-vat")
       }
 
-      "show the access blocked page" in {
+      "Show an error page" in {
         result must have(
           httpStatus(SEE_OTHER),
-          redirectUri(routes.CaptureVatRegistrationDateController.show(testJourneyId).url)
+          redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
         )
       }
     }

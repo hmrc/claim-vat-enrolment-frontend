@@ -35,7 +35,7 @@ class JourneyValidateService @Inject()(
 
   def continueIfJourneyIsNotLocked(journeyId: String, authInternalId: String)(continue: Result)(implicit request: Request[_]): Future[Result] = {
     isJourneyLocked(journeyId, authInternalId).map { isLocked =>
-        if(isLocked) Redirect(errorPages.routes.KnownFactsMismatchWithin24hrsController.show()) else continue
+        if (isLocked) Redirect(errorPages.routes.KnownFactsMismatchWithin24hrsController.show()) else continue
     }
   }
 
@@ -43,7 +43,7 @@ class JourneyValidateService @Inject()(
       if (config.isKnownFactsCheckEnabled) {
         journeyDataRepository.getVRNInfo(journeyId, authInternalId).flatMap {
           case Some(vrn) =>
-              journeySubmissionRepository.isVrnBlocked(vrn)
+              journeySubmissionRepository.isVrnLocked(vrn)
           case None =>
             errorLog(s"[JourneyValidateService][journeyIsLocked] - Journey data was not found for journey ID $journeyId")
             Future.successful(false)

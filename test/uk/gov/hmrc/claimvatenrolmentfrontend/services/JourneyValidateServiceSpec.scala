@@ -33,12 +33,19 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
-class JourneyValidateServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with MockJourneyDataRepository
-                with MockJourneySubmissionRepository with FeatureSwitching with PrivateMethodTester with MockJourneyValidationService
-                with ScalaFutures {
+class JourneyValidateServiceSpec
+    extends AnyWordSpec
+    with GuiceOneAppPerSuite
+    with Matchers
+    with MockJourneyDataRepository
+    with MockJourneySubmissionRepository
+    with FeatureSwitching
+    with PrivateMethodTester
+    with MockJourneyValidationService
+    with ScalaFutures {
 
-  implicit val hc: HeaderCarrier = HeaderCarrier()
-  implicit val request: Request[_] = FakeRequest()
+  implicit val hc: HeaderCarrier    = HeaderCarrier()
+  implicit val request: Request[_]  = FakeRequest()
   implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
   implicit val ec: ExecutionContextExecutor = scala.concurrent.ExecutionContext.global
@@ -51,7 +58,7 @@ class JourneyValidateServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite wi
       "isJourneyLocked method returns 'true'" in {
         enable(KnownFactsCheckFlag)
         mockGetVrnInfo(testJourneyId, testInternalId)(Future.successful(Some(testVatNumber)))
-        mockIsVrnBlocked(testVatNumber)(Future.successful(true))
+        mockIsVrnLocked(testVatNumber)(Future.successful(true))
 
         val result = TestService.continueIfJourneyIsNotLocked(testJourneyId, testInternalId)(continueResult)(request)
 
@@ -63,7 +70,8 @@ class JourneyValidateServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite wi
     "follow the 'continue' result argument" when {
       "isJourneyLocked method returns 'false'" in {
         enable(KnownFactsCheckFlag)
-        mockGetVrnInfo(testJourneyId, testInternalId)(Future.successful(None))
+        mockGetVrnInfo(testJourneyId, testInternalId)(Future.successful(Some(testVatNumber)))
+        mockIsVrnLocked(testVatNumber)(Future.successful(false))
 
         val result = TestService.continueIfJourneyIsNotLocked(testJourneyId, testInternalId)(continueResult)
         result.map(_.header.status mustBe OK)
@@ -71,8 +79,8 @@ class JourneyValidateServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite wi
       }
     }
 
-    "return an error (or whatever happens here" when {
-      "isJourneyLocked method returns an error (if journeyDataRepository.getVRNInfo or journeySubmissionRepository.isBlockedJourney fail)" in {
+    "return an Exception" when {
+      "'isJourneyLocked' method returns an error" in {
         enable(KnownFactsCheckFlag)
         mockGetVrnInfo(testJourneyId, testInternalId)(Future.failed(new RuntimeException("Internal Server Error")))
 
@@ -86,43 +94,41 @@ class JourneyValidateServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite wi
 
     "isJourneyLocked" when {
       "'KnownFactsCheck' switch is enabled" should {
-        "return 'false' in a future" when {
-          "user has vrn journey saved and user(supplied vrn) is not blocked" in {
-            enable(KnownFactsCheckFlag) // true
-            mockGetVrnInfo(testJourneyId, testInternalId)(Future.successful(Some(testVatNumber))) // user has vrn journey
-            mockIsVrnBlocked(testVatNumber)(Future.successful(false)) // user(vrn) is not blocked
-
-            val result = TestService.isJourneyLocked(testJourneyId, testInternalId)(request)
-
-            whenReady(result) { isUserBlocked =>
-              isUserBlocked mustBe false
-            }
-          }
-        }
-
         "return 'true' in a future" when {
-          "user has vrn journey saved and user(supplied vrn) is blocked" in {
-            enable(KnownFactsCheckFlag) // true
-            mockGetVrnInfo(testJourneyId, testInternalId)(Future.successful(Some(testVatNumber))) // user has vrn journey
-            mockIsVrnBlocked(testVatNumber)(Future.successful(true)) // user(vrn) is blocked
+          "user has VRN journey data and the VRN is locked" in {
+            enable(KnownFactsCheckFlag)
+            mockGetVrnInfo(testJourneyId, testInternalId)(Future.successful(Some(testVatNumber)))
+            mockIsVrnLocked(testVatNumber)(Future.successful(true))
 
             val result = TestService.isJourneyLocked(testJourneyId, testInternalId)(request)
 
-            whenReady(result) { isUserBlocked =>
-              isUserBlocked mustBe true
+            whenReady(result) { isUserLocked =>
+              isUserLocked mustBe true
             }
           }
         }
 
         "return 'false' in a future" when {
-          "user has no vrn in the journey and user is not blocked" in {
-            enable(KnownFactsCheckFlag) // true
-            mockGetVrnInfo(testJourneyId, testInternalId)(Future.successful(None)) // No vrn exists
+          "user has VRN journey data and the VRN is not locked" in {
+            enable(KnownFactsCheckFlag)
+            mockGetVrnInfo(testJourneyId, testInternalId)(Future.successful(Some(testVatNumber)))
+            mockIsVrnLocked(testVatNumber)(Future.successful(false))
 
             val result = TestService.isJourneyLocked(testJourneyId, testInternalId)(request)
 
-            whenReady(result) { isUserBlocked =>
-              isUserBlocked mustBe false
+            whenReady(result) { isUserLocked =>
+              isUserLocked mustBe false
+            }
+          }
+          "user has no VRN journey data" in {
+            enable(KnownFactsCheckFlag)
+            mockGetVrnInfo(testJourneyId, testInternalId)(Future.successful(None))
+            mockIsVrnLocked(testVatNumber)(Future.successful(true))
+
+            val result = TestService.isJourneyLocked(testJourneyId, testInternalId)(request)
+
+            whenReady(result) { isUserLocked =>
+              isUserLocked mustBe false
             }
           }
         }
@@ -130,14 +136,14 @@ class JourneyValidateServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite wi
 
       "'KnownFactsCheck' switch is disabled" should {
         "always return 'false' in a future" in {
-            disable(KnownFactsCheckFlag) // false
-            val result = TestService.isJourneyLocked(testJourneyId, testInternalId)(request) // return false always
+          disable(KnownFactsCheckFlag)
+          val result = TestService.isJourneyLocked(testJourneyId, testInternalId)(request)
 
-            whenReady(result) { isUserBlocked =>
-              isUserBlocked mustBe false
-            }
+          whenReady(result) { isUserLocked =>
+            isUserLocked mustBe false
           }
         }
+      }
     }
   }
 }

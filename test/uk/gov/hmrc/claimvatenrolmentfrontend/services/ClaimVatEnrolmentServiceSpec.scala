@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
+import org.scalatest.concurrent.Eventually.eventually
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -31,24 +32,23 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.httpparsers.QueryUsersHttpParser.{N
 import uk.gov.hmrc.claimvatenrolmentfrontend.models._
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.mocks.MockJourneySubmissionRepository
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.ClaimVatEnrolmentService._
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.mocks.{MockAllocateEnrolmentService, MockJourneyService}
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.mocks.{MockAllocateEnrolmentService, MockClaimVatEnrolmentService, MockJourneyService}
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with MockJourneyService
-  with MockAllocateEnrolmentService with MockAuditConnector with MockJourneySubmissionRepository with FeatureSwitching {
+  with MockAllocateEnrolmentService with MockAuditConnector with MockJourneySubmissionRepository with MockClaimVatEnrolmentService with FeatureSwitching {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-
   implicit val request: Request[AnyContent] = FakeRequest()
   implicit val responseVatKnownFacts: Future[Option[VatKnownFacts]] = Future.successful(testFullVatKnownFacts)
   implicit val responseJourneyConfig: Future[Option[JourneyConfig]] = Future.successful(testJourneyConfig)
   implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
   object TestService extends ClaimVatEnrolmentService(mockAuditConnector, mockAllocateEnrolmentService, appConfig,
-    mockJourneyService, mockJourneySubmissionRepository)
+    mockJourneyService, mockJourneySubmissionRepository, mockAuthConnector)
 
   def testAuditDetails(vatKnownFacts: VatKnownFacts,
                        isSuccessful: Boolean,
@@ -60,7 +60,8 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
     "boxFiveAmount" -> vatKnownFacts.optReturnsInformation.map(_.boxFive).getOrElse(""),
     "latestMonthReturn" -> vatKnownFacts.optReturnsInformation.map(v => "%02d".format(v.lastReturnMonth.getValue)).getOrElse(""),
     "vatSubscriptionClaimSuccessful" -> isSuccessful.toString,
-    "enrolmentAndClientDatabaseFailureReason" -> optFailureMessage.getOrElse("")
+    "enrolmentAndClientDatabaseFailureReason" -> optFailureMessage.getOrElse(""),
+    "userType" -> "Agent"
   ).filter { case (_, value) => value.nonEmpty }
 
   def testAuditDetailsBlockedSubmission(vatKnownFacts: VatKnownFacts,
@@ -77,57 +78,69 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
     "vatSubscriptionClaimSuccessful" -> isSuccessful.toString,
     "enrolmentAndClientDatabaseFailureReason" -> optFailureMessage.getOrElse(""),
     "submissionNumber" -> submissionNumber.getOrElse("0").toString,
-    "accountStatus" -> accountStatus.getOrElse("")
+    "accountStatus" -> accountStatus.getOrElse(""),
+    "userType" -> "Agent"
   ).filter { case (_, value) => value.nonEmpty }
+
 
   "claimVatEnrolment" should {
     "return a Right(continueUrl)" when {
       "the enrolment is successfully claimed" in {
+        mockAuthorise()
+        mockRetrieveJourneyConfig(testJourneyId, testInternalId)
         mockRetrieveJourneyData(testJourneyId, testInternalId)
         mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(EnrolmentSuccess))
-        mockRetrieveJourneyConfig(testJourneyId, testInternalId)
 
-        val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
-
+        val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId)(hc, request, global))
         result mustBe Right(testContinueUrl)
-        verifyAuditEvent
-        auditEventCaptor.getValue.detail mustBe testAuditDetails(testFullVatKnownFacts.get, isSuccessful = true)
+
+        eventually {
+          verifyAuditEvent
+          auditEventCaptor.getValue.detail mustBe testAuditDetails(testFullVatKnownFacts.get, isSuccessful = true)
+        }
       }
     }
 
     "return a Left(KnownFactsMismatch)" when {
       "the enrolment cannot be claimed due to invalid known facts with KnownFactsCheck is disabled" in {
+        disable(KnownFactsCheckFlag)
+        mockAuthorise()
         mockRetrieveJourneyData(testJourneyId, testInternalId)
         mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(InvalidKnownFacts))
         mockGetUserIds(testVatNumber)(Future.successful(NoUsersFound))
-        disable(KnownFactsCheckFlag)
 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
 
         result mustBe Left(KnownFactsMismatchLevel1)
-        verifyAuditEvent
-        auditEventCaptor.getValue.detail mustBe testAuditDetails(testFullVatKnownFacts.get, isSuccessful = false, Some(InvalidKnownFacts.message))
+        eventually {
+          verifyAuditEvent
+          auditEventCaptor.getValue.detail mustBe testAuditDetails(testFullVatKnownFacts.get, isSuccessful = false, Some(InvalidKnownFacts.message))
+        }
       }
 
       "the enrolment cannot be claimed due to invalid known facts with KnownFactsCheck is enabled" in {
+        enable(KnownFactsCheckFlag)
+        mockAuthorise()
         mockRetrieveJourneyData(testJourneyId, testInternalId)
         mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(InvalidKnownFacts))
         mockGetUserIds(testVatNumber)(Future.successful(NoUsersFound))
         mockInsertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber1, testAccountStatusUnLocked)(Future.successful(testJourneyId))
         mockFindSubmissionData(testJourneyId, testVatNumber)(Future.successful(None)) // will insert the first record when no record found
-        enable(KnownFactsCheckFlag)
 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
 
         result mustBe Left(KnownFactsMismatchLevel1)
-        verifyAuditEvent
-        verifyInsertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber1, testAccountStatusUnLocked)
+        eventually {
+          verifyAuditEvent
+          verifyInsertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber1, testAccountStatusUnLocked)
 
-        auditEventCaptor.getValue.detail mustBe testAuditDetailsBlockedSubmission(testFullVatKnownFacts.get, isSuccessful = false, Some(InvalidKnownFacts.message),
-                Some(testSubmissionNumber1), Some(testAccountStatusUnLocked))
+          auditEventCaptor.getValue.detail mustBe testAuditDetailsBlockedSubmission(testFullVatKnownFacts.get, isSuccessful = false, Some(InvalidKnownFacts.message),
+                  Some(testSubmissionNumber1), Some(testAccountStatusUnLocked))
+        }
       }
 
       "the enrolment cannot be claimed due to 3 consecutive invalid known facts with KnownFactsCheck is enabled" in {
+        mockAuthorise()
         mockRetrieveJourneyData(testJourneyId, testInternalId)
         mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(InvalidKnownFacts))
         mockGetUserIds(testVatNumber)(Future.successful(NoUsersFound))
@@ -138,16 +151,19 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
 
         result mustBe Left(KnownFactsMismatchLevel2)
-        verifyAuditEvent
-        verifyUpdateSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked)
+        eventually {
+          verifyAuditEvent
+          verifyUpdateSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked)
 
-        auditEventCaptor.getValue.detail mustBe testAuditDetailsBlockedSubmission(testFullVatKnownFacts.get, isSuccessful = false, Some(InvalidKnownFacts.message),
-          Some(testSubmissionNumber3), Some(testAccountStatusLocked))
+          auditEventCaptor.getValue.detail mustBe testAuditDetailsBlockedSubmission(testFullVatKnownFacts.get, isSuccessful = false, Some(InvalidKnownFacts.message),
+            Some(testSubmissionNumber3), Some(testAccountStatusLocked))
+        }
       }
     }
 
     "return a Left(EnrolmentAlreadyAllocated)" when {
       "the enrolment cannot be claimed due to invalid known facts but enrolment store proxy returns existing user" in {
+        mockAuthorise()
         mockRetrieveJourneyData(testJourneyId, testInternalId)
         mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(InvalidKnownFacts))
         mockGetUserIds(testVatNumber)(Future.successful(UsersFound))
@@ -156,26 +172,33 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
 
         result mustBe Left(EnrolmentAlreadyAllocated)
-        verifyAuditEvent
-        auditEventCaptor.getValue.detail mustBe testAuditDetails(testFullVatKnownFacts.get, isSuccessful = false, Some(UsersFound.message))
+        eventually {
+          verifyAuditEvent
+          auditEventCaptor.getValue.detail mustBe testAuditDetails(testFullVatKnownFacts.get, isSuccessful = false, Some(UsersFound.message))
+        }
       }
     }
 
     "return a Left(CannotAssignMultipleMtdvatEnrolments)" when {
       "the user already has an MTDVAT enrolment on their credential" in {
+        mockAuthorise()
         mockRetrieveJourneyData(testJourneyId, testInternalId)
         mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(MultipleEnrolmentsInvalid))
 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
 
         result mustBe Left(CannotAssignMultipleMtdvatEnrolments)
-        verifyAuditEvent
-        auditEventCaptor.getValue.detail mustBe testAuditDetails(testFullVatKnownFacts.get, isSuccessful = false, Some(MultipleEnrolmentsInvalid.message))
+
+        eventually {
+          verifyAuditEvent
+          auditEventCaptor.getValue.detail mustBe testAuditDetails(testFullVatKnownFacts.get, isSuccessful = false, Some(MultipleEnrolmentsInvalid.message))
+        }
       }
     }
 
     "return a Left(EnrolmentAlreadyAllocated)" when {
       "the enrolment is already allocated to a different credential" in {
+        mockAuthorise()
         mockRetrieveJourneyData(testJourneyId, testInternalId)
         mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(EnrolmentFailure("Failure")))
         mockGetUserIds(testVatNumber)(Future.successful(UsersFound))
@@ -183,47 +206,49 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
 
         result mustBe Left(EnrolmentAlreadyAllocated)
-        verifyAuditEvent
-        auditEventCaptor.getValue.detail mustBe testAuditDetails(testFullVatKnownFacts.get, isSuccessful = false, Some(UsersFound.message))
+        eventually {
+          verifyAuditEvent
+          auditEventCaptor.getValue.detail mustBe testAuditDetails(testFullVatKnownFacts.get, isSuccessful = false, Some(UsersFound.message))
+        }
       }
     }
 
     "return a Left(JourneyConfigFailure)" when {
       "the enrolment is already allocated to a different credential" in {
+        mockAuthorise()
         mockRetrieveJourneyData(testJourneyId, testInternalId)
         mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(EnrolmentSuccess))
         mockFailRetrieveJourneyConfig(testJourneyId, testInternalId)
 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
-
         result mustBe Left(JourneyConfigFailure)
       }
     }
 
     "return a Left(JourneyDataFailure)" when {
       "the enrolment is already allocated to a different credential" in {
+        mockAuthorise()
         mockFailRetrieveJourneyData(testJourneyId, testInternalId)
 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
-
         result mustBe Left(JourneyDataFailure)
       }
     }
 
     "throw an exception" when {
       "the enrolment cannot be claimed but is not allocated to another user" in {
+        mockAuthorise()
         mockRetrieveJourneyData(testJourneyId, testInternalId)
         mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(EnrolmentFailure("Failure")))
         mockGetUserIds(testVatNumber)(Future.successful(NoUsersFound))
 
         intercept[InternalServerException] {
           await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
+
           verifyAuditEvent
           auditEventCaptor.getValue.detail mustBe testAuditDetails(testFullVatKnownFacts.get, isSuccessful = false, Some(NoUsersFound.message))
         }
-
       }
     }
   }
-
 }

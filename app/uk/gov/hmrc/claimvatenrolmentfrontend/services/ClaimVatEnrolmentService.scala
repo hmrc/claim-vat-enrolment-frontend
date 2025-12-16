@@ -18,6 +18,8 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
 import play.api.data.Form
 import play.api.mvc.Request
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.affinityGroup
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthorisedFunctions}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.AllocateEnrolmentConnector.etmpDateFormat
 import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.{FeatureSwitching, KnownFactsCheckFlag}
@@ -38,7 +40,8 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
                                          allocateEnrolmentService: AllocateEnrolmentService,
                                          config: AppConfig,
                                          journeyService: JourneyService,
-                                         submissionRepo: JourneySubmissionRepository) extends FeatureSwitching {
+                                         submissionRepo: JourneySubmissionRepository,
+                                         val authConnector: AuthConnector) extends AuthorisedFunctions with FeatureSwitching {
 
   def claimVatEnrolment(credentialId: String,
                         groupId: String,
@@ -120,24 +123,34 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
                                             optFailureMessage: Option[String] = None
                             )(implicit hc: HeaderCarrier,
                               request: Request[_],
-                              ec: ExecutionContext): Future[AuditResult] =
-    auditConnector.sendEvent(buildClaimVatEnrolmentAuditEvent(vatKnownFacts, isSuccessful = false, optFailureMessage, Some(submissionNumber), Some(accountStatus)))
+                              ec: ExecutionContext): Future[AuditResult] = {
+    for {
+      affinityGroup <- retrieveIdentityDetails()(hc, ec)
+      result <- auditConnector.sendEvent(buildClaimVatEnrolmentAuditEvent(vatKnownFacts, isSuccessful = false, optFailureMessage, affinityGroup, Some(submissionNumber), Some(accountStatus)))
+    } yield result
+  }
 
   private def sendAuditEvent(vatKnownFacts: VatKnownFacts,
                              isSuccessful: Boolean,
                              optFailureMessage: Option[String] = None
                             )(implicit hc: HeaderCarrier,
                               request: Request[_],
-                              ec: ExecutionContext): Future[AuditResult] =
-    auditConnector.sendEvent(buildClaimVatEnrolmentAuditEvent(vatKnownFacts, isSuccessful, optFailureMessage))
+                              ec: ExecutionContext): Future[Unit] = {
+    for {
+      affinityGroup <- retrieveIdentityDetails()(hc, ec)
+      _ <- auditConnector.sendEvent(buildClaimVatEnrolmentAuditEvent(vatKnownFacts, isSuccessful, optFailureMessage, affinityGroup))
+    } yield {}
+  }
 
   private def buildClaimVatEnrolmentAuditEvent(vatKnownFacts: VatKnownFacts,
                                                isSuccessful: Boolean,
                                                optFailureMessage: Option[String],
+                                               affinityGroup: AffinityGroup,
                                                submissionNumber: Option[Int] = None,
                                                accountStatus: Option[String] = Some("")
                                               )(implicit hc: HeaderCarrier,
-                                                request: Request[_]): DataEvent = {
+                                                request: Request[_],
+                                                ec: ExecutionContext): DataEvent = {
 
     val auditSource = "claim-vat-enrolment"
     val transactionName: String = "MTDVATClaimSubscriptionRequest"
@@ -155,7 +168,7 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
       ( if (config.isKnownFactsCheckEnabled) {
           Map("submissionNumber"-> submissionNumber.getOrElse(0).toString,
                "accountStatus"-> accountStatus.getOrElse(""))
-      } else {Map.empty})
+      } else {Map.empty}) ++ Map("userType" -> affinityGroup.toString)
 
     val updatedDetail: Map[String, String] = detail.filter {case(_, value) => value.nonEmpty}
 
@@ -194,6 +207,13 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
       detail = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails(detail.toSeq: _*)
     )
 
+  }
+
+  def retrieveIdentityDetails()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[AffinityGroup] = {
+   authorised().retrieve(affinityGroup) {
+      case Some(affinity) => Future.successful(affinity)
+      case _ => Future.failed(throw new InternalServerException("[ClaimVatEnrolmentService] Couldn't retrieve auth details for user"))
+    }
   }
 }
 

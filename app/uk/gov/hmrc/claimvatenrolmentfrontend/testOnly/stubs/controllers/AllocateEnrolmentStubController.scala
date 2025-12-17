@@ -40,6 +40,11 @@ class AllocateEnrolmentStubController @Inject()(controllerComponents: Controller
       "Postcode"            -> "AA1 1AA",
       "BoxFiveValue" -> "123.45",
       "LastMonthLatestStagger" -> "01"
+    ),
+    "968501689" -> Map(
+      "VATRegistrationDate" -> "2025-12-12",
+      "Postcode"            -> "BA1 1AB",
+      //"FB_NUM"              -> "099123456789"  --> to be used only for VAN
     )
   )
 

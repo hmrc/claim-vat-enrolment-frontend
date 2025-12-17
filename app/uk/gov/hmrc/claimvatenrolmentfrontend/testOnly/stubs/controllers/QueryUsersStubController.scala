@@ -28,7 +28,7 @@ class QueryUsersStubController @Inject()(controllerComponents: ControllerCompone
     Action {
       vatNumber match {
         case "333333333" | "111111111" => Ok
-        case "444444444" | "555555555" | "123456789" => NoContent
+        case "444444444" | "555555555" | "123456789" | "968501689" => NoContent
         case _ => InternalServerError("Error in the QueryUsersStubController")
       }
     }

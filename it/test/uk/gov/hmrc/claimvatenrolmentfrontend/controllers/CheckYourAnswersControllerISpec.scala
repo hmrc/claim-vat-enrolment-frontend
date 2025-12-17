@@ -76,6 +76,98 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
       testCheckYourAnswersViewFull(result)
     }
 
+    "a Valid request passed in the request (with knownFactsCheckFlag disabled)" should {
+
+      "be without JourneyData" when {
+        lazy val result = {
+          disable(KnownFactsCheckFlag)
+
+          await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+          stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+          get(s"/$testJourneyId/check-your-answers-vat")
+        }
+
+        "Show an error page" in {
+          result must have(
+            httpStatus(SEE_OTHER),
+            redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
+          )
+        }
+      }
+      "be with JourneyData" when {
+        lazy val result = {
+          disable(KnownFactsCheckFlag)
+
+          await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+          await(journeyDataRepository.collection.insertOne(
+            Json.obj(
+              "_id" -> testJourneyId,
+              "authInternalId" -> testInternalId,
+              "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
+            ) ++ Json.toJsObject(testVatKnownFactsNoPostcode)
+          ).toFuture())
+          stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+          get(s"/$testJourneyId/check-your-answers-vat")
+        }
+
+        "return OK" in {
+          result.status mustBe OK
+        }
+      }
+    }
+
+    "a Locked VRN is passed in the request (with knownFactsCheckFlag Enabled)" should {
+
+      "be without JourneyData" when {
+        lazy val result = {
+          enable(KnownFactsCheckFlag)
+
+          await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+          await(insertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked, testSubmissionDataAttempt3))
+          stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+          get(s"/$testJourneyId/check-your-answers-vat")
+        }
+
+        "Show an error page" in {
+          result must have(
+            httpStatus(SEE_OTHER),
+            redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
+          )
+        }
+      }
+
+      "be with JourneyData" when {
+
+        lazy val result = {
+          enable(KnownFactsCheckFlag)
+
+          await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+
+          await(journeyDataRepository.collection.insertOne(
+            Json.obj(
+              "_id" -> testJourneyId,
+              "authInternalId" -> testInternalId,
+              "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
+            ) ++ Json.toJsObject(testVatKnownFactsNoPostcode)
+          ).toFuture())
+
+          await(insertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked, testSubmissionDataAttempt3))
+
+          stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+          get(s"/$testJourneyId/check-your-answers-vat")
+        }
+
+        "show the access blocked page" in {
+          result must have(
+            httpStatus(SEE_OTHER),
+            redirectUri(errorPages.routes.KnownFactsMismatchWithin24hrsController.show().url)
+          )
+        }
+      }
+    }
+
     "there is a VatKnownFacts with no postcode stored in the database" should {
       lazy val result = {
         await(journeyDataRepository.collection.insertOne(

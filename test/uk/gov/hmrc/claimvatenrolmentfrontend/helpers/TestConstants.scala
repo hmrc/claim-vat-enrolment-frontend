@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.helpers
 
+import play.api.mvc.{Result, Results}
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, JourneySubmission, Postcode, ReturnsInformation, VatKnownFacts}
 
 import java.time.{LocalDate, Month}
@@ -30,6 +31,7 @@ object TestConstants {
   val testVatRegDate: LocalDate = LocalDate.parse("2021-01-01")
   val testVatReturn: Boolean = true
   val testInternalId: String = UUID.randomUUID().toString
+  val continueResult: Result = Results.Ok("next action executed")
   val testVatNumber: String = UUID.randomUUID().toString
   val testBoxFive: String = "1000.00"
   val testFormBundleReference: String = "123456789101"
@@ -49,6 +51,7 @@ object TestConstants {
       formBundleReference = Some(testFormBundleReference)
     ))
   }
+
   val testSubmissionUpdateTrueStatus: Boolean = true
   val testSubmissionUpdateFalseStatus: Boolean = false
   val testSubmissionNumber1: Int = 1
@@ -56,6 +59,8 @@ object TestConstants {
   val testSubmissionNumber3: Int = 3
   val testAccountStatusUnLocked: String = "UnLocked"
   val testAccountStatusLocked: String = "Locked"
+
+  val test1stSubmission: Option[JourneySubmission] = Some(JourneySubmission(testJourneyId, testVatNumber, testSubmissionNumber1, testAccountStatusUnLocked))
 
   val test2ndSubmission: Option[JourneySubmission] = Some(JourneySubmission(testJourneyId, testVatNumber, testSubmissionNumber2, testAccountStatusUnLocked))
 

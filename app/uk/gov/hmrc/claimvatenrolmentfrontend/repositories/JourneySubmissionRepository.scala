@@ -92,15 +92,14 @@ class JourneySubmissionRepository @Inject()(mongoComponent: MongoComponent,
       Filters.equal(SubmissionVrnKey, vrn)
     )
 
- def isBlockedJourney(vrn: String): Future[Boolean] = {
+ def isVrnLocked(vrn: String): Future[Boolean] = {
    collection.find[JsObject](
      Filters.and(
        Filters.equal(SubmissionVrnKey, vrn),
-       Filters.equal(AccountStatusKey, eq("Locked"))
+       Filters.equal(AccountStatusKey, "Locked")
      )
    ).headOption().map(_.isDefined)
  }
-
 }
 
 object JourneySubmissionRepository {

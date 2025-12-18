@@ -43,8 +43,8 @@ class AllocateEnrolmentStubController @Inject()(controllerComponents: Controller
     ),
     "968501689" -> Map(
       "VATRegistrationDate" -> "2025-12-12",
-      "Postcode"            -> "BA1 1AB",
-      "FB_NUM"              -> "099123456789"
+      "Postcode"            -> "BA1 1AB"
+      //"FB_NUM"              -> "099123456789"  -> to be used for VAN changes
     )
   )
 

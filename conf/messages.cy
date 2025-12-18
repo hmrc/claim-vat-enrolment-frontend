@@ -108,12 +108,6 @@ known_facts_mismatch.ver2.title_heading                     = Doedd dim modd cad
 known_facts_mismatch.ver2.line_1                            = Nid yw’r manylion a ddarparwyd gennych yr un fath â’r cofnodion sydd gennym. Mae’n rhaid iddynt gyd-fynd yn union â’r manylion sydd ar y llythyr a anfonwyd gennym drwy’r post yn cadarnhau’r cofrestriad TAW.
 known_facts_mismatch.ver2.line_2                            = Gwiriwch eich manylion a rhowch gynnig arall arni.
 
-
-# Different VAT Registration Numbers Error Page
-different_vat_numbers_error.heading                         = Rydych wedi nodi gwahanol rifau cofrestru TAW
-different_vat_numbers_error.line_1                          = Nid yw’r rhif cofrestru TAW rydych wedi ei ddarparu yn cyd-fynd yn union â’r rhif a ddefnyddiwyd o’r blaen. Am resymau diogelwch, mae’n rhaid ailddechrau’r sesiwn hwn.
-different_vat_numbers_error.line_2                          = Er mwyn rhoi cynnig arall arni, bydd angen i chi allgofnodi ac yna mewngofnodi eto.
-
 # Known Facts Mismatch Within 24hrs Page
 known_facts_mismatch_within_24hrs.heading                   = Mae mynediad at eich cyfrif TAW ar-lein yn dal i fod wedi’i gloi
 known_facts_mismatch_within_24hrs.line_1                    = Yn ystod y 24 awr ddiwethaf, cafodd manylion busnes eu darparu nad oeddent yn cyd-fynd yn union â’r cofnodion sydd gennym. Am resymau diogelwch, mae mynediad wedi’i gloi am 24 awr, a hynny o’r amser y cafodd y cynnig aflwyddiannus diwethaf ei wneud.

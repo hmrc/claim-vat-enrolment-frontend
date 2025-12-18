@@ -1,23 +1,20 @@
 # Invalid Account Type Error
-GET         /not-authorised                     uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.InvalidAccountTypeController.show()
+GET         /not-authorised                             uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.InvalidAccountTypeController.show()
 
 # Unmatched User Error
-GET         /not-enrolled                       uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.UnmatchedUserErrorController.show()
+GET         /not-enrolled                               uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.UnmatchedUserErrorController.show()
 
 # Enrolment Already Allocated Error
- GET        /already-enrolled                   uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.EnrolmentAlreadyAllocatedController.show()
+ GET        /already-enrolled                           uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.EnrolmentAlreadyAllocatedController.show()
 
 # Known Facts Mismatch Error
-GET         /can-not-confirm-business            uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.KnownFactsMismatchController.show()
-
-# Different VAT Registration Numbers Error
-GET        /different-vat-registration-numbers    uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.DifferentVatNumbersErrorController.show()
+GET         /can-not-confirm-business                   uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.KnownFactsMismatchController.show()
 
 # Known Facts Mismatch Within 24hrs Error
-GET         /access-still-locked                 uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.KnownFactsMismatchWithin24hrsController.show()
+GET         /access-still-locked                        uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.KnownFactsMismatchWithin24hrsController.show()
 
 # Third Attempt Lockout Error
-GET         /can-not-confirm-business-now-locked    uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.ThirdAttemptLockoutController.show()
+GET         /can-not-confirm-business-now-locked        uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.ThirdAttemptLockoutController.show()
 
 # Service Timeout Error
-GET        /service-timeout                     uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.ServiceTimeoutController.show()
+GET         /service-timeout                            uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.ServiceTimeoutController.show()

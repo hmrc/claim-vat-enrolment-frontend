@@ -109,11 +109,6 @@ known_facts_mismatch.ver2.title_heading                          = We could not 
 known_facts_mismatch.ver2.line_1                                 = The details you provided are not the same as those that we have on record. They must match exactly the details on the VAT registration confirmation letter that we sent by post.
 known_facts_mismatch.ver2.line_2                                 = Check your details and try again.
 
-# Different VAT Registration Numbers Error Page
-different_vat_numbers_error.heading                          = You have entered different VAT registration numbers
-different_vat_numbers_error.line_1                           = The VAT registration number you have provided does not match exactly the number previously used. For security, this session must be restarted.
-different_vat_numbers_error.line_2                           = To make another attempt, sign out and sign in.
-
 # Known Facts Mismatch Within 24hrs Page
 known_facts_mismatch_within_24hrs.heading                   = Access to your VAT online account is still locked
 known_facts_mismatch_within_24hrs.line_1                    = In the last 24 hours, business details were provided that did not match exactly those that we have on record. For security, we have locked access for 24 hours from the last failed attempt.

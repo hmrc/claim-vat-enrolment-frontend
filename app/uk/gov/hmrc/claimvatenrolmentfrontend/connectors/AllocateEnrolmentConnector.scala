@@ -53,7 +53,7 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
 
     def knownFactsJson: JsArray = {
       val formBundleReferenceJson = Json.obj(
-        "key" -> "FB_NUM",
+        "key" -> "FormBundleNumber",
         "value" -> (vatKnownFacts.formBundleReference match {
           case Some(formBundleReferenceVal) => formBundleReferenceVal
           case None => NullValue

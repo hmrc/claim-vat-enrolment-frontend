@@ -40,7 +40,7 @@ capture-submitted-vat-return.old.heading                    = Ydych chi’n cyfl
 capture-submitted-vat-return.error.message                  = Dewiswch ‘Iawn’ os ydych yn cyflwyno Ffurflenni TAW
 
 # Submitted VAT Return Page New
-capture-submitted-vat-return.heading                        = A ydych chi, neu rywun arall, wedi cyflwyno Ffurflenni TAW ar gyfer y busnes hwn?
+capture-submitted-vat-return.new.heading                    = A ydych chi, neu rywun arall, wedi cyflwyno Ffurflenni TAW ar gyfer y busnes hwn?
 capture-submitted-vat-return.hint                           = Dewiswch ‘na’ os nad oes Ffurflen TAW wedi’i chyflwyno ar gyfer y busnes hwn eto.
 
 # VAT Application Number Page

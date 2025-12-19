@@ -75,7 +75,7 @@ trait AllocationEnrolmentStub extends WireMockMethods {
       )
     )
     val fbNum = Json.obj(
-      "key" -> "FB_NUM",
+      "key" -> "FormBundleNumber",
       "value" -> claimVatEnrolmentInfo.formBundleReference
     )
     val verifiers =

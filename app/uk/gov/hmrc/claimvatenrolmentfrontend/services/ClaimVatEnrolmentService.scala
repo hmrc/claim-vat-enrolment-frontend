@@ -170,8 +170,10 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
       "enrolmentAndClientDatabaseFailureReason" -> optFailureMessage.getOrElse("")
     ) ++
       ( if (config.isKnownFactsCheckEnabled) {
-          Map("submissionNumber"-> submissionNumber.getOrElse(0).toString,
-               "accountStatus"-> accountStatus.getOrElse(""))
+        Seq(
+          submissionNumber.map("submissionNumber" -> _.toString),
+          accountStatus.map("accountStatus" -> _)
+        ).flatten.toMap
       } else {Map.empty}) ++ Map("userType" -> affinityGroup.toString)
 
     val updatedDetail: Map[String, String] = detail.filter {case(_, value) => value.nonEmpty}

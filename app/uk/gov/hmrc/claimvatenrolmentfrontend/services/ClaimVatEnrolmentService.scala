@@ -31,7 +31,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 import uk.gov.hmrc.play.audit.AuditExtensions
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.audit.model.DataEvent
-import utils.LinkLogger.infoLog
+import utils.LinkLogger.warnLog
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -107,16 +107,16 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
       case Some(data) if data.submissionNumber == 1 =>
         submissionRepo.updateSubmissionData(journeyId, journeyData.vatNumber, data.submissionNumber + 1, accountStatusUnLocked)
         sendAuditEventKnownFactsCheck(journeyData, data.submissionNumber + 1, accountStatusUnLocked, Some(InvalidKnownFacts.message))
-        infoLog(s"[ClaimVatEnrolmentService][callKnownFactsMismatchLogic] - 2nd attempt - JourneyId: ${journeyId} vrn: ${journeyData.vatNumber}")
+        warnLog(s"[ClaimVatEnrolmentService][callKnownFactsMismatchLogic] - 2nd attempt - JourneyId: $journeyId vrn: ${journeyData.vatNumber}")
         Future.successful(Left(KnownFactsMismatchLevel1))
       case Some(data) if data.submissionNumber == 2 =>
         submissionRepo.updateSubmissionData(journeyId, journeyData.vatNumber, data.submissionNumber + 1, accountStatusLocked)
         sendAuditEventKnownFactsCheck(journeyData, data.submissionNumber + 1, accountStatusLocked, Some(InvalidKnownFacts.message))
-        infoLog(s"[ClaimVatEnrolmentService][callKnownFactsMismatchLogic] - 3rd Attempt - JourneyId: ${journeyId} Journey will be locked for the vrn ${journeyData.vatNumber}")
+        warnLog(s"[ClaimVatEnrolmentService][callKnownFactsMismatchLogic] - 3rd Attempt - JourneyId: $journeyId Journey will be locked for the vrn ${journeyData.vatNumber}")
         Future.successful(Left(KnownFactsMismatchLevel2))
       case _ => submissionRepo.insertSubmissionData(journeyId, journeyData.vatNumber, 1, accountStatusUnLocked)
         sendAuditEventKnownFactsCheck(journeyData, 1, accountStatusUnLocked, Some(InvalidKnownFacts.message))
-        infoLog(s"[ClaimVatEnrolmentService][callKnownFactsMismatchLogic] - 1st Attempt - JourneyId: ${journeyId} vrn: ${journeyData.vatNumber}")
+        warnLog(s"[ClaimVatEnrolmentService][callKnownFactsMismatchLogic] - 1st Attempt - JourneyId: $journeyId vrn: ${journeyData.vatNumber}")
         Future.successful(Left(KnownFactsMismatchLevel1))
     }
   }

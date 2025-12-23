@@ -50,7 +50,7 @@ class JourneySubmissionRepositoryISpec extends JourneyMongoHelper {
           testAccountStatusUnLocked,
           testSubmissionDataAttempt1
         ))
-        await(journeySubmissionRepository.findSubmissionData(testJourneyId, testVatNumber)) mustBe Some(testSubmissionDataAttempt1)
+        await(journeySubmissionRepository.findSubmissionData(testVatNumber)) mustBe Some(testSubmissionDataAttempt1)
     }
   }
 
@@ -63,7 +63,7 @@ class JourneySubmissionRepositoryISpec extends JourneyMongoHelper {
         AccountStatusKey -> testAccountStatusUnLocked
       )
       await(journeySubmissionRepository.insertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber1, testAccountStatusUnLocked))
-      await(journeySubmissionRepository.updateSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber2, testAccountStatusUnLocked)) mustBe testSubmissionUpdateStatusTrue
+      await(journeySubmissionRepository.updateSubmissionData(testVatNumber, testSubmissionNumber2, testAccountStatusUnLocked)) mustBe testSubmissionUpdateStatusTrue
 
       await(retrieveSubmissionData(testJourneyId, testVatNumber)) match {
         case Some(document) => document - UniqueId - LastAttemptAtKey mustBe expectedJson
@@ -73,8 +73,8 @@ class JourneySubmissionRepositoryISpec extends JourneyMongoHelper {
 
     "successfully update data when data is already stored against a key" in {
       await(journeySubmissionRepository.insertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber1, testAccountStatusUnLocked))
-      await(journeySubmissionRepository.updateSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber2, testAccountStatusUnLocked)) mustBe testSubmissionUpdateStatusTrue
-      await(journeySubmissionRepository.updateSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked)) mustBe testSubmissionUpdateStatusTrue
+      await(journeySubmissionRepository.updateSubmissionData(testVatNumber, testSubmissionNumber2, testAccountStatusUnLocked)) mustBe testSubmissionUpdateStatusTrue
+      await(journeySubmissionRepository.updateSubmissionData(testVatNumber, testSubmissionNumber3, testAccountStatusLocked)) mustBe testSubmissionUpdateStatusTrue
 
       await(retrieveSubmissionData(testJourneyId, testVatNumber)).map(
         json => (json \ accountStatusKey).as[String]) mustBe Some(testAccountStatusLocked)
@@ -82,7 +82,7 @@ class JourneySubmissionRepositoryISpec extends JourneyMongoHelper {
 
     "return false when the journey does not exist" in {
       await(journeySubmissionRepository.insertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber1, testAccountStatusUnLocked))
-      await(journeySubmissionRepository.updateSubmissionData(s"${testJourneyId}1", testVatNumber, testSubmissionNumber2, testAccountStatusUnLocked)) mustBe testSubmissionUpdateStatusFalse
+      await(journeySubmissionRepository.updateSubmissionData(testVatNumber1, testSubmissionNumber2, testAccountStatusUnLocked)) mustBe testSubmissionUpdateStatusFalse
     }
   }
 

@@ -103,14 +103,14 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
 
     val accountStatusUnLocked = "UnLocked"
     val accountStatusLocked = "Locked"
-    submissionRepo.findSubmissionData(journeyId, journeyData.vatNumber).flatMap {
+    submissionRepo.findSubmissionData(journeyData.vatNumber).flatMap {
       case Some(data) if data.submissionNumber == 1 =>
-        submissionRepo.updateSubmissionData(journeyId, journeyData.vatNumber, data.submissionNumber + 1, accountStatusUnLocked)
+        submissionRepo.updateSubmissionData(journeyData.vatNumber, data.submissionNumber + 1, accountStatusUnLocked)
         sendAuditEventKnownFactsCheck(journeyData, data.submissionNumber + 1, accountStatusUnLocked, Some(InvalidKnownFacts.message))
         warnLog(s"[ClaimVatEnrolmentService][callKnownFactsMismatchLogic] - 2nd attempt - JourneyId: $journeyId vrn: ${journeyData.vatNumber}")
         Future.successful(Left(KnownFactsMismatchLevel1))
       case Some(data) if data.submissionNumber == 2 =>
-        submissionRepo.updateSubmissionData(journeyId, journeyData.vatNumber, data.submissionNumber + 1, accountStatusLocked)
+        submissionRepo.updateSubmissionData(journeyData.vatNumber, data.submissionNumber + 1, accountStatusLocked)
         sendAuditEventKnownFactsCheck(journeyData, data.submissionNumber + 1, accountStatusLocked, Some(InvalidKnownFacts.message))
         warnLog(s"[ClaimVatEnrolmentService][callKnownFactsMismatchLogic] - 3rd Attempt - JourneyId: $journeyId Journey will be locked for the vrn ${journeyData.vatNumber}")
         Future.successful(Left(KnownFactsMismatchLevel2))

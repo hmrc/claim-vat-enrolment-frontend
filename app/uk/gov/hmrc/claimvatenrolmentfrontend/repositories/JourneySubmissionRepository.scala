@@ -53,12 +53,9 @@ class JourneySubmissionRepository @Inject()(mongoComponent: MongoComponent,
               )
 ) {
 
-  def findSubmissionData(journeyId: String, vrn: String): Future[Option[JourneySubmission]] = {
+  def findSubmissionData(vrn: String): Future[Option[JourneySubmission]] = {
     collection.find[JsObject](
-      Filters.and(
-        Filters.equal(JourneySubmissionIdKey, journeyId),
-        Filters.equal(SubmissionVrnKey, vrn)
-      )
+      Filters.equal(SubmissionVrnKey, vrn)
     ).headOption().map {
       case Some(doc) => Some(doc.as[JourneySubmission])
       case _ => None
@@ -77,20 +74,17 @@ class JourneySubmissionRepository @Inject()(mongoComponent: MongoComponent,
     ).toFuture().map(_ => journeyId)
   }
 
-  def updateSubmissionData(journeyId: String, vrn: String, submissionNumber: Int, accountStatus: String): Future[Boolean] =
+  def updateSubmissionData(vrn: String, submissionNumber: Int, accountStatus: String): Future[Boolean] =
     collection.updateOne(
-      filterSubmissionData(journeyId, vrn),
+      filterSubmissionData(vrn),
       combine(Updates.set(SubmissionNumberKey, submissionNumber),
           Updates.set(AccountStatusKey, accountStatus),
           Updates.set(LastAttemptAtKey, Json.obj("$date" -> Instant.now.toEpochMilli))),
       UpdateOptions().upsert(false)
     ).toFuture().map(_.getMatchedCount == 1 )
 
-  private def filterSubmissionData(journeyId: String, vrn: String): Bson =
-    Filters.and(
-      Filters.equal(JourneySubmissionIdKey, journeyId),
-      Filters.equal(SubmissionVrnKey, vrn)
-    )
+  private def filterSubmissionData(vrn: String): Bson =
+    Filters.equal(SubmissionVrnKey, vrn)
 
  def isVrnLocked(vrn: String): Future[Boolean] = {
    collection.find[JsObject](

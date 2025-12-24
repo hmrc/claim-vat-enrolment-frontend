@@ -28,6 +28,7 @@ import java.util.UUID
 object TestConstants {
 
   val testVatNumber: String = "123456782"
+  val testVatNumber1: String = "123456783"
   val testVatRegDate: LocalDate = LocalDate.now()
   val testPostcode: Postcode = Postcode("AA11AA")
   val testLastReturnMonth: Month = Month.JANUARY

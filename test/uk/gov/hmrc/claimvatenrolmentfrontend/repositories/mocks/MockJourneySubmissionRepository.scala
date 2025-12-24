@@ -40,7 +40,6 @@ trait MockJourneySubmissionRepository extends MockitoSugar with BeforeAndAfterEa
                              vrn: String
                         )(response: Future[Option[JourneySubmission]]): OngoingStubbing[_] =
     when(mockJourneySubmissionRepository.findSubmissionData(
-      ArgumentMatchers.eq(journeyId),
       ArgumentMatchers.eq(vrn)
     )).thenReturn(response)
 
@@ -61,7 +60,6 @@ trait MockJourneySubmissionRepository extends MockitoSugar with BeforeAndAfterEa
   def mockUpdateSubmissionData(journeyId: String, vrn: String, submissionNumber: Int, accountStatus: String)
                                   (response: Future[Boolean]): OngoingStubbing[_] =
     when(mockJourneySubmissionRepository.updateSubmissionData(
-      ArgumentMatchers.eq(journeyId),
       ArgumentMatchers.eq(vrn),
       ArgumentMatchers.eq(submissionNumber),
       ArgumentMatchers.eq(accountStatus)
@@ -78,7 +76,6 @@ trait MockJourneySubmissionRepository extends MockitoSugar with BeforeAndAfterEa
 
   def verifyUpdateSubmissionData(journeyId: String, vrn: String, submissionNumber: Int, accountStatus: String): Unit =
     verify(mockJourneySubmissionRepository).updateSubmissionData(
-      ArgumentMatchers.eq(journeyId),
       ArgumentMatchers.eq(vrn),
       ArgumentMatchers.eq(submissionNumber),
       ArgumentMatchers.eq(accountStatus)
@@ -87,7 +84,6 @@ trait MockJourneySubmissionRepository extends MockitoSugar with BeforeAndAfterEa
   def verifyFindSubmissionData(journeyId: String,
                                vrn: String): Unit =
     verify(mockJourneySubmissionRepository).findSubmissionData(
-      ArgumentMatchers.eq(journeyId),
       ArgumentMatchers.eq(vrn)
     )
 

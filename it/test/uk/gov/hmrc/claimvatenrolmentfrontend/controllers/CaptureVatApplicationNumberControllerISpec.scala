@@ -26,12 +26,14 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.views.CaptureVatApplicationNumberVi
 
 import java.time.Instant
 
-class CaptureVatApplicationNumberControllerISpec extends JourneyMongoHelper with CaptureVatApplicationNumberViewTests with AuthStub {
+class CaptureVatApplicationNumberControllerISpec
+  extends JourneyMongoHelper with CaptureVatApplicationNumberViewTests with AuthStub {
 
   s"GET VAN /$testJourneyId/vat-application-number" should {
     lazy val result = {
-      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
-      stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+
+      await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       get(s"/$testJourneyId/vat-application-number")
     }
     "return OK" in {
@@ -40,16 +42,14 @@ class CaptureVatApplicationNumberControllerISpec extends JourneyMongoHelper with
 
     testCaptureVatApplicationNumberViewTests(result)
 
-    "return a access blocked page" when {
+    "return the access blocked page" when {
       lazy val result = {
         enable(KnownFactsCheckFlag)
 
-        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+        await(insertLockData(testVatNumber, testInternalId, testSubmissionNumber3))
 
-        await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
-        await(insertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked, testSubmissionDataAttempt3))
-
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         get(s"/$testJourneyId/vat-application-number")
       }
@@ -63,8 +63,8 @@ class CaptureVatApplicationNumberControllerISpec extends JourneyMongoHelper with
     }
 
     "Show an error page VAN " when {
-      "there is no Journey Config" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      "there is no Journey Data" in {
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = get(s"/$testJourneyId/vat-application-number")
 
@@ -74,25 +74,15 @@ class CaptureVatApplicationNumberControllerISpec extends JourneyMongoHelper with
         )
       }
 
-      "the internal Ids do not match" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        await(insertJourneyConfig(testJourneyId, testContinueUrl, "testInternalId"))
+      "the journey Id has no vat number stored" in {
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
-        lazy val result = get(s"/$testJourneyId/vat-application-number")
-
-        result must have(
-          httpStatus(SEE_OTHER),
-          redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
-        )
-      }
-
-      "the journey Id has no internal Id stored" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
-        await(journeyConfigRepository.collection.insertOne(
+        await(journeyDataRepository.collection.insertOne(
           Json.obj(
             "_id" -> testJourneyId,
-            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-          ) ++ Json.toJsObject(testJourneyConfig)
+            "authInternalId" -> testInternalId,
+            "creationTimestamp" -> Json.obj( "$date" -> Instant.now.toEpochMilli)
+          )
         ).toFuture())
 
         lazy val result = get(s"/$testJourneyId/vat-application-number")
@@ -118,7 +108,7 @@ class CaptureVatApplicationNumberControllerISpec extends JourneyMongoHelper with
   s"POST /$testJourneyId/vat-application-number" should {
 
     "when the user does not submit a VAN number" should {
-      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       lazy val result = post(s"/$testJourneyId/vat-application-number")(
         "vatApplicationNumber" -> ""
       )
@@ -126,7 +116,7 @@ class CaptureVatApplicationNumberControllerISpec extends JourneyMongoHelper with
       testCaptureVatApplicationNumberMissingErrorViewTests(result, authStub)
 
       "return a BAD_REQUEST" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = post(s"/$testJourneyId/vat-application-number")(
           "vatApplicationNumber" -> ""
@@ -137,7 +127,7 @@ class CaptureVatApplicationNumberControllerISpec extends JourneyMongoHelper with
     }
 
     "when the user submits an 11 digit number for VAN page" should {
-      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
       lazy val result = post(s"/$testJourneyId/vat-application-number")(
         "vatApplicationNumber" -> "12345678910"
@@ -146,7 +136,7 @@ class CaptureVatApplicationNumberControllerISpec extends JourneyMongoHelper with
       testCaptureVatApplicationNumberInvalidLengthErrorViewTests(result, authStub)
 
       "return a BAD_REQUEST" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = post(s"/$testJourneyId/vat-application-number")(
           "vatApplicationNumber" -> "12345678910"
@@ -157,7 +147,7 @@ class CaptureVatApplicationNumberControllerISpec extends JourneyMongoHelper with
     }
 
     "when the user submits a VAN with invalid characters" should {
-      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
       lazy val result = post(s"/$testJourneyId/vat-application-number")(
         "vatApplicationNumber" -> "1234oo789101"
@@ -166,7 +156,7 @@ class CaptureVatApplicationNumberControllerISpec extends JourneyMongoHelper with
       testCaptureVatApplicationNumberInvalidFormatErrorViewTests(result, authStub)
 
       "return a BAD_REQUEST" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = post(s"/$testJourneyId/vat-application-number")(
           "vatApplicationNumber" -> "1234.oo"
@@ -177,7 +167,7 @@ class CaptureVatApplicationNumberControllerISpec extends JourneyMongoHelper with
     }
 
     "when the user submits a VAN with 14 digits" should {
-      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
 
       lazy val result = post(s"/$testJourneyId/vat-application-number")(
@@ -187,7 +177,7 @@ class CaptureVatApplicationNumberControllerISpec extends JourneyMongoHelper with
       testCaptureVatApplicationNumberInvalidLengthErrorViewTests(result, authStub)
 
       "return a BAD_REQUEST" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = post(s"/$testJourneyId/vat-application-number")(
           "vatApplicationNumber" -> "0123456789012345"

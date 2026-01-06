@@ -30,7 +30,7 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.{FeatureS
 import uk.gov.hmrc.claimvatenrolmentfrontend.helpers.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.httpparsers.QueryUsersHttpParser.{NoUsersFound, UsersFound}
 import uk.gov.hmrc.claimvatenrolmentfrontend.models._
-import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.mocks.MockJourneySubmissionRepository
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.mocks.MockUserLockRepository
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.ClaimVatEnrolmentService._
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.mocks.{MockAllocateEnrolmentService, MockClaimVatEnrolmentService, MockJourneyService}
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
@@ -39,7 +39,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with MockJourneyService
-  with MockAllocateEnrolmentService with MockAuditConnector with MockJourneySubmissionRepository with MockClaimVatEnrolmentService with FeatureSwitching {
+  with MockAllocateEnrolmentService with MockAuditConnector with MockUserLockRepository with MockClaimVatEnrolmentService with FeatureSwitching {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   implicit val request: Request[AnyContent] = FakeRequest()
@@ -47,8 +47,9 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
   implicit val responseJourneyConfig: Future[Option[JourneyConfig]] = Future.successful(testJourneyConfig)
   implicit val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
-  object TestService extends ClaimVatEnrolmentService(mockAuditConnector, mockAllocateEnrolmentService, appConfig,
-    mockJourneyService, mockJourneySubmissionRepository, mockAuthConnector)
+  object TestService extends ClaimVatEnrolmentService(
+    mockAuditConnector, mockAllocateEnrolmentService, appConfig, mockJourneyService, mockUserLockRepository, mockAuthConnector
+  )
 
   def testAuditDetails(vatKnownFacts: VatKnownFacts,
                        isSuccessful: Boolean,
@@ -56,9 +57,9 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
                       ): Map[String, String] = Map(
     "vatNumber" -> vatKnownFacts.vatNumber,
     "businessPostcode" -> vatKnownFacts.optPostcode.map(_.sanitisedPostcode).getOrElse(""),
-    "vatRegistrationDate" -> vatKnownFacts.vatRegistrationDate.format(etmpDateFormat),
-    "boxFiveAmount" -> vatKnownFacts.optReturnsInformation.map(_.boxFive).getOrElse(""),
-    "latestMonthReturn" -> vatKnownFacts.optReturnsInformation.map(v => "%02d".format(v.lastReturnMonth.getValue)).getOrElse(""),
+    "vatRegistrationDate" -> vatKnownFacts.vatRegistrationDate.get.format(etmpDateFormat),
+    "boxFiveAmount" -> vatKnownFacts.optReturnsInformation.map(_.boxFive.get).getOrElse(""),
+    "latestMonthReturn" -> vatKnownFacts.optReturnsInformation.map(v => "%02d".format(v.lastReturnMonth.get.getValue)).getOrElse(""),
     "vatSubscriptionClaimSuccessful" -> isSuccessful.toString,
     "enrolmentAndClientDatabaseFailureReason" -> optFailureMessage.getOrElse(""),
     "userType" -> "Agent"
@@ -72,12 +73,12 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
                             ): Map[String, String] = Map(
     "vatNumber" -> vatKnownFacts.vatNumber,
     "businessPostcode" -> vatKnownFacts.optPostcode.map(_.sanitisedPostcode).getOrElse(""),
-    "vatRegistrationDate" -> vatKnownFacts.vatRegistrationDate.format(etmpDateFormat),
-    "boxFiveAmount" -> vatKnownFacts.optReturnsInformation.map(_.boxFive).getOrElse(""),
-    "latestMonthReturn" -> vatKnownFacts.optReturnsInformation.map(v => "%02d".format(v.lastReturnMonth.getValue)).getOrElse(""),
+    "vatRegistrationDate" -> vatKnownFacts.vatRegistrationDate.get.format(etmpDateFormat),
+    "boxFiveAmount" -> vatKnownFacts.optReturnsInformation.map(_.boxFive.get).getOrElse(""),
+    "latestMonthReturn" -> vatKnownFacts.optReturnsInformation.map(v => "%02d".format(v.lastReturnMonth.get.getValue)).getOrElse(""),
     "vatSubscriptionClaimSuccessful" -> isSuccessful.toString,
     "enrolmentAndClientDatabaseFailureReason" -> optFailureMessage.getOrElse(""),
-    "submissionNumber" -> submissionNumber.getOrElse("0").toString,
+    "submissionNumber" -> submissionNumber.fold("0")(_.toString),
     "accountStatus" -> accountStatus.getOrElse(""),
     "userType" -> "Agent"
   ).filter { case (_, value) => value.nonEmpty }
@@ -111,11 +112,7 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
 
-        result mustBe Left(KnownFactsMismatchLevel1)
-        eventually {
-          verifyAuditEvent
-          auditEventCaptor.getValue.detail mustBe testAuditDetails(testFullVatKnownFacts.get, isSuccessful = false, Some(InvalidKnownFacts.message))
-        }
+        result mustBe Left(KnownFactsMismatchNotLocked)
       }
 
       "the enrolment cannot be claimed due to invalid known facts with KnownFactsCheck is enabled" in {
@@ -124,19 +121,12 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
         mockRetrieveJourneyData(testJourneyId, testInternalId)
         mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(InvalidKnownFacts))
         mockGetUserIds(testVatNumber)(Future.successful(NoUsersFound))
-        mockInsertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber1, testAccountStatusUnLocked)(Future.successful(testJourneyId))
-        mockFindSubmissionData(testJourneyId, testVatNumber)(Future.successful(None)) // will insert the first record when no record found
+        mockUpdateSubmissionData(testVatNumber, testInternalId)(Future.successful(testLock().get))
+        mockIsVrnLocked(testVatNumber, testInternalId)(Future.successful(false))
 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
 
-        result mustBe Left(KnownFactsMismatchLevel1)
-        eventually {
-          verifyAuditEvent
-          verifyInsertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber1, testAccountStatusUnLocked)
-
-          auditEventCaptor.getValue.detail mustBe testAuditDetailsBlockedSubmission(testFullVatKnownFacts.get, isSuccessful = false, Some(InvalidKnownFacts.message),
-                  Some(testSubmissionNumber1), Some(testAccountStatusUnLocked))
-        }
+        result mustBe Left(KnownFactsMismatchNotLocked)
       }
 
       "the enrolment cannot be claimed due to 3 consecutive invalid known facts with KnownFactsCheck is enabled" in {
@@ -144,20 +134,13 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
         mockRetrieveJourneyData(testJourneyId, testInternalId)
         mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(InvalidKnownFacts))
         mockGetUserIds(testVatNumber)(Future.successful(NoUsersFound))
-        mockFindSubmissionData(testJourneyId, testVatNumber)(Future.successful(test2ndSubmission))
-        mockUpdateSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked)(Future.successful(testSubmissionUpdateTrueStatus))
+        mockIsVrnLocked(testVatNumber, testInternalId)(Future.successful(true))
+        mockUpdateSubmissionData(testVatNumber, testInternalId)(Future.successful(testLock(3).get))
         enable(KnownFactsCheckFlag)
 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
 
-        result mustBe Left(KnownFactsMismatchLevel2)
-        eventually {
-          verifyAuditEvent
-          verifyUpdateSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked)
-
-          auditEventCaptor.getValue.detail mustBe testAuditDetailsBlockedSubmission(testFullVatKnownFacts.get, isSuccessful = false, Some(InvalidKnownFacts.message),
-            Some(testSubmissionNumber3), Some(testAccountStatusLocked))
-        }
+        result mustBe Left(KnownFactsMismatchLocked)
       }
     }
 

@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
+import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
+import uk.gov.hmrc.claimvatenrolmentfrontend.auth.{AuthenticatedIdentifierAction, JourneyDataRetrievalAction}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.VatRegistrationDateForm.vatRegistrationDateForm
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, JourneyValidateService, StoreVatRegistrationDateService}
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.{LockService, StoreVatRegistrationDateService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_vat_registration_date_page
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -34,58 +34,33 @@ import scala.concurrent.{ExecutionContext, Future}
 class CaptureVatRegistrationDateController @Inject()(mcc: MessagesControllerComponents,
                                                      view: capture_vat_registration_date_page,
                                                      storeVatRegistrationDateService: StoreVatRegistrationDateService,
-                                                     journeyService: JourneyService,
-                                                     val authConnector: AuthConnector,
-                                                     journeyValidateService: JourneyValidateService
-                                                    )(implicit ec: ExecutionContext,
-                                                      appConfig: AppConfig) extends FrontendController(mcc) with AuthorisedFunctions with LoggingUtil{
+                                                     identify: AuthenticatedIdentifierAction,
+                                                     getData: JourneyDataRetrievalAction,
+                                                     journeyValidateService: LockService
+                                                    )(implicit ec: ExecutionContext, appConfig: AppConfig)
+  extends FrontendController(mcc) with I18nSupport with LoggingUtil{
 
-  def show(journeyId: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      authorised().retrieve(internalId) {
-        case Some(authId) =>
-          journeyService.retrieveJourneyConfig(journeyId, authId).flatMap {
-            case Some(_) =>
-              journeyValidateService.continueIfJourneyIsNotLocked(journeyId, authId)(
-                Ok(view(vatRegistrationDateForm, routes.CaptureVatRegistrationDateController.submit(journeyId)))
-              )
-            case None =>
-              errorLog(s"[CaptureVatRegistrationDateController][show] - Journey config could not be retrieved from the journeyConfigRepository for journey: $journeyId")
-              Future.successful(Redirect(errorPages.routes.ServiceTimeoutController.show()))
-          }
-        case None =>
-          errorLog(s"[CaptureVatRegistrationDateController][show] - Internal ID could not be retrieved from Auth for journey: $journeyId")
-          throw new InternalServerException(s"Internal ID could not be retrieved from Auth for journey: $journeyId")
-      }
+  def show(journeyId: String): Action[AnyContent] = (identify andThen getData).async { implicit request =>
+    journeyValidateService.continueIfJourneyIsNotLocked(request.journeyData.vatNumber, request.userId)(
+      Ok(view(vatRegistrationDateForm, routes.CaptureVatRegistrationDateController.submit(journeyId)))
+    )
   }
 
-  def submit(journeyId: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      authorised().retrieve(internalId) {
-        case Some(authId) =>
-          vatRegistrationDateForm.bindFromRequest().fold(
-            formWithErrors =>
-              Future.successful(
-                BadRequest(view(formWithErrors, routes.CaptureVatRegistrationDateController.submit(journeyId)))
-              ),
-            vatRegistrationDate =>
-              storeVatRegistrationDateService.storeVatRegistrationDate(
-                journeyId,
-                vatRegistrationDate,
-                authId
-              ).map {
-                    matched => if (matched) {
-                      Redirect(routes.CaptureBusinessPostcodeController.show(journeyId).url)
-                    } else {
-                      errorLog(s"[CaptureVatRegistrationDateController][submit] - The date of Vat registration could not be updated for journey $journeyId")
-                      throw new InternalServerException(s"The date of Vat registration could not be updated for journey $journeyId")
-                    }
-              }
-          )
-        case None =>
-          errorLog(s"[CaptureVatRegistrationDateController][submit] - Internal ID could not be retrieved from Auth for journey: $journeyId")
-          throw new InternalServerException(s"Internal ID could not be retrieved from Auth for journey: $journeyId")
-      }
+  def submit(journeyId: String): Action[AnyContent] = identify.async { implicit request =>
+    vatRegistrationDateForm.bindFromRequest().fold(
+      formWithErrors =>
+        Future.successful(BadRequest(view(formWithErrors, routes.CaptureVatRegistrationDateController.submit(journeyId)))),
+      vatRegistrationDate =>
+        storeVatRegistrationDateService.storeVatRegistrationDate(
+          journeyId,
+          Some(vatRegistrationDate),
+          request.userId
+        ) map {
+          case true => Redirect(routes.CaptureBusinessPostcodeController.show(journeyId).url)
+          case _ =>
+            errorLog(s"[CaptureVatRegistrationDateController][submit] - The date of Vat registration could not be updated for journey $journeyId")
+            throw new InternalServerException(s"The date of Vat registration could not be updated for journey $journeyId")
+        }
+    )
   }
-
 }

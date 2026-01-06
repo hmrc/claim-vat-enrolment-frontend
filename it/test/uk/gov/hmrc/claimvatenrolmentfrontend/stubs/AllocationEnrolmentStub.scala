@@ -50,7 +50,7 @@ trait AllocationEnrolmentStub extends WireMockMethods {
     val baseKnownFacts = Json.arr(
       Json.obj(
         "key" -> "VATRegistrationDate",
-        "value" -> claimVatEnrolmentInfo.vatRegistrationDate.format(etmpDateFormat)
+        "value" -> claimVatEnrolmentInfo.vatRegistrationDate.get.format(etmpDateFormat)
       ),
       Json.obj(
         "key" -> "Postcode",
@@ -62,14 +62,14 @@ trait AllocationEnrolmentStub extends WireMockMethods {
       Json.obj(
         "key" -> "BoxFiveValue",
         "value" -> (claimVatEnrolmentInfo.optReturnsInformation match {
-          case Some(returnsInformation) => returnsInformation.boxFive
+          case Some(returnsInformation) => returnsInformation.boxFive.get
           case None => NullValue
         })
       ),
       Json.obj(
         "key" -> "LastMonthLatestStagger",
         "value" -> (claimVatEnrolmentInfo.optReturnsInformation match {
-          case Some(returnsInformation) => returnsInformation.lastReturnMonth.getValue.formatted("%02d")
+          case Some(returnsInformation) => returnsInformation.lastReturnMonth.get.getValue.formatted("%02d")
           case None => NullValue
         })
       )
@@ -79,10 +79,11 @@ trait AllocationEnrolmentStub extends WireMockMethods {
       "value" -> claimVatEnrolmentInfo.formBundleReference
     )
     val verifiers =
-      if (includeFormBundleReference)
+      if (includeFormBundleReference) {
         baseKnownFacts ++ Json.arr(fbNum)
-      else
+      } else {
         baseKnownFacts
+      }
 
     Json.obj(
       "userId" -> credentialId,

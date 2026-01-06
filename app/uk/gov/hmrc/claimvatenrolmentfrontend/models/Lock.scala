@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,17 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.models
 
-import java.time.{LocalDate, Month}
+import play.api.libs.json.{Format, Json, OFormat}
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
-case class VatKnownFacts(vatNumber: String,
-                         optPostcode: Option[Postcode],
-                         vatRegistrationDate: Option[LocalDate],
-                         optReturnsInformation: Option[ReturnsInformation],
-                         formBundleReference: Option[String])
+import java.time.Instant
 
-case class ReturnsInformation(boxFive: Option[String], lastReturnMonth: Option[Month])
+case class Lock(vrn: String,
+                userId: String,
+                failedAttempts: Int,
+                lastAttemptedAt: Instant)
+
+object Lock {
+  implicit val instantFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
+  implicit lazy val format: OFormat[Lock] = Json.format
+}

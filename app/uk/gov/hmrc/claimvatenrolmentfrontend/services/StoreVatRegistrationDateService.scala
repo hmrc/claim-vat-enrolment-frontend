@@ -30,12 +30,12 @@ class StoreVatRegistrationDateService @Inject()(journeyDataRepository: JourneyDa
                                                ) {
 
   def storeVatRegistrationDate(journeyId: String,
-                               vatRegDate: LocalDate,
+                               vatRegDate: Option[LocalDate],
                                authInternalId: String): Future[Boolean] =
     journeyDataRepository.updateJourneyData(
       journeyId = journeyId,
       dataKey = VatRegistrationDateKey,
-      data = Json.toJson(vatRegDate),
+      data = Json.toJson(vatRegDate.get),
       authInternalId = authInternalId
     )
 

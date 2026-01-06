@@ -28,11 +28,11 @@ import java.util.UUID
 object TestConstants {
 
   val testVatNumber: String = "123456782"
-  val testVatNumber1: String = "123456783"
-  val testVatRegDate: LocalDate = LocalDate.now()
+  val differentTestVatNumber: String = "123456783"
+  val testVatRegDate: Some[LocalDate] = Some(LocalDate.now())
   val testPostcode: Postcode = Postcode("AA11AA")
-  val testLastReturnMonth: Month = Month.JANUARY
-  val testBoxFive: String = "1000.00"
+  val testLastReturnMonth: Some[Month] = Some(Month.JANUARY)
+  val testBoxFive: Some[String] = Some("1000.00")
   val testFormBundleReference: String = "123456789101"
   val testJourneyId: String = UUID.randomUUID().toString
   val testInternalId: String = UUID.randomUUID().toString
@@ -101,6 +101,15 @@ object TestConstants {
           lastReturnMonth = testLastReturnMonth
         )),
       formBundleReference = Some(testFormBundleReference)
+    )
+
+  val testVatKnownFactsDefault: VatKnownFacts =
+    VatKnownFacts(
+      vatNumber = testVatNumber,
+      optPostcode = None,
+      vatRegistrationDate = testVatRegDate,
+      optReturnsInformation = None,
+      formBundleReference = None
     )
 
   val testVatKnownFactsNoReturns: VatKnownFacts =

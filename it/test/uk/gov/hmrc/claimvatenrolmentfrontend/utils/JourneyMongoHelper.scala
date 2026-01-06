@@ -20,22 +20,20 @@ import org.mongodb.scala.model.Filters
 import org.mongodb.scala.result.InsertOneResult
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers._
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, JourneySubmission, VatKnownFacts}
-import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{AuthInternalIdKey, CreationTimestampKey, JourneyIdKey}
-import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.{JourneyConfigRepository, JourneyDataRepository, JourneySubmissionRepository}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, Lock, VatKnownFacts}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository._
-import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneySubmissionRepository.{AccountStatusKey, JourneySubmissionIdKey, SubmissionNumberKey, _}
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.{JourneyConfigRepository, JourneyDataRepository, UserLockRepository}
 
 import java.time.Instant
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 trait JourneyMongoHelper extends ComponentSpecHelper {
 
   override def beforeEach(): Unit = {
     await(dropConfigRepo)
     await(dropDataRepo)
-    await(dropSubmissionDataRepo)
+    await(dropLockData)
     super.beforeEach()
   }
 
@@ -43,7 +41,7 @@ trait JourneyMongoHelper extends ComponentSpecHelper {
 
   lazy val journeyDataRepository: JourneyDataRepository = app.injector.instanceOf[JourneyDataRepository]
 
-  lazy val journeySubmissionRepository: JourneySubmissionRepository = app.injector.instanceOf[JourneySubmissionRepository]
+  lazy val UserLockRepository: UserLockRepository = app.injector.instanceOf[UserLockRepository]
 
   // Journey configuration mongo repository methods
   def dropConfigRepo: Future[Unit] =
@@ -73,7 +71,7 @@ trait JourneyMongoHelper extends ComponentSpecHelper {
         Filters.equal(JourneyIdKey, journeyId),
         Filters.equal(AuthInternalIdKey, authInternalId)
       )
-    ).headOption
+    ).headOption()
   }
 
   def insertJourneyDataAsJsObject(journeyId: String,
@@ -98,31 +96,18 @@ trait JourneyMongoHelper extends ComponentSpecHelper {
       ) ++ Json.toJsObject(vatKnownFacts)
     ).toFuture().map(_ => journeyId)
 
-  // Journey submission data mongo repository methods
-  def retrieveSubmissionData(journeyId: String, vrn: String): Future[Option[JsObject]] = {
-    journeySubmissionRepository.collection.find[JsObject](
-      Filters.and(
-        Filters.equal(JourneySubmissionIdKey, journeyId),
-        Filters.equal(SubmissionVrnKey, vrn)
-      )
-    ).headOption
-  }
+  def insertLockData(vrn: String, userId: String, attempts: Int = 1): Future[String] = {
+    def insert: Future[Lock] = UserLockRepository.updateAttempts(vrn, userId)
 
-  def insertSubmissionData(journeyId: String, vrn: String, submissionNumber: Int, accountStatus: String,
-                           submissionData: JourneySubmission): Future[String] = {
-   journeySubmissionRepository.collection.insertOne(
-      Json.obj(
-        JourneySubmissionIdKey -> journeyId,
-        SubmissionVrnKey -> vrn,
-        SubmissionNumberKey -> submissionNumber,
-        AccountStatusKey -> accountStatus,
-        LastAttemptAtKey -> Json.obj( "$date" -> Instant.now.toEpochMilli)
-      ) ++ Json.toJsObject(submissionData)
-    ).toFuture().map(_ => journeyId)
+    for {
+      a <- insert
+      b <- if (a.failedAttempts < attempts) insert else Future.successful(a)
+      _ <- if (b.failedAttempts < attempts) insert else Future.successful(b)
+    } yield a.vrn
   }
 
   // Journey data mongo repository methods
-  def dropSubmissionDataRepo: Future[Unit] =
-    journeySubmissionRepository.collection.drop().toFuture().map(_ => ())
+  def dropLockData: Future[Unit] =
+    UserLockRepository.collection.drop().toFuture().map(_ => ())
 
 }

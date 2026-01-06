@@ -43,7 +43,7 @@ trait MockClaimVatEnrolmentService extends MockitoSugar with BeforeAndAfterEach 
     when(mockClaimVatEnrolmentService.retrieveIdentityDetails()(ArgumentMatchers.eq(hc), ArgumentMatchers.eq(ec))
     ).thenReturn(response)
 
-  def mockAuthorise() {
+  def mockAuthorise(): Unit = {
     when(
       mockAuthConnector.authorise[Option[AffinityGroup]](ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any())
     ).thenReturn(Future.successful(Some(agentAffinity)))

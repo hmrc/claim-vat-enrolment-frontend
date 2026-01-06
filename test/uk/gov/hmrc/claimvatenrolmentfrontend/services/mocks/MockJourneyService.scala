@@ -40,25 +40,23 @@ trait MockJourneyService extends MockitoSugar with BeforeAndAfterEach {
 
   def mockRetrieveJourneyConfig(journeyId: String,
                                 authInternalId: String)
-                               (implicit request: Request[_], response: Future[Option[JourneyConfig]]): OngoingStubbing[Future[Option[JourneyConfig]]] =
+                               (implicit response: Future[Option[JourneyConfig]]): OngoingStubbing[Future[Option[JourneyConfig]]] =
     when(mockJourneyService.retrieveJourneyConfig(ArgumentMatchers.eq(journeyId), ArgumentMatchers.eq(authInternalId))(any())).thenReturn(response)
 
   def mockFailRetrieveJourneyConfig(journeyId: String,
-                                authInternalId: String)
-                               (implicit request: Request[_], response: Future[Option[JourneyConfig]]): OngoingStubbing[Future[Option[JourneyConfig]]] =
+                                authInternalId: String): OngoingStubbing[Future[Option[JourneyConfig]]] =
     when(mockJourneyService.retrieveJourneyConfig(ArgumentMatchers.eq(journeyId), ArgumentMatchers.eq(authInternalId))(any())).thenReturn(Future.successful(None))
 
   def mockRetrieveJourneyData(journeyId: String,
                               authInternalId: String
-                             )(implicit request: Request[_], response: Future[Option[VatKnownFacts]]): OngoingStubbing[Future[Option[VatKnownFacts]]] =
+                             )(implicit response: Future[Option[VatKnownFacts]]): OngoingStubbing[Future[Option[VatKnownFacts]]] =
     when(mockJourneyService.retrieveJourneyData(
       ArgumentMatchers.eq(journeyId),
       ArgumentMatchers.eq(authInternalId))(any())
     ).thenReturn(response)
 
   def mockFailRetrieveJourneyData(journeyId: String,
-                              authInternalId: String
-                             )(implicit request: Request[_], response: Future[Option[VatKnownFacts]]): OngoingStubbing[Future[Option[VatKnownFacts]]] =
+                              authInternalId: String): OngoingStubbing[Future[Option[VatKnownFacts]]] =
     when(mockJourneyService.retrieveJourneyData(
       ArgumentMatchers.eq(journeyId),
       ArgumentMatchers.eq(authInternalId))(any())

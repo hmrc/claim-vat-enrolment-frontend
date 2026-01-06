@@ -17,12 +17,12 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
 import play.api.http.HeaderNames
-import play.api.i18n.MessagesApi
-import play.api.libs.ws.WSCookie
 import play.api.test.Helpers._
+import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.{testGroupId, testInternalId, testJourneyId, testVatNumber}
+import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
 
-class SignInOutControllerISpec extends ComponentSpecHelper {
+class SignInOutControllerISpec extends ComponentSpecHelper with AuthStub {
 
   val host: String = s"http://localhost:$port"
   val signOutUrl: String = s"$host$baseUrl/sign-out"
@@ -31,7 +31,6 @@ class SignInOutControllerISpec extends ComponentSpecHelper {
 
   s"GET /sign-out" should {
     "return 303, and redirect to the feedback page" in {
-
       lazy val result = await(ws.url(signOutUrl)
         .withHttpHeaders((HeaderNames.REFERER, refererUrl))
         .withFollowRedirects(false).get())
@@ -41,6 +40,7 @@ class SignInOutControllerISpec extends ComponentSpecHelper {
       result.header(HeaderNames.LOCATION) mustBe Some("http://localhost:9553/bas-gateway/sign-out-without-state?continue=http://localhost:9514/feedback/claim-vat-enrolment")
     }
   }
+
   s"GET /keep-alive" should {
     "return 200" in {
 
@@ -49,6 +49,17 @@ class SignInOutControllerISpec extends ComponentSpecHelper {
         .withFollowRedirects(false).get())
 
       result.status mustBe OK
+    }
+  }
+
+  s"AuthExceptions should redirect a user to GG Login" should {
+    "return 200" in {
+      stubAuthFailure()
+
+      lazy val result = get(s"/$testJourneyId/vat-application-number")
+
+      result.status mustBe SEE_OTHER
+      result.header(HeaderNames.LOCATION).get must include("http://localhost:9553/bas-gateway/sign-in?continue_url=")
     }
   }
 }

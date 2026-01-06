@@ -27,12 +27,10 @@ import play.api.libs.ws.{DefaultWSCookie, WSClient, WSCookie, WSRequest, WSRespo
 import play.api.mvc.{Cookie, Session, SessionCookieBaker}
 import play.api.test.Helpers._
 import play.api.test.Injecting
-import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.{FeatureSwitching, FeatureSwitchingModule}
 import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.models.FeatureSwitch
 import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.http.SessionKeys
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto
 
 trait ComponentSpecHelper extends AnyWordSpec with Matchers
@@ -71,7 +69,7 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .configure(config ++ additionalConfig)
-    .build
+    .build()
 
   implicit val ws: WSClient = app.injector.instanceOf[WSClient]
   lazy val featureSwitches: Seq[FeatureSwitch] = app.injector.instanceOf[FeatureSwitchingModule].switches
@@ -100,7 +98,7 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
     await(
       buildClient(uri)
         .withCookies(cookie, mockSessionCookie)
-        .get
+        .get()
     )
   }
 

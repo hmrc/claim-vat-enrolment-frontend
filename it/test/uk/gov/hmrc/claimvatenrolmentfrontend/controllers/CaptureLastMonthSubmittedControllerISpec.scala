@@ -30,8 +30,8 @@ class CaptureLastMonthSubmittedControllerISpec extends JourneyMongoHelper with C
 
   s"GET /$testJourneyId/last-vat-return-date" should {
     lazy val result = {
-      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
-      stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       get(s"/$testJourneyId/last-vat-return-date")
     }
     "return OK" in {
@@ -44,12 +44,10 @@ class CaptureLastMonthSubmittedControllerISpec extends JourneyMongoHelper with C
       lazy val result = {
         enable(KnownFactsCheckFlag)
 
-        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+        await(insertLockData(testVatNumber, testInternalId, testSubmissionNumber3))
 
-        await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
-        await(insertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked, testSubmissionDataAttempt3))
-
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         get(s"/$testJourneyId/last-vat-return-date")
       }
@@ -64,7 +62,7 @@ class CaptureLastMonthSubmittedControllerISpec extends JourneyMongoHelper with C
 
     "Show an error page" when {
       "There is no Journey Config" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = get(s"/$testJourneyId/last-vat-return-date")
 
@@ -75,7 +73,7 @@ class CaptureLastMonthSubmittedControllerISpec extends JourneyMongoHelper with C
       }
 
       "the internal Ids do not match" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         await(insertJourneyConfig(testJourneyId, testContinueUrl, "testInternalId"))
 
         lazy val result = get(s"/$testJourneyId/last-vat-return-date")
@@ -87,7 +85,7 @@ class CaptureLastMonthSubmittedControllerISpec extends JourneyMongoHelper with C
       }
 
       "the journey Id has no internal Id stored" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         await(journeyConfigRepository.collection.insertOne(
           Json.obj(
             "_id" -> testJourneyId,
@@ -104,7 +102,7 @@ class CaptureLastMonthSubmittedControllerISpec extends JourneyMongoHelper with C
     }
     "return 500" when {
       "there is no auth id" in {
-        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
         stubAuth(OK, successfulAuthResponse(None))
         lazy val result = get(s"/$testJourneyId/last-vat-return-date")
 
@@ -115,7 +113,7 @@ class CaptureLastMonthSubmittedControllerISpec extends JourneyMongoHelper with C
 
   "POST /last-vat-return-date" should {
     "redirect to Check Your Answers page if a month is selected" in {
-      stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
 
       lazy val result = post(s"/$testJourneyId/last-vat-return-date")("return_date" -> Month.JANUARY.getValue.toString)
@@ -125,14 +123,14 @@ class CaptureLastMonthSubmittedControllerISpec extends JourneyMongoHelper with C
       )
     }
     "return BAD_REQUEST if no month is selected" in {
-      stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
       lazy val result = post(s"/$testJourneyId/last-vat-return-date")()
 
       result.status mustBe BAD_REQUEST
     }
     "return the correct view with error messages" should {
-      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
       lazy val result = post(s"/$testJourneyId/last-vat-return-date")()
 
@@ -140,7 +138,7 @@ class CaptureLastMonthSubmittedControllerISpec extends JourneyMongoHelper with C
     }
     "raise an internal server exception" when {
       "the journey data is missing" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = post(s"/$testJourneyId/last-vat-return-date")("return_date" -> Month.JANUARY.getValue.toString)
 

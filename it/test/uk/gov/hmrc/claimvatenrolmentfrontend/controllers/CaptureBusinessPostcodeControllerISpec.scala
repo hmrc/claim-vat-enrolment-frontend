@@ -31,8 +31,8 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
 
   s"GET /$testJourneyId/business-postcode" should {
     lazy val result = {
-      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
-      stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       get(s"/$testJourneyId/business-postcode")
     }
 
@@ -47,12 +47,10 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
       lazy val result = {
         enable(KnownFactsCheckFlag)
 
-        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+        await(insertLockData(testVatNumber, testInternalId, testSubmissionNumber3))
 
-        await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
-        await(insertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked, testSubmissionDataAttempt3))
-
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         get(s"/$testJourneyId/business-postcode")
       }
@@ -67,7 +65,7 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
 
     "Show an error page" when {
       "there is no journey config" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = get(s"/$testJourneyId/business-postcode")
 
@@ -77,7 +75,7 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
         )
       }
       "the internal Ids do not match" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         await(insertJourneyConfig(testJourneyId, testContinueUrl, "testInternalId"))
 
         lazy val result = get(s"/$testJourneyId/business-postcode")
@@ -88,7 +86,7 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
         )
       }
       "the journey Id has no internal Id stored" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         await(journeyConfigRepository.collection.insertOne(
           Json.obj(
             "_id" -> testJourneyId,
@@ -107,7 +105,7 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
 
     "return 500" when {
       "there is no auth id" in {
-        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
         stubAuth(OK, successfulAuthResponse(None))
         lazy val result = get(s"/$testJourneyId/business-postcode")
 
@@ -120,7 +118,7 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
   s"POST /$testJourneyId/business-postcode" should {
     "redirect to CaptureSubmittedVatReturn" when {
       "the postcode contains a space" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         lazy val result = post(s"/$testJourneyId/business-postcode")("business_postcode" -> "ZZ1 1ZZ")
         await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
 
@@ -131,7 +129,7 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
       }
 
       "the postcode does not contain a space" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         lazy val result = post(s"/$testJourneyId/business-postcode")("business_postcode" -> "ZZ11ZZ")
         await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
 
@@ -145,7 +143,7 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
     "return a view with errors" when {
       "the user has submitted an empty form" should {
         lazy val result = {
-          stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+          stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
           post(s"/$testJourneyId/business-postcode")()
         }
 
@@ -158,7 +156,7 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
 
       "the user has submitted an invalid postcode" should {
         lazy val result = {
-          stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+          stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
           post(s"/$testJourneyId/business-postcode")("business_postcode" -> "invalid")
         }
 
@@ -172,7 +170,7 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
     "raise an internal server exception" when {
       "the journey data is missing" in {
         lazy val result = {
-          stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+          stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
           post(s"/$testJourneyId/business-postcode")("business_postcode" -> "ZZ1 1ZZ")
         }
 
@@ -197,7 +195,7 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
   "clicking the skip postcode link (GET /no-business-postcode)" should {
     "redirect to Submitted VAT Returns page" when {
       "there is no postcode in the database" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
         lazy val result = get(s"/$testJourneyId/no-business-postcode")
 
@@ -211,7 +209,7 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
 
     "remove the postcode field and redirect to Submitted VAT Returns page" when {
       "there is a postcode in the database" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         await(journeyDataRepository.collection.insertOne(
           Json.obj(
             "_id" -> testJourneyId,
@@ -232,7 +230,7 @@ class CaptureBusinessPostcodeControllerISpec extends JourneyMongoHelper with Cap
     }
     "raise an exception" when {
       "the journey data is missing" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = get(s"/$testJourneyId/no-business-postcode")
 

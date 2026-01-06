@@ -17,29 +17,27 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.services.mocks
 
 import org.mockito.ArgumentMatchers
-import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{reset, when}
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.mvc.Request
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.JourneyValidateService
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.LockService
 
 import scala.concurrent.Future
 
 trait MockJourneyValidationService extends MockitoSugar with BeforeAndAfterEach {
   self: Suite =>
 
-  val mockJourneyValidateService: JourneyValidateService = mock[JourneyValidateService]
+  val mockJourneyValidateService: LockService = mock[LockService]
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
     reset(mockJourneyValidateService)
   }
 
-  def mockIsJourneyLocked(journeyId: String, authInternalId: String)(implicit request: Request[_], response: Future[Boolean]): OngoingStubbing[Future[Boolean]] =
+  def mockIsJourneyLocked(journeyId: String, authInternalId: String)(implicit response: Future[Boolean]): OngoingStubbing[Future[Boolean]] =
     when(mockJourneyValidateService.isJourneyLocked(
       ArgumentMatchers.eq(journeyId), ArgumentMatchers.eq(authInternalId)
-    )(any())).thenReturn(response)
+    )).thenReturn(response)
 
 }

@@ -65,7 +65,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
           ) ++ Json.toJsObject(testFullVatKnownFacts)
         ).toFuture())
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         stubAudit
         get(s"/$testJourneyId/check-your-answers-vat")
       }
@@ -82,8 +82,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
         lazy val result = {
           disable(KnownFactsCheckFlag)
 
-          await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
-          stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+          stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
           get(s"/$testJourneyId/check-your-answers-vat")
         }
 
@@ -98,7 +97,6 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
         lazy val result = {
           disable(KnownFactsCheckFlag)
 
-          await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
           await(journeyDataRepository.collection.insertOne(
             Json.obj(
               "_id" -> testJourneyId,
@@ -106,7 +104,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
               "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
             ) ++ Json.toJsObject(testVatKnownFactsNoPostcode)
           ).toFuture())
-          stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+          stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
           get(s"/$testJourneyId/check-your-answers-vat")
         }
 
@@ -122,9 +120,8 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
         lazy val result = {
           enable(KnownFactsCheckFlag)
 
-          await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
-          await(insertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked, testSubmissionDataAttempt3))
-          stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+          await(insertLockData(testVatNumber, testInternalId, testSubmissionNumber3))
+          stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
           get(s"/$testJourneyId/check-your-answers-vat")
         }
@@ -142,8 +139,6 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
         lazy val result = {
           enable(KnownFactsCheckFlag)
 
-          await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
-
           await(journeyDataRepository.collection.insertOne(
             Json.obj(
               "_id" -> testJourneyId,
@@ -152,9 +147,9 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
             ) ++ Json.toJsObject(testVatKnownFactsNoPostcode)
           ).toFuture())
 
-          await(insertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked, testSubmissionDataAttempt3))
+          await(insertLockData(testVatNumber, testInternalId, testSubmissionNumber3))
 
-          stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+          stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
           get(s"/$testJourneyId/check-your-answers-vat")
         }
@@ -177,7 +172,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
           ) ++ Json.toJsObject(testVatKnownFactsNoPostcode)
         ).toFuture())
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         stubAudit
         get(s"/$testJourneyId/check-your-answers-vat")
       }
@@ -201,7 +196,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
             SubmittedVatReturnKey -> true
           )
         ).toFuture())
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         stubAudit
         get(s"/$testJourneyId/check-your-answers-vat")
       }
@@ -209,7 +204,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
       "return a redirect to the registration date page" in {
         result must have(
           httpStatus(SEE_OTHER),
-          redirectUri(routes.CaptureVatRegistrationDateController.show(testJourneyId).url)
+          redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
         )
       }
 
@@ -224,7 +219,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
           ) ++ Json.toJsObject(testVatKnownFactsNoReturns)
         ).toFuture())
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         stubAudit
         get(s"/$testJourneyId/check-your-answers-vat")
       }
@@ -245,7 +240,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
           ) ++ Json.toJsObject(testVatKnownFactsNoReturnsNoPostcode)
         ).toFuture())
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         stubAudit
         get(s"/$testJourneyId/check-your-answers-vat")
       }
@@ -266,7 +261,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
           ) ++ Json.toJsObject(testVatKnownFactsNoReturnsNoPostcode)
         ).toFuture())
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         stubAudit
         get(s"/$testJourneyId/check-your-answers-vat")
       }
@@ -280,7 +275,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
 
     "return 500" when {
       "there is no auth id" in {
-        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
         stubAuth(OK, successfulAuthResponse(None))
         lazy val result = get(s"/$testJourneyId/check-your-answers-vat")
 
@@ -292,6 +287,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
   s"POST /$testJourneyId/check-your-answers-vat" should {
     "redirect to SignUpComplete page when the allocation was successfully created" in {
       stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
       await(journeyDataRepository.collection.insertOne(
         Json.obj(
           "_id" -> testJourneyId,
@@ -299,7 +295,6 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
           "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ).toFuture())
-      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
       stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(CREATED, Json.obj())
       stubAudit
 
@@ -321,7 +316,6 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
           "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ).toFuture())
-      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
       stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(CONFLICT, Json.obj("code" -> MultipleEnrolmentsInvalidKey))
       stubAudit
 
@@ -343,7 +337,6 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
           "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ).toFuture())
-      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
       stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(BAD_REQUEST, Json.obj())
       stubGetUserIds(testVatNumber)(NO_CONTENT)
       stubAudit
@@ -370,19 +363,11 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
           "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ).toFuture())
-      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
       stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(BAD_REQUEST, Json.obj())
       stubGetUserIds(testVatNumber)(NO_CONTENT)
       stubAudit
 
-      await(journeySubmissionRepository.collection.insertOne(
-          Json.obj(
-            "journeyId"       ->  testJourneyId,
-            "vrn"             ->  testVatNumber,
-            "submissionNumber"  -> testSubmissionNumber2,
-            "accountStatus"     -> testAccountStatusUnLocked
-          ) ++ Json.toJsObject(testSubmissionDataAttempt2)
-      ).toFuture())
+      await(insertLockData(testVatNumber, testInternalId, testSubmissionNumber2))
 
       lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 
@@ -402,13 +387,11 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
           "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ).toFuture())
-      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
       stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(BAD_REQUEST, Json.obj())
       stubGetUserIds(testVatNumber)(OK)
       stubAudit
 
       lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
-
 
       result must have(
         httpStatus(SEE_OTHER),
@@ -426,7 +409,6 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
           "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ).toFuture())
-      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
       stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(INTERNAL_SERVER_ERROR, Json.obj())
       stubGetUserIds(testVatNumber)(OK)
       stubAudit
@@ -449,7 +431,6 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
           "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
         ) ++ Json.toJsObject(testFullVatKnownFacts)
       ).toFuture())
-      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
       stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(INTERNAL_SERVER_ERROR, Json.obj())
       stubGetUserIds(testVatNumber)(NO_CONTENT)
       stubAudit
@@ -465,7 +446,6 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
 
     "Redirect to an error page when there is no journeyData" in {
       stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
       stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(BAD_REQUEST, Json.obj())
       stubGetUserIds(testVatNumber)(NO_CONTENT)
       stubAudit
@@ -499,7 +479,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
 
 
     "return Internal Server Error when no credentials or groupId are retrieved from Auth" in {
-      stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      stubAuth(OK, successfulAuthResponse(Some(testGroupId)))
       stubAudit
 
       lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()

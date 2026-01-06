@@ -28,7 +28,7 @@ import java.util.UUID
 object TestConstants {
 
   val testVatNumber: String = "123456782"
-  val testVatNumber1: String = "123456783"
+  val differentTestVatNumber: String = "123456783"
   val testVatRegDate: LocalDate = LocalDate.now()
   val testPostcode: Postcode = Postcode("AA11AA")
   val testLastReturnMonth: Month = Month.JANUARY
@@ -101,6 +101,15 @@ object TestConstants {
           lastReturnMonth = testLastReturnMonth
         )),
       formBundleReference = Some(testFormBundleReference)
+    )
+
+  val testVatKnownFactsDefault: VatKnownFacts =
+    VatKnownFacts(
+      vatNumber = testVatNumber,
+      optPostcode = None,
+      vatRegistrationDate = testVatRegDate,
+      optReturnsInformation = None,
+      formBundleReference = None
     )
 
   val testVatKnownFactsNoReturns: VatKnownFacts =

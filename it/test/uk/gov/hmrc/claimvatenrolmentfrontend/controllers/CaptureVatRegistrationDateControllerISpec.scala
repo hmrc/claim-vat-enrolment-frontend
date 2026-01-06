@@ -30,8 +30,8 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
 
   s"GET /$testJourneyId/vat-registration-date" should {
     lazy val result = {
-      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
-      stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       get(s"/$testJourneyId/vat-registration-date")
     }
     "return OK" in {
@@ -44,12 +44,10 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
       lazy val result = {
         enable(KnownFactsCheckFlag)
 
-        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+        await(insertLockData(testVatNumber, testInternalId, testSubmissionNumber3))
 
-        await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
-        await(insertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked, testSubmissionDataAttempt3))
-
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         get(s"/$testJourneyId/vat-registration-date")
       }
@@ -64,7 +62,7 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
 
     "Show an error page" when {
       "there is no Journey Config" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = get(s"/$testJourneyId/vat-registration-date")
 
@@ -75,7 +73,7 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
       }
 
       "the internal Ids do not match" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         await(insertJourneyConfig(testJourneyId, testContinueUrl, "testInternalId"))
 
         lazy val result = get(s"/$testJourneyId/vat-registration-date")
@@ -87,7 +85,7 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
       }
 
       "the journey Id has no internal Id stored" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         await(journeyConfigRepository.collection.insertOne(
           Json.obj(
             "_id" -> testJourneyId,
@@ -106,7 +104,7 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
 
     "return 500" when {
       "there is no auth id" in {
-        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
         stubAuth(OK, successfulAuthResponse(None))
         lazy val result = get(s"/$testJourneyId/vat-registration-date")
 
@@ -117,7 +115,7 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
 
   s"POST /$testJourneyId/vat-registration-date" should {
     "redirect to CaptureBusinessPostcode if the date is valid" in {
-      stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
       await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
 
@@ -134,13 +132,13 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
     }
 
     "when the user has submitted an empty form, the page" should {
-      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       lazy val result = post(s"/$testJourneyId/vat-registration-date")()
 
       testCaptureVatRegistrationDateMissingErrorViewTests(result, authStub)
 
       "return a BAD_REQUEST" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         lazy val result = post(s"/$testJourneyId/vat-registration-date")()
 
         result.status mustBe BAD_REQUEST
@@ -148,7 +146,7 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
     }
 
     "when the user has submitted a date that is invalid, the page" should {
-      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       lazy val result = post(s"/$testJourneyId/vat-registration-date")(
         "date.day" -> "1",
         "date.month" -> "1",
@@ -158,7 +156,7 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
       testCaptureVatRegistrationDateInvalidErrorViewTests(result, authStub)
 
       "return a BAD_REQUEST" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         lazy val result = post(s"/$testJourneyId/vat-registration-date")(
           "date.day" -> "1",
           "date.month" -> "1",
@@ -170,7 +168,7 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
     }
 
     "when the user has submitted a date with an invalid year, the page" should {
-      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       lazy val result = post(s"/$testJourneyId/vat-registration-date")(
         "date.day" -> "1",
         "date.month" -> "1",
@@ -180,7 +178,7 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
       testCaptureVatRegistrationDateInvalidErrorViewTests(result, authStub)
 
       "return a BAD_REQUEST" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         lazy val result = post(s"/$testJourneyId/vat-registration-date")(
           "date.day" -> "1",
           "date.month" -> "1",
@@ -192,7 +190,7 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
     }
 
     "when the user enters a date that is in the future, the page" should {
-      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       lazy val result = post(s"/$testJourneyId/vat-registration-date")(
         "date.day" -> "1",
         "date.month" -> "1",
@@ -202,7 +200,7 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
       testCaptureVatRegistrationDateFutureErrorViewTests(result, authStub)
 
       "return a BAD_REQUEST" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         lazy val result = post(s"/$testJourneyId/vat-registration-date")(
           "date.day" -> "1",
           "date.month" -> "1",
@@ -214,7 +212,7 @@ class CaptureVatRegistrationDateControllerISpec extends JourneyMongoHelper with 
     }
     "raise an internal server exception" when {
       "the journey data is missing" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = post(s"/$testJourneyId/vat-registration-date")(
           "date.day" -> "1",

@@ -17,12 +17,10 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.stubs
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import play.api.http.HeaderNames
 import play.api.libs.json.{JsObject, Json, Writes}
-import play.api.test.Helpers.UNAUTHORIZED
-import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.testCredentialId
+import uk.gov.hmrc.auth.core.InvalidBearerToken
+import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.{testCredentialId, testInternalId}
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.WireMockMethods
-
 
 trait AuthStub extends WireMockMethods {
 
@@ -35,7 +33,7 @@ trait AuthStub extends WireMockMethods {
 
   def stubAuthFailure(): StubMapping = {
     when(method = POST, uri = authUrl)
-      .thenReturn(status = UNAUTHORIZED, headers = Map(HeaderNames.WWW_AUTHENTICATE -> s"""MDTP detail="MissingBearerToken""""))
+      .thenReturn(status = 401, body = successfulAuthResponse(None))
   }
 
   def successfulAuthResponse(internalId: Option[String]): JsObject = Json.obj(

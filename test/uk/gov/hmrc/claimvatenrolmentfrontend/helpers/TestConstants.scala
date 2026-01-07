@@ -17,9 +17,9 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.helpers
 
 import play.api.mvc.{Result, Results}
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, JourneySubmission, Postcode, ReturnsInformation, VatKnownFacts}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, Lock, Postcode, ReturnsInformation, VatKnownFacts}
 
-import java.time.{LocalDate, Month}
+import java.time.{Instant, LocalDate, Month}
 import java.util.UUID
 
 object TestConstants {
@@ -28,16 +28,16 @@ object TestConstants {
   val testCredentialId: String = UUID.randomUUID().toString
   val testGroupId: String = UUID.randomUUID().toString
   val testContinueUrl: String = "/test"
-  val testVatRegDate: LocalDate = LocalDate.parse("2021-01-01")
+  val testVatRegDate: Some[LocalDate] = Some(LocalDate.parse("2021-01-01"))
   val testVatReturn: Boolean = true
   val testInternalId: String = UUID.randomUUID().toString
   val continueResult: Result = Results.Ok("next action executed")
   val testVatNumber: String = UUID.randomUUID().toString
-  val testBoxFive: String = "1000.00"
+  val testBoxFive: Some[String] = Some("1000.00")
   val testFormBundleReference: String = "123456789101"
-  val testLastMonthSubmitted: Month = Month.MARCH
+  val testLastMonthSubmitted: Some[Month] = Some(Month.MARCH)
   val testPostcode: Postcode = Postcode("AA11AA")
-  val testLastReturnMonth: Month = Month.JANUARY
+  val testLastReturnMonth: Some[Month] = Some(Month.JANUARY)
   val testFullVatKnownFacts: Option[VatKnownFacts] = {
     Some(VatKnownFacts(
       vatNumber = testVatNumber,
@@ -60,11 +60,7 @@ object TestConstants {
   val testAccountStatusUnLocked: String = "UnLocked"
   val testAccountStatusLocked: String = "Locked"
 
-  val test1stSubmission: Option[JourneySubmission] = Some(JourneySubmission(testJourneyId, testVatNumber, testSubmissionNumber1, testAccountStatusUnLocked))
-
-  val test2ndSubmission: Option[JourneySubmission] = Some(JourneySubmission(testJourneyId, testVatNumber, testSubmissionNumber2, testAccountStatusUnLocked))
-
-  val test3rdSubmission: Option[JourneySubmission] = Some(JourneySubmission(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked))
+  def testLock(attempts: Int = 1): Option[Lock] = Some(Lock(testInternalId, testVatNumber, attempts, Instant.now))
 
   val testJourneyConfig: Option[JourneyConfig] = Some(JourneyConfig(testContinueUrl))
 

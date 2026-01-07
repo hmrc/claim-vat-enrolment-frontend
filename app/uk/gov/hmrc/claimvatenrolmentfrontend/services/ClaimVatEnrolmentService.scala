@@ -25,7 +25,7 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.connectors.AllocateEnrolmentConnect
 import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.{FeatureSwitching, KnownFactsCheckFlag}
 import uk.gov.hmrc.claimvatenrolmentfrontend.httpparsers.QueryUsersHttpParser.{NoUsersFound, UsersFound}
 import uk.gov.hmrc.claimvatenrolmentfrontend.models._
-import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneySubmissionRepository
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.UserLockRepository
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.ClaimVatEnrolmentService._
 import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
 import uk.gov.hmrc.play.audit.AuditExtensions
@@ -41,7 +41,7 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
                                          allocateEnrolmentService: AllocateEnrolmentService,
                                          config: AppConfig,
                                          journeyService: JourneyService,
-                                         submissionRepo: JourneySubmissionRepository,
+                                         lock: UserLockRepository,
                                          val authConnector: AuthConnector) extends AuthorisedFunctions with FeatureSwitching {
 
   def claimVatEnrolment(credentialId: String,
@@ -64,15 +64,15 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
             sendAuditEvent(journeyData, isSuccessful = false, Some(MultipleEnrolmentsInvalid.message))
             Future.successful(Left(CannotAssignMultipleMtdvatEnrolments))
           case InvalidKnownFacts =>
-            callEnrolmentStoreProxy(journeyId, journeyData)
+            callEnrolmentStoreProxy(internalId, journeyData)
           case EnrolmentFailure(_) =>
-            callEnrolmentStoreProxy(journeyId, journeyData, enrolmentFailure = true)
+            callEnrolmentStoreProxy(internalId, journeyData, enrolmentFailure = true)
         }
       case None => Future.successful(Left(JourneyDataFailure))
     }
   }
 
-  private def callEnrolmentStoreProxy(journeyId: String,
+  private def callEnrolmentStoreProxy(internalId: String,
                                       journeyData: VatKnownFacts,
                                       enrolmentFailure: Boolean = false
                                      )(implicit hc: HeaderCarrier,
@@ -85,10 +85,10 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
         throw new InternalServerException(NoUsersFound.message)
       case NoUsersFound =>
         if (isEnabled(KnownFactsCheckFlag)) {
-          callKnownFactsMismatchLogic(journeyId, journeyData)
+          callKnownFactsMismatchLogic(internalId, journeyData)
         } else {
           sendAuditEvent(journeyData, isSuccessful = false, Some(InvalidKnownFacts.message))
-          Future.successful(Left(KnownFactsMismatchLevel1))
+          Future.successful(Left(KnownFactsMismatchNotLocked))
         }
       case UsersFound =>
         sendAuditEvent(journeyData, isSuccessful = false, Some(UsersFound.message))
@@ -96,28 +96,20 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
     }
   }
 
-  private def callKnownFactsMismatchLogic(journeyId: String,
-                                          journeyData: VatKnownFacts)(implicit hc: HeaderCarrier,
-                                                                      request: Request[_],
-                                                                      ec: ExecutionContext): Future[ClaimVatEnrolmentResponse] = {
-
-    val accountStatusUnLocked = "UnLocked"
-    val accountStatusLocked = "Locked"
-    submissionRepo.findSubmissionData(journeyData.vatNumber).flatMap {
-      case Some(data) if data.submissionNumber == 1 =>
-        submissionRepo.updateSubmissionData(journeyData.vatNumber, data.submissionNumber + 1, accountStatusUnLocked)
-        sendAuditEventKnownFactsCheck(journeyData, data.submissionNumber + 1, accountStatusUnLocked, Some(InvalidKnownFacts.message))
-        warnLog(s"[ClaimVatEnrolmentService][callKnownFactsMismatchLogic] - 2nd attempt - JourneyId: $journeyId vrn: ${journeyData.vatNumber}")
-        Future.successful(Left(KnownFactsMismatchLevel1))
-      case Some(data) if data.submissionNumber == 2 =>
-        submissionRepo.updateSubmissionData(journeyData.vatNumber, data.submissionNumber + 1, accountStatusLocked)
-        sendAuditEventKnownFactsCheck(journeyData, data.submissionNumber + 1, accountStatusLocked, Some(InvalidKnownFacts.message))
-        warnLog(s"[ClaimVatEnrolmentService][callKnownFactsMismatchLogic] - 3rd Attempt - JourneyId: $journeyId Journey will be locked for the vrn ${journeyData.vatNumber}")
-        Future.successful(Left(KnownFactsMismatchLevel2))
-      case _ => submissionRepo.insertSubmissionData(journeyId, journeyData.vatNumber, 1, accountStatusUnLocked)
-        sendAuditEventKnownFactsCheck(journeyData, 1, accountStatusUnLocked, Some(InvalidKnownFacts.message))
-        warnLog(s"[ClaimVatEnrolmentService][callKnownFactsMismatchLogic] - 1st Attempt - JourneyId: $journeyId vrn: ${journeyData.vatNumber}")
-        Future.successful(Left(KnownFactsMismatchLevel1))
+  private def callKnownFactsMismatchLogic(userId: String,
+                                          journeyData: VatKnownFacts)
+                                         (implicit hc: HeaderCarrier, request: Request[_], ec: ExecutionContext): Future[ClaimVatEnrolmentResponse] = {
+    lock.isVrnOrUserLocked(journeyData.vatNumber, userId).flatMap {
+      case true => Future.successful(Left(KnownFactsMismatchLocked))
+      case _ =>
+        lock.updateAttempts(journeyData.vatNumber, userId).map {
+          case lock if lock.failedAttempts == config.knownFactsLockAttemptLimit =>
+            sendAuditEventKnownFactsCheck(journeyData, lock.failedAttempts, "locked", Some(InvalidKnownFacts.message))
+            warnLog(s"[ClaimVatEnrolmentService][callKnownFactsMismatchLogic] - Attempt ${lock.failedAttempts} - " +
+              s"userId: $userId Journey will be locked for the vrn ${journeyData.vatNumber}")
+            Left(KnownFactsMismatchLocked)
+          case _ => Left(KnownFactsMismatchNotLocked)
+        }
     }
   }
 
@@ -152,9 +144,7 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
                                                affinityGroup: AffinityGroup,
                                                submissionNumber: Option[Int] = None,
                                                accountStatus: Option[String] = Some("")
-                                              )(implicit hc: HeaderCarrier,
-                                                request: Request[_],
-                                                ec: ExecutionContext): DataEvent = {
+                                              )(implicit hc: HeaderCarrier, request: Request[_]): DataEvent = {
 
     val auditSource = "claim-vat-enrolment"
     val transactionName: String = "MTDVATClaimSubscriptionRequest"
@@ -163,9 +153,9 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
     val detail: Map[String, String] = Map(
       "vatNumber" -> vatKnownFacts.vatNumber,
       "businessPostcode" -> vatKnownFacts.optPostcode.map(_.sanitisedPostcode).getOrElse(""),
-      "vatRegistrationDate" -> vatKnownFacts.vatRegistrationDate.format(etmpDateFormat),
-      "boxFiveAmount" -> vatKnownFacts.optReturnsInformation.map(_.boxFive).getOrElse(""),
-      "latestMonthReturn" -> vatKnownFacts.optReturnsInformation.map(x => formatString(x.lastReturnMonth.getValue)).getOrElse(""),
+      "vatRegistrationDate" -> vatKnownFacts.vatRegistrationDate.get.format(etmpDateFormat),
+      "boxFiveAmount" -> vatKnownFacts.optReturnsInformation.map(_.boxFive.get).getOrElse(""),
+      "latestMonthReturn" -> vatKnownFacts.optReturnsInformation.map(x => formatString(x.lastReturnMonth.get.getValue)).getOrElse(""),
       "vatSubscriptionClaimSuccessful" -> isSuccessful.toString,
       "enrolmentAndClientDatabaseFailureReason" -> optFailureMessage.getOrElse("")
     ) ++
@@ -231,9 +221,9 @@ object ClaimVatEnrolmentService {
 
   case object CannotAssignMultipleMtdvatEnrolments extends ClaimVatEnrolmentFailure
 
-  case object KnownFactsMismatchLevel1 extends ClaimVatEnrolmentFailure
+  case object KnownFactsMismatchNotLocked extends ClaimVatEnrolmentFailure
 
-  case object KnownFactsMismatchLevel2 extends ClaimVatEnrolmentFailure
+  case object KnownFactsMismatchLocked extends ClaimVatEnrolmentFailure
 
   case object JourneyConfigFailure extends ClaimVatEnrolmentFailure
 

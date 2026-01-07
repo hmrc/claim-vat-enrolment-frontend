@@ -30,8 +30,8 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
 
   s"GET /$testJourneyId/box-5-figure" should {
     lazy val result = {
-      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
-      stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       get(s"/$testJourneyId/box-5-figure")
     }
     "return OK" in {
@@ -44,12 +44,10 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
       lazy val result = {
         enable(KnownFactsCheckFlag)
 
-        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+        await(insertLockData(testVatNumber, testInternalId, testSubmissionNumber3))
 
-        await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
-        await(insertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked, testSubmissionDataAttempt3))
-
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         get(s"/$testJourneyId/box-5-figure")
       }
@@ -64,7 +62,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
 
     "Show an error page" when {
       "there is no Journey Config" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = get(s"/$testJourneyId/box-5-figure")
 
@@ -75,7 +73,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
       }
 
       "the internal Ids do not match" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         await(insertJourneyConfig(testJourneyId, testContinueUrl, "testInternalId"))
 
         lazy val result = get(s"/$testJourneyId/box-5-figure")
@@ -87,7 +85,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
       }
 
       "the journey Id has no internal Id stored" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         await(journeyConfigRepository.collection.insertOne(
           Json.obj(
             "_id" -> testJourneyId,
@@ -106,7 +104,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
 
     "return 500" when {
       "there is no auth id" in {
-        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
         stubAuth(OK, successfulAuthResponse(None))
         lazy val result = get(s"/$testJourneyId/box-5-figure")
 
@@ -117,7 +115,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
 
   s"POST /$testJourneyId/box-5-figure" should {
     "redirect to CaptureLastMonthSubmitted if the box 5 figure is valid" in {
-      stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
       await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
 
@@ -132,7 +130,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
     }
 
     "redirect to CaptureLastMonthSubmitted if the box 5 figure is a negative value " in {
-      stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
       await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
 
@@ -147,7 +145,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
     }
 
     "when the user does not submit a box 5 figure" should {
-      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       lazy val result = post(s"/$testJourneyId/box-5-figure")(
         "box5_figure" -> ""
       )
@@ -155,7 +153,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
       testCaptureBox5MissingErrorViewTests(result, authStub)
 
       "return a BAD_REQUEST" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = post(s"/$testJourneyId/box-5-figure")(
           "box5_figure" -> ""
@@ -166,7 +164,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
     }
 
     "when the user submits an invalid box 5 figure" should {
-      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
       lazy val result = post(s"/$testJourneyId/box-5-figure")(
         "box5_figure" -> "1234.5"
@@ -175,7 +173,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
       testCaptureBox5InvalidFormatErrorViewTests(result, authStub)
 
       "return a BAD_REQUEST" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = post(s"/$testJourneyId/box-5-figure")(
           "box5_figure" -> "1234.5"
@@ -186,7 +184,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
     }
 
     "when the user submits a box 5 figure with invalid characters" should {
-      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
       lazy val result = post(s"/$testJourneyId/box-5-figure")(
         "box5_figure" -> "1234.oo"
@@ -195,7 +193,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
       testCaptureBox5InvalidFormatErrorViewTests(result, authStub)
 
       "return a BAD_REQUEST" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = post(s"/$testJourneyId/box-5-figure")(
           "box5_figure" -> "1234.oo"
@@ -206,7 +204,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
     }
 
     "when the user submits a box 5 figure that is more than 14 digits" should {
-      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
 
       lazy val result = post(s"/$testJourneyId/box-5-figure")(
@@ -216,7 +214,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
       testCaptureBox5InvalidLengthErrorViewTests(result, authStub)
 
       "return a BAD_REQUEST" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = post(s"/$testJourneyId/box-5-figure")(
           "box5_figure" -> "0123456789012345"
@@ -227,7 +225,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
     }
 
     "when the user submits a box 5 figure that is more than 14 digits and negative" should {
-      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      lazy val authStub = stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
 
       lazy val result = post(s"/$testJourneyId/box-5-figure")(
@@ -237,7 +235,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
       testCaptureBox5InvalidLengthErrorViewTests(result, authStub)
 
       "return a BAD_REQUEST" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = post(s"/$testJourneyId/box-5-figure")(
           "box5_figure" -> "-100000000000000000000.00"
@@ -249,7 +247,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
 
     "return an internal server error" when {
       "the journey data is missing" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = post(s"/$testJourneyId/box-5-figure")(
           "box5_figure" -> "1234.56"
@@ -273,7 +271,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
 
     s"POST /$testJourneyId/box-5-figure" should {
       "redirect to CaptureLastMonthSubmitted if the user submits a valid box 5 figure with commas" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
 

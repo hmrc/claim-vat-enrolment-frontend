@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
+import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
+import uk.gov.hmrc.claimvatenrolmentfrontend.auth.{AuthenticatedIdentifierAction, JourneyDataRetrievalAction}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureSubmittedVatReturnForm
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, JourneyValidateService, StoreSubmittedVatReturnService}
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, LockService, StoreSubmittedVatReturnService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_submitted_vat_return_page
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -35,71 +35,48 @@ class CaptureSubmittedVatReturnController @Inject()(mcc: MessagesControllerCompo
                                                     view: capture_submitted_vat_return_page,
                                                     storeSubmittedVatService: StoreSubmittedVatReturnService,
                                                     journeyService: JourneyService,
-                                                    val authConnector: AuthConnector,
-                                                    journeyValidateService: JourneyValidateService
-                                                   )(implicit val config: AppConfig, ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions with LoggingUtil {
+                                                    identify: AuthenticatedIdentifierAction,
+                                                    getData: JourneyDataRetrievalAction,
+                                                    journeyValidateService: LockService
+                                                   )(implicit val config: AppConfig, ec: ExecutionContext)
+  extends FrontendController(mcc) with I18nSupport with LoggingUtil {
 
-  def show(journeyId: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      authorised().retrieve(internalId) {
-        case Some(authId) =>
-          journeyService.retrieveJourneyConfig(journeyId, authId).flatMap {
-               case Some(_) =>
-                 journeyValidateService.continueIfJourneyIsNotLocked(journeyId, authId)(
-                   Ok(view(routes.CaptureSubmittedVatReturnController.submit(journeyId), CaptureSubmittedVatReturnForm.form))
-                 )
-               case None =>
-                 errorLog(s"[CaptureSubmittedVatReturnController][show] - Journey config could not be retrieved from the journeyConfigRepository for journey: $journeyId")
-                 Future.successful(Redirect(errorPages.routes.ServiceTimeoutController.show()))
-          }
-        case None =>
-          errorLog(s"CaptureSubmittedVatReturnController][show] - Internal ID could not be retrieved from Auth for journey: $journeyId")
-          throw new InternalServerException(s"Internal ID could not be retrieved from Auth for journey: $journeyId")
-      }
+  def show(journeyId: String): Action[AnyContent] = (identify andThen getData).async { implicit request =>
+    journeyValidateService.continueIfJourneyIsNotLocked(request.journeyData.vatNumber, request.userId)(
+      Ok(view(routes.CaptureSubmittedVatReturnController.submit(journeyId), CaptureSubmittedVatReturnForm.form))
+    )
   }
 
-  def submit(journeyId: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      authorised().retrieve(internalId) {
-        case Some(authId) =>
-          CaptureSubmittedVatReturnForm.form.bindFromRequest().fold(
-            formWithErrors => Future.successful(
-              BadRequest(view(routes.CaptureSubmittedVatReturnController.submit(journeyId), formWithErrors))
-            ),
-            submittedReturn =>
-              storeSubmittedVatService.storeStoreSubmittedVat(
-                journeyId,
-                submittedReturn,
-                authId
-              ).flatMap {
-                storeMatched =>
-                  if(storeMatched) {
-                    if (submittedReturn) {
-                      Future.successful(Redirect(routes.CaptureBox5FigureController.show(journeyId).url))
-                    } else {
-                      journeyService.removeAdditionalVatReturnFields(journeyId, authId).map {
-                        removeMatched => if (removeMatched) {
-                          if (config.knownFactsCheckFlag && config.knownFactsCheckWithVanFlag) {
-                            Redirect(routes.CaptureVatApplicationNumberController.show(journeyId).url)
-                          } else {
-                            Redirect(routes.CheckYourAnswersController.show(journeyId).url)
-                          }
-                        } else {
-                          errorLog(s"[CaptureSubmittedVatReturnController][submit] - The additional Vat return fields could not be removed for journey $journeyId")
-                          throw new InternalServerException(s"The additional Vat return fields could not be removed for journey $journeyId")
-                        }
-                      }
-                    }
-                  } else {
-                    errorLog(s"[CaptureSubmittedVatReturnController][submit] - The Vat return submitted flag could not be updated for journey $journeyId")
-                    throw new InternalServerException(s"The Vat return submitted flag could not be updated for journey $journeyId")
+  def submit(journeyId: String): Action[AnyContent] = identify.async { implicit request =>
+    CaptureSubmittedVatReturnForm.form.bindFromRequest().fold(
+      formWithErrors => Future.successful(
+        BadRequest(view(routes.CaptureSubmittedVatReturnController.submit(journeyId), formWithErrors))
+      ),
+      submittedReturn =>
+        storeSubmittedVatService.storeStoreSubmittedVat(
+          journeyId,
+          submittedReturn,
+          request.userId
+        ) flatMap {
+          case true =>
+              if (submittedReturn) {
+                Future.successful(Redirect(routes.CaptureBox5FigureController.show(journeyId).url))
+              } else {
+                journeyService.removeAdditionalVatReturnFields(journeyId, request.userId).map {
+                  case true if config.knownFactsCheckFlag && config.knownFactsCheckWithVanFlag =>
+                      Redirect(routes.CaptureVatApplicationNumberController.show(journeyId).url)
+                  case true =>
+                      Redirect(routes.CheckYourAnswersController.show(journeyId).url)
+                  case _ =>
+                    errorLog(s"[CaptureSubmittedVatReturnController][submit] - The additional Vat return fields could not be removed for journey $journeyId")
+                    throw new InternalServerException(s"The additional Vat return fields could not be removed for journey $journeyId")
                   }
               }
-          )
-        case None =>
-          errorLog(s"[CaptureSubmittedVatReturnController][submit] - Internal ID could not be retrieved from Auth for journey: $journeyId")
-          throw new InternalServerException(s"Internal ID could not be retrieved from Auth for journey: $journeyId")
-      }
+          case _ =>
+            errorLog(s"[CaptureSubmittedVatReturnController][submit] - The Vat return submitted flag could not be updated for journey $journeyId")
+            throw new InternalServerException(s"The Vat return submitted flag could not be updated for journey $journeyId")
+        }
+    )
   }
 }
 

@@ -63,7 +63,7 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
       val otherKnownFacts = Json.arr(
         Json.obj(
           "key" -> "VATRegistrationDate",
-          "value" -> vatKnownFacts.vatRegistrationDate.format(etmpDateFormat)
+          "value" -> vatKnownFacts.vatRegistrationDate.get.format(etmpDateFormat)
         ),
         Json.obj(
           "key" -> "Postcode",
@@ -75,14 +75,14 @@ class AllocateEnrolmentConnector @Inject()(http: HttpClient,
         Json.obj(
           "key" -> "BoxFiveValue",
           "value" -> (vatKnownFacts.optReturnsInformation match {
-            case Some(returnsInformation) => returnsInformation.boxFive
+            case Some(returnsInformation) => returnsInformation.boxFive.get
             case None => NullValue
           })
         ),
         Json.obj(
           "key" -> "LastMonthLatestStagger",
           "value" -> (vatKnownFacts.optReturnsInformation match {
-            case Some(returnsInformation) => "%02d".format(returnsInformation.lastReturnMonth.getValue)
+            case Some(returnsInformation) => "%02d".format(returnsInformation.lastReturnMonth.get.getValue)
             case None => NullValue
           })
         ))

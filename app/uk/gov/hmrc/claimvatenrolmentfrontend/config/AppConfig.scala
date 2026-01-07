@@ -83,5 +83,5 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   }
 
   def isKnownFactsCheckEnabled: Boolean = isEnabled(KnownFactsCheckFlag)
-
+  val knownFactsLockAttemptLimit: Int = 3
 }

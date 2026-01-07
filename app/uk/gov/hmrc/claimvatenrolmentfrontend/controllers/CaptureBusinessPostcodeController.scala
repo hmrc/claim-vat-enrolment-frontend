@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
+import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.internalId
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
+import uk.gov.hmrc.claimvatenrolmentfrontend.auth.{AuthenticatedIdentifierAction, JourneyDataRetrievalAction}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureBusinessPostcodeForm
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.{ClaimVatEnrolmentService, JourneyService, JourneyValidateService, StoreBusinessPostcodeService}
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.{ClaimVatEnrolmentService, JourneyService, LockService, StoreBusinessPostcodeService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_business_postcode_page
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -36,77 +36,46 @@ class CaptureBusinessPostcodeController @Inject()(mcc: MessagesControllerCompone
                                                   cveService: ClaimVatEnrolmentService,
                                                   storeBusinessPostcodeService: StoreBusinessPostcodeService,
                                                   journeyService: JourneyService,
-                                                  val authConnector: AuthConnector,
-                                                  journeyValidateService: JourneyValidateService
-                                                 )(implicit val config: AppConfig,
-                                                   ec: ExecutionContext) extends FrontendController(mcc) with AuthorisedFunctions with LoggingUtil{
+                                                  identify: AuthenticatedIdentifierAction,
+                                                  getData: JourneyDataRetrievalAction,
+                                                  journeyValidateService: LockService
+                                                 )(implicit val config: AppConfig, ec: ExecutionContext)
+  extends FrontendController(mcc) with I18nSupport with LoggingUtil{
 
-  def show(journeyId: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      authorised().retrieve(internalId) {
-        case Some(authId) =>
-          journeyService.retrieveJourneyConfig(journeyId, authId).flatMap {
-            case Some(_) =>
-              journeyValidateService.continueIfJourneyIsNotLocked(journeyId, authId)(
-                Ok(view(routes.CaptureBusinessPostcodeController.submit(journeyId), CaptureBusinessPostcodeForm.form, journeyId))
-              )
-            case None =>
-              errorLog(s"[CaptureBusinessPostcodeController][show] - Journey config could not be retrieved from the journeyConfigRepository for journey: $journeyId")
-              Future.successful(Redirect(errorPages.routes.ServiceTimeoutController.show()))
-          }
-        case None =>
-          errorLog(s"[CaptureBusinessPostcodeController][show] - Internal ID could not be retrieved from Auth for journey: $journeyId")
-          throw new InternalServerException(s"Internal ID could not be retrieved from Auth for journey: $journeyId")
-      }
+  def show(journeyId: String): Action[AnyContent] = (identify andThen getData).async { implicit request =>
+    journeyValidateService.continueIfJourneyIsNotLocked(request.journeyData.vatNumber, request.userId)(
+      Ok(view(routes.CaptureBusinessPostcodeController.submit(journeyId), CaptureBusinessPostcodeForm.form, journeyId))
+    )
   }
 
-  def submit(journeyId: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      authorised().retrieve(internalId) {
-        case Some(authId) =>
-          CaptureBusinessPostcodeForm.form.bindFromRequest().fold(
-            formWithErrors => {
-              cveService.buildPostCodeFailureAuditEvent(formWithErrors)
-              Future.successful(
-                BadRequest(view(routes.CaptureBusinessPostcodeController.submit(journeyId), formWithErrors, journeyId))
-              )},
-            businessPostcode =>
-              storeBusinessPostcodeService.storeBusinessPostcodeService(
-                journeyId,
-                businessPostcode,
-                authId
-              ).map {
-                matched =>
-                  if(matched) {
-                    Redirect(routes.CaptureSubmittedVatReturnController.show(journeyId).url)
-                  } else {
-                    errorLog(s"[CaptureBusinessPostcodeController][submit] - The VAT registration postcode could not be updated for journey $journeyId")
-                    throw new InternalServerException(s"The VAT registration postcode could not be updated for journey $journeyId")
-                  }
-              }
-          )
-        case None =>
-          errorLog(s"[CaptureBusinessPostcodeController][submit] - Internal ID could not be retrieved from Auth for journey: $journeyId")
-          throw new InternalServerException(s"Internal ID could not be retrieved from Auth for journey: $journeyId")
-      }
+  def submit(journeyId: String): Action[AnyContent] = identify.async { implicit request =>
+    CaptureBusinessPostcodeForm.form.bindFromRequest().fold(
+      formWithErrors => {
+        cveService.buildPostCodeFailureAuditEvent(formWithErrors)
+        Future.successful(
+          BadRequest(view(routes.CaptureBusinessPostcodeController.submit(journeyId), formWithErrors, journeyId))
+        )},
+      businessPostcode =>
+        storeBusinessPostcodeService.storeBusinessPostcodeService(
+          journeyId,
+          businessPostcode,
+          request.userId
+        ).map {
+          case true => Redirect(routes.CaptureSubmittedVatReturnController.show(journeyId).url)
+          case _ =>
+            errorLog(s"[CaptureBusinessPostcodeController][submit] - The VAT registration postcode could not be updated for journey $journeyId")
+            throw new InternalServerException(s"The VAT registration postcode could not be updated for journey $journeyId")
+        }
+    )
   }
 
-  def noPostcode(journeyId: String): Action[AnyContent] = Action.async {
-    implicit request =>
-      authorised().retrieve(internalId) {
-        case Some(authId) =>
-          journeyService.removePostcodeField(journeyId, authId).map {
-            matched => if (matched) {
-              Redirect(routes.CaptureSubmittedVatReturnController.show(journeyId))
-            } else {
-              errorLog(s"[CaptureBusinessPostcodeController][noPostcode] - The post code field could not be removed for journey $journeyId")
-              throw new InternalServerException(s"The post code field could not be removed for journey $journeyId")
-            }
-          }
-        case None =>
-          errorLog(s"[CaptureBusinessPostcodeController][noPostcode] - Internal ID could not be retrieved from Auth for journey: $journeyId")
-          throw new InternalServerException(s"Internal ID could not be retrieved from Auth for journey: $journeyId")
-      }
+  def noPostcode(journeyId: String): Action[AnyContent] = identify.async { implicit request =>
+    journeyService.removePostcodeField(journeyId, request.userId) map {
+      case true => Redirect(routes.CaptureSubmittedVatReturnController.show(journeyId))
+      case _ =>
+        errorLog(s"[CaptureBusinessPostcodeController][noPostcode] - The post code field could not be removed for journey $journeyId")
+        throw new InternalServerException(s"The post code field could not be removed for journey $journeyId")
+    }
   }
 
 }

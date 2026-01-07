@@ -36,8 +36,8 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
 
   s"GET /$testJourneyId/submitted-vat-return" should {
     lazy val result = {
-      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
-      stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+      await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       get(s"/$testJourneyId/submitted-vat-return")
     }
 
@@ -51,12 +51,10 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
       lazy val result = {
         enable(KnownFactsCheckFlag)
 
-        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+        await(insertLockData(testVatNumber, testInternalId, testSubmissionNumber3))
 
-        await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
-        await(insertSubmissionData(testJourneyId, testVatNumber, testSubmissionNumber3, testAccountStatusLocked, testSubmissionDataAttempt3))
-
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         get(s"/$testJourneyId/submitted-vat-return")
       }
@@ -71,7 +69,7 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
 
     "Show an error page" when {
       "There is no Journey Config" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = get(s"/$testJourneyId/submitted-vat-return")
 
@@ -81,7 +79,7 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
         )
       }
       "the internal Ids do not match" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         await(insertJourneyConfig(testJourneyId, testContinueUrl, "testInternalId"))
 
         lazy val result = get(s"/$testJourneyId/submitted-vat-return")
@@ -92,7 +90,7 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
         )
       }
       "the journey Id has no internal Id stored" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         await(journeyConfigRepository.collection.insertOne(
           Json.obj(
             "_id" -> testJourneyId,
@@ -110,7 +108,7 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
     }
     "return 500" when {
       "there is no auth id" in {
-        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
         stubAuth(OK, successfulAuthResponse(None))
         lazy val result = get(s"/$testJourneyId/submitted-vat-return")
 
@@ -123,7 +121,7 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
   s"POST /$testJourneyId/submitted-vat-return" should {
     "redirect to CaptureBox5Figure" when {
       "the user selects yes" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
         lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "yes")
 
@@ -136,7 +134,7 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
 
     "redirect to Check Your Answers Page" when {
       "the user changes their answer to no" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         await(journeyDataRepository.collection.insertOne(
           Json.obj(
             "_id" -> testJourneyId,
@@ -156,7 +154,7 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
       }
 
       "the user selects no" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         await(journeyDataRepository.collection.insertOne(
           Json.obj(
             "_id" -> testJourneyId,
@@ -178,7 +176,7 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
     }
     "raise an internal server error" when {
       "the journey data is missing" in {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
         lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "yes")
 
@@ -199,7 +197,7 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
   "return a view with errors" when {
     "the user submits an empty form" should {
       lazy val result = {
-        stubAuth(OK, successfulAuthResponse(Some(testInternalId)))
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         post(s"/$testJourneyId/submitted-vat-return")()
       }
 

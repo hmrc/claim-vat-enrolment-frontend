@@ -64,7 +64,7 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
         val vatRegDateRow = summaryListRows(1)
 
         vatRegDateRow.getSummaryListQuestion mustBe messages.vatRegDateRow
-        vatRegDateRow.getSummaryListAnswer mustBe testVatRegDate.format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
+        vatRegDateRow.getSummaryListAnswer mustBe testVatRegDate.get.format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
         vatRegDateRow.getSummaryListChangeLink mustBe routes.CaptureVatRegistrationDateController.show(testJourneyId).url
         vatRegDateRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.vatRegDateRow}"
       }
@@ -91,7 +91,7 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
         val boxFiveRow = summaryListRows(4)
 
         boxFiveRow.getSummaryListQuestion mustBe messages.boxFiveRow
-        boxFiveRow.getSummaryListAnswer mustBe testBoxFive
+        boxFiveRow.getSummaryListAnswer mustBe testBoxFive.get
         boxFiveRow.getSummaryListChangeLink mustBe routes.CaptureBox5FigureController.show(testJourneyId).url
         boxFiveRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.boxFiveRow}"
       }
@@ -145,7 +145,7 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
         val vatRegDateRow = summaryListRows(1)
 
         vatRegDateRow.getSummaryListQuestion mustBe messages.vatRegDateRow
-        vatRegDateRow.getSummaryListAnswer mustBe testVatRegDate.format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
+        vatRegDateRow.getSummaryListAnswer mustBe testVatRegDate.get.format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
         vatRegDateRow.getSummaryListChangeLink mustBe routes.CaptureVatRegistrationDateController.show(testJourneyId).url
         vatRegDateRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.vatRegDateRow}"
       }
@@ -163,7 +163,7 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
         val boxFiveRow = summaryListRows(3)
 
         boxFiveRow.getSummaryListQuestion mustBe messages.boxFiveRow
-        boxFiveRow.getSummaryListAnswer mustBe testBoxFive
+        boxFiveRow.getSummaryListAnswer mustBe testBoxFive.get
         boxFiveRow.getSummaryListChangeLink mustBe routes.CaptureBox5FigureController.show(testJourneyId).url
         boxFiveRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.boxFiveRow}"
       }
@@ -217,7 +217,7 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
         val vatRegDateRow = summaryListRows(1)
 
         vatRegDateRow.getSummaryListQuestion mustBe messages.vatRegDateRow
-        vatRegDateRow.getSummaryListAnswer mustBe testVatRegDate.format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
+        vatRegDateRow.getSummaryListAnswer mustBe testVatRegDate.get.format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
         vatRegDateRow.getSummaryListChangeLink mustBe routes.CaptureVatRegistrationDateController.show(testJourneyId).url
         vatRegDateRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.vatRegDateRow}"
       }
@@ -280,7 +280,7 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
         val vatRegDateRow = summaryListRows(1)
 
         vatRegDateRow.getSummaryListQuestion mustBe messages.vatRegDateRow
-        vatRegDateRow.getSummaryListAnswer mustBe testVatRegDate.format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
+        vatRegDateRow.getSummaryListAnswer mustBe testVatRegDate.get.format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
         vatRegDateRow.getSummaryListChangeLink mustBe routes.CaptureVatRegistrationDateController.show(testJourneyId).url
         vatRegDateRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.vatRegDateRow}"
       }

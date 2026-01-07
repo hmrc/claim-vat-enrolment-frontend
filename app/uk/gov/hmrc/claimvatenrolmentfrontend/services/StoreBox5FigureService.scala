@@ -24,8 +24,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
-class StoreBox5FigureService @Inject()(journeyDataRepository: JourneyDataRepository
-                                      ) {
+class StoreBox5FigureService @Inject()(journeyDataRepository: JourneyDataRepository) {
 
   def storeBox5Figure(journeyId: String,
                       box5Figure: String,

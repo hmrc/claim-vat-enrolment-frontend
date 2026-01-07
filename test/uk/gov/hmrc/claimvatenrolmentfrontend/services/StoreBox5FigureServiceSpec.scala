@@ -35,18 +35,18 @@ class StoreBox5FigureServiceSpec extends AnyWordSpec with Matchers with MockJour
       mockUpdateJourneyData(
         journeyId = testJourneyId,
         dataKey = "box5Figure",
-        data = Json.toJson(testBoxFive),
+        data = Json.toJson(testBoxFive.get),
         authId = testInternalId
       )(Future.successful(true))
 
-      val result: Boolean = await(TestService.storeBox5Figure(testJourneyId, testBoxFive, testInternalId))
+      val result: Boolean = await(TestService.storeBox5Figure(testJourneyId, testBoxFive.get, testInternalId))
 
       result mustBe true
 
       verifyUpdateJourneyData(
         journeyId = testJourneyId,
         dataKey = "box5Figure",
-        data = Json.toJson(testBoxFive),
+        data = Json.toJson(testBoxFive.get),
         authId = testInternalId
       )
     }
@@ -55,17 +55,17 @@ class StoreBox5FigureServiceSpec extends AnyWordSpec with Matchers with MockJour
         mockUpdateJourneyData(
           journeyId = testJourneyId,
           dataKey = "box5Figure",
-          data = Json.toJson(testBoxFive),
+          data = Json.toJson(testBoxFive.get),
           authId = testInternalId
         )(response = Future.failed(new MongoException("failed to update")))
 
         intercept[MongoException](
-          await(TestService.storeBox5Figure(testJourneyId, testBoxFive, testInternalId))
+          await(TestService.storeBox5Figure(testJourneyId, testBoxFive.get, testInternalId))
         )
         verifyUpdateJourneyData(
           journeyId = testJourneyId,
           dataKey = "box5Figure",
-          data = Json.toJson(testBoxFive),
+          data = Json.toJson(testBoxFive.get),
           authId = testInternalId
         )
       }

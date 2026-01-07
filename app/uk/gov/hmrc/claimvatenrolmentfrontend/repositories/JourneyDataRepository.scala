@@ -125,30 +125,30 @@ object JourneyDataRepository {
       optPostcode <- (json \ PostcodeKey).validateOpt[String].map {
         optPostcodeString => optPostcodeString.map { stringValue => Postcode(stringValue) } // may be a cleaner way to do this
       }
-      vatRegistrationDate <- (json \ VatRegistrationDateKey).validate[LocalDate]
-      submittedVatReturn <- (json \ SubmittedVatReturnKey).validate[Boolean]
-      optReturnsInformation <- if (submittedVatReturn) {
+      optVatRegistrationDate <- (json \ VatRegistrationDateKey).validateOpt[LocalDate]
+      optSubmittedVatReturn <- (json \ SubmittedVatReturnKey).validateOpt[Boolean]
+      optReturnsInformation <- if (optSubmittedVatReturn.getOrElse(false)) {
         for {
-          boxFiveFigure <- (json \ Box5FigureKey).validate[String]
-          lastReturnMonth <- (json \ LastMonthSubmittedKey).validate[Int].map(Month.of)
+          boxFiveFigure <- (json \ Box5FigureKey).validateOpt[String]
+          lastReturnMonth <- (json \ LastMonthSubmittedKey).validateOpt[Int].map(_.map(Month.of))
         } yield Some(ReturnsInformation(boxFiveFigure, lastReturnMonth))
       } else {
         JsSuccess(None)
       }
       optFormBundleReference <- (json \ SubmittedVatApplicationNumberKey).validateOpt[String]
-    } yield VatKnownFacts(vatNumber, optPostcode, vatRegistrationDate, optReturnsInformation, optFormBundleReference)
+    } yield VatKnownFacts(vatNumber, optPostcode, optVatRegistrationDate, optReturnsInformation, optFormBundleReference)
 
   implicit lazy val vatKnownFactsWrites: OWrites[VatKnownFacts] =
     (vatKnownFacts: VatKnownFacts) => Json.obj(
       VatNumberKey -> vatKnownFacts.vatNumber,
-      VatRegistrationDateKey -> vatKnownFacts.vatRegistrationDate,
+      VatRegistrationDateKey -> vatKnownFacts.vatRegistrationDate.get,
       PostcodeKey -> vatKnownFacts.optPostcode.map(_.stringValue)
     ) ++ {
       if (vatKnownFacts.optReturnsInformation.isDefined) {
         Json.obj(
           SubmittedVatReturnKey -> true,
-          Box5FigureKey -> vatKnownFacts.optReturnsInformation.map(_.boxFive),
-          LastMonthSubmittedKey -> vatKnownFacts.optReturnsInformation.map(_.lastReturnMonth.getValue)
+          Box5FigureKey -> vatKnownFacts.optReturnsInformation.map(_.boxFive.get),
+          LastMonthSubmittedKey -> vatKnownFacts.optReturnsInformation.map(_.lastReturnMonth.get.getValue)
         )
       } else {
         Json.obj(SubmittedVatReturnKey -> false)

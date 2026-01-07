@@ -29,7 +29,7 @@ class JourneyConfigRepositoryISpec extends JourneyMongoHelper with AbstractPatie
   override lazy val app: Application = new GuiceApplicationBuilder()
     .configure(config)
     .configure("application.router" -> "testOnlyDoNotUseInAppConf.Routes")
-    .build
+    .build()
 
   "documents" should {
     "successfully insert a new document" in {

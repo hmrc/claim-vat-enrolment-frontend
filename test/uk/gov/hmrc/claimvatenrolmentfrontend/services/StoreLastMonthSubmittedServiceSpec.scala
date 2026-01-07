@@ -35,18 +35,18 @@ class StoreLastMonthSubmittedServiceSpec extends AnyWordSpec with Matchers with 
       mockUpdateJourneyData(
         journeyId = testJourneyId,
         dataKey = "lastMonthSubmitted",
-        data = Json.toJson(testLastMonthSubmitted.getValue),
+        data = Json.toJson(testLastMonthSubmitted.get.getValue),
         authId = testInternalId
       )(Future.successful(true))
 
-      val result: Boolean = await(TestService.storeLastMonthSubmitted(testJourneyId, testLastMonthSubmitted, testInternalId))
+      val result: Boolean = await(TestService.storeLastMonthSubmitted(testJourneyId, testLastMonthSubmitted.get, testInternalId))
 
       result mustBe true
 
       verifyUpdateJourneyData(
         journeyId = testJourneyId,
         dataKey = "lastMonthSubmitted",
-        data = Json.toJson(testLastMonthSubmitted.getValue),
+        data = Json.toJson(testLastMonthSubmitted.get.getValue),
         authId = testInternalId
       )
     }
@@ -55,17 +55,17 @@ class StoreLastMonthSubmittedServiceSpec extends AnyWordSpec with Matchers with 
         mockUpdateJourneyData(
           journeyId = testJourneyId,
           dataKey = "lastMonthSubmitted",
-          data = Json.toJson(testLastMonthSubmitted.getValue),
+          data = Json.toJson(testLastMonthSubmitted.get.getValue),
           authId = testInternalId
         )(response = Future.failed(new MongoException("failed to update")))
 
         intercept[MongoException](
-          await(TestService.storeLastMonthSubmitted(testJourneyId, testLastMonthSubmitted, testInternalId))
+          await(TestService.storeLastMonthSubmitted(testJourneyId, testLastMonthSubmitted.get, testInternalId))
         )
         verifyUpdateJourneyData(
           journeyId = testJourneyId,
           dataKey = "lastMonthSubmitted",
-          data = Json.toJson(testLastMonthSubmitted.getValue),
+          data = Json.toJson(testLastMonthSubmitted.get.getValue),
           authId = testInternalId
         )
       }

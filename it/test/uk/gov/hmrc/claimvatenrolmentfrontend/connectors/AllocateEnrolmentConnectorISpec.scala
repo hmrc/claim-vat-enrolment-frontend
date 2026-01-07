@@ -37,7 +37,7 @@ class AllocateEnrolmentConnectorISpec extends ComponentSpecHelper with Allocatio
 
   private implicit val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
 
-  val testVatKnownFacts: VatKnownFacts = VatKnownFacts(testVatNumber, Some(testPostcode), LocalDate.of(2021, 1, 1),
+  val testVatKnownFacts: VatKnownFacts = VatKnownFacts(testVatNumber, Some(testPostcode), Some(LocalDate.of(2021, 1, 1)),
     Some(ReturnsInformation(testBoxFive, testLastReturnMonth)), Some(testFormBundleReference))
 
   "allocateEnrolment" should {

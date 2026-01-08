@@ -18,7 +18,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.config
 
 import play.api.Configuration
 import play.api.i18n.Lang
-import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.{AllocateEnrolmentStub, FeatureSwitching, KnownFactsCheckFlag, QueryUserIdStub}
+import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.{AllocateEnrolmentStub, FeatureSwitching, KnownFactsCheckFlag, KnownFactsCheckWithVanFlag, QueryUserIdStub}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 import javax.inject.{Inject, Singleton}
@@ -83,5 +83,7 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   }
 
   def isKnownFactsCheckEnabled: Boolean = isEnabled(KnownFactsCheckFlag)
+  def isKnownFactsCheckWithVanFlagEnabled: Boolean = isEnabled(KnownFactsCheckWithVanFlag)
+
   val knownFactsLockAttemptLimit: Int = 3
 }

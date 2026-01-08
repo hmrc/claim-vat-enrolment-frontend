@@ -159,10 +159,15 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
       "vatSubscriptionClaimSuccessful" -> isSuccessful.toString,
       "enrolmentAndClientDatabaseFailureReason" -> optFailureMessage.getOrElse("")
     ) ++
-      ( if (config.isKnownFactsCheckEnabled) {
-          Map("submissionNumber"-> submissionNumber.getOrElse(0).toString,
-               "accountStatus"-> accountStatus.getOrElse(""))
-      } else {Map.empty}) ++ Map("userType" -> affinityGroup.toString)
+      Option.when(config.isKnownFactsCheckEnabled)(
+        submissionNumber.map("submissionNumber" -> _.toString).toMap ++
+          accountStatus.map("accountStatus" -> _).toMap
+      ).getOrElse(Map.empty) ++
+      Option.when(config.isKnownFactsCheckWithVanFlagEnabled)(
+        vatKnownFacts.formBundleReference
+          .map("vatApplicationNumber" -> _)
+          .toMap
+      ).getOrElse(Map.empty) ++ Map("userType" -> affinityGroup.toString)
 
     val updatedDetail: Map[String, String] = detail.filter {case(_, value) => value.nonEmpty}
 

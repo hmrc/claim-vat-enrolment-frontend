@@ -46,46 +46,60 @@ class UserLockRepository @Inject()(
         .expireAfter(appConfig.ttlLockSeconds, TimeUnit.SECONDS)
     ),
     IndexModel(
-      keys = ascending("userId", "vrn"),
+      keys = ascending("identifier"),
       indexOptions = IndexOptions()
-        .name("IdentifierIndex")
-        .unique(true))
+        .name("IdentifierIdx")
+        .sparse(true)
+        .unique(true)
     )
+  )
 ) {
 
-  def find(vrn: String, userId: String): Future[Option[Lock]] = {
-    collection.find(Filters.and(Filters.eq("vrn", vrn), Filters.equal("userId", userId))).headOption()
-  }
-
   def isVrnOrUserLocked(vrn: String, userId: String): Future[Boolean] = {
-    collection.find(
-      Filters.or(Filters.eq("vrn", vrn), Filters.equal("userId", userId))
-    )
+    collection
+      .find(Filters.in("identifier", vrn, userId))
       .toFuture()
       .map { _.exists { _.failedAttempts >= appConfig.knownFactsLockAttemptLimit }}
   }
 
-  def updateAttempts(vrn: String, userId: String): Future[Lock] = {
-    find(vrn, userId).flatMap {
-      case Some(existingLock) =>
-        val newLock = existingLock.copy(
-          failedAttempts = existingLock.failedAttempts + 1,
-          lastAttemptedAt = Instant.now()
-        )
-        collection.replaceOne(
-            Filters.and(
-              Filters.eq("vrn", vrn),
-              Filters.equal("userId", userId)
-            ),
-            newLock
-          )
-          .toFuture()
-          .map(_ => newLock)
-      case _ =>
-        val newLock = Lock(vrn, userId, 1, Instant.now)
-        collection.insertOne(newLock)
-          .toFuture()
-          .map(_ => newLock)
+  def updateAttempts(vrn: String, userId: String): Future[Map[String, Int]] = {
+    def updateAttemptsForLockWith(identifier: String): Future[Lock] = {
+      collection
+        .find(Filters.eq("identifier", identifier))
+        .headOption()
+        .flatMap {
+          case Some(existingLock) =>
+            val newLock = existingLock.copy(
+              failedAttempts = existingLock.failedAttempts + 1,
+              lastAttemptedAt = Instant.now()
+            )
+            collection.replaceOne(
+              Filters.and(
+                Filters.eq("identifier", identifier)
+              ),
+              newLock
+            )
+            .toFuture()
+            .map(_ => newLock)
+          case _ =>
+            val newLock = Lock(identifier, 1, Instant.now)
+            collection.insertOne(newLock)
+              .toFuture()
+              .map(_ => newLock)
+      }
+    }
+
+    val updateVrnLock = updateAttemptsForLockWith(vrn)
+    val updateUserLock = updateAttemptsForLockWith(userId)
+
+    for {
+      vrnLock <- updateVrnLock
+      userLock <- updateUserLock
+    } yield {
+      Map(
+        "user" -> userLock.failedAttempts,
+        "vrn" -> vrnLock.failedAttempts
+      )
     }
   }
 }

@@ -41,17 +41,13 @@ class AuthenticatedIdentifierAction @Inject()(override val authConnector: AuthCo
     with AuthorisedFunctions
     with LoggingUtil {
 
-  // TODO: optional: check enrolment as the service cannot support a user who already has the enrolment
-  // private val mtdEnrolment = "HMRC-MTD-VAT"
-
   override def invokeBlock[A](request: Request[A], block: IdentifierRequest[A] => Future[Result]): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
     val journeyId = request.path.split("/claim-vat-enrolment/")(1).take(36)
     authorised().retrieve(
-      Retrievals.internalId and credentialRole and credentials and groupIdentifier // and Retrievals.allEnrolments
+      Retrievals.internalId and credentialRole and credentials and groupIdentifier
     ) {
-//      case Some(internalId) ~ e ~ Some(User) ~ Some(Credentials(credId, "GovernmentGateway")) ~ Some(groupId)  if !e.enrolments.exists(_.key == mtdEnrolment) =>
       case Some(internalId) ~ Some(User) ~ Some(Credentials(credId, "GovernmentGateway")) ~ Some(groupId) =>
         block(IdentifierRequest(request, journeyId, internalId, credId, groupId))
       case _ =>

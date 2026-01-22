@@ -21,7 +21,6 @@ import org.mockito.Mockito.{reset, verify, when}
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.{BeforeAndAfterEach, Suite}
 import org.scalatestplus.mockito.MockitoSugar
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.Lock
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.UserLockRepository
 
 import scala.concurrent.Future
@@ -42,13 +41,10 @@ trait MockUserLockRepository extends MockitoSugar with BeforeAndAfterEach {
       ArgumentMatchers.eq(userId),
     )).thenReturn(response)
 
-  def mockUpdateSubmissionData(vrn: String, userId: String)(response: Future[Lock]): OngoingStubbing[_] =
+  def mockUpdateSubmissionData(vrn: String, userId: String)(response: Future[Map[String, Int]]): OngoingStubbing[_] =
     when(mockUserLockRepository.updateAttempts(ArgumentMatchers.eq(vrn), ArgumentMatchers.eq(userId: String))).thenReturn(response)
 
   def verifyUpdateSubmissionData(vrn: String, userId: String): Unit =
     verify(mockUserLockRepository.updateAttempts(ArgumentMatchers.eq(vrn), ArgumentMatchers.eq(userId: String)))
-
-  def verifyFindSubmissionData(vrn: String, userId: String): Unit =
-    verify(mockUserLockRepository).find(ArgumentMatchers.eq(vrn), ArgumentMatchers.eq(userId: String))
 
 }

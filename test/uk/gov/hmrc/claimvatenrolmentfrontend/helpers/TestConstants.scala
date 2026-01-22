@@ -17,9 +17,9 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.helpers
 
 import play.api.mvc.{Result, Results}
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, Lock, Postcode, ReturnsInformation, VatKnownFacts}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, Postcode, ReturnsInformation, VatKnownFacts}
 
-import java.time.{Instant, LocalDate, Month}
+import java.time.{LocalDate, Month}
 import java.util.UUID
 
 object TestConstants {
@@ -60,7 +60,7 @@ object TestConstants {
   val testAccountStatusUnLocked: String = "UnLocked"
   val testAccountStatusLocked: String = "Locked"
 
-  def testLock(attempts: Int = 1): Option[Lock] = Some(Lock(testInternalId, testVatNumber, attempts, Instant.now))
+  def testVrnLock(attempts: Int = 1): Map[String, Int] = Map(testVatNumber -> attempts)
 
   val testJourneyConfig: Option[JourneyConfig] = Some(JourneyConfig(testContinueUrl))
 

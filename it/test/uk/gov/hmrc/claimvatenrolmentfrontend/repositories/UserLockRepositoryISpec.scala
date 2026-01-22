@@ -27,40 +27,52 @@ class UserLockRepositoryISpec extends JourneyMongoHelper {
     "return Some when the journey data exists" should {
       "successfully return a lock" in {
         await(insertLockData(testVatNumber, testInternalId, testSubmissionNumber1))
-        val result = await(UserLockRepository.find(testVatNumber, testInternalId)).get
+        val result = await(find(testVatNumber, testInternalId))
 
-        result.vrn mustBe testVatNumber
-        result.userId mustBe testInternalId
-        result.failedAttempts mustBe 1
+        result.exists(_.identifier == testVatNumber) mustBe true
+        result.exists(_.identifier == testInternalId) mustBe true
+        result.forall(_.failedAttempts == 1) mustBe true
       }
     }
 
     "return None when the journey does not exist" in {
-      await(UserLockRepository.find(testVatNumber, testInternalId)) mustBe None
+      await(find(testVatNumber, testInternalId)) mustBe Seq.empty[Lock]
     }
   }
 
   "updateAttempts" should {
     "successfully upsert data" in {
-      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).failedAttempts mustBe 1
+      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).values.forall(_ == 1) mustBe true
 
-      await(UserLockRepository.find(testVatNumber, testInternalId)) match {
-        case Some(Lock(vrn, userId, attempts, _)) =>
+      await(find(testVatNumber)) match {
+        case Some(Lock(vrn, attempts, _)) =>
           vrn mustBe testVatNumber
+          attempts mustBe 1
+        case None => fail("A vrn lock should have been retrieved from the journey data database")
+      }
+
+      await(find(testInternalId)) match {
+        case Some(Lock(userId, attempts, _)) =>
           userId mustBe testInternalId
           attempts mustBe 1
-        case None => fail("A document should have been retrieved from the journey data database")
+        case None => fail("A user lock should have been retrieved from the journey data database")
       }
     }
 
     "successfully update data when data is already stored against a key" in {
-      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).failedAttempts mustBe 1
-      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).failedAttempts mustBe 2
-      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).failedAttempts mustBe 3
+      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).values.forall(_ == 1) mustBe true
+      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).values.forall(_ == 2) mustBe true
+      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).values.forall(_ == 3) mustBe true
 
-      await(UserLockRepository.find(testVatNumber, testInternalId)) match {
-        case Some(Lock(vrn, userId, attempts, _)) =>
+      await(find(testVatNumber)) match {
+        case Some(Lock(vrn, attempts, _)) =>
           vrn mustBe testVatNumber
+          attempts mustBe 3
+        case None => fail("A document should have been retrieved from the journey data database")
+      }
+
+      await(find(testInternalId)) match {
+        case Some(Lock(userId, attempts, _)) =>
           userId mustBe testInternalId
           attempts mustBe 3
         case None => fail("A document should have been retrieved from the journey data database")
@@ -70,39 +82,62 @@ class UserLockRepositoryISpec extends JourneyMongoHelper {
 
   "isVrnOrUserLocked" should {
     "return false for a VRN with 1 less than the configured attempt limit" in {
-      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).failedAttempts mustBe 1
-      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).failedAttempts mustBe 2
+      val one = await(UserLockRepository.updateAttempts(testVatNumber, testInternalId))
+      val two = await(UserLockRepository.updateAttempts(testVatNumber, testInternalId))
+
+      one("vrn") mustBe 1
+      one("user") mustBe 1
+
+      two("vrn") mustBe 2
+      two("user") mustBe 2
 
       await(UserLockRepository.isVrnOrUserLocked(testVatNumber, testInternalId)) mustBe false
     }
 
-    "return false for a VRN when it hasn't reached the limit, even when the limit is exceeded across all records" in {
-      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).failedAttempts mustBe 1
-      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).failedAttempts mustBe 2
-      await(UserLockRepository.updateAttempts(differentTestVatNumber, testInternalId)).failedAttempts mustBe 1
-      await(UserLockRepository.updateAttempts(differentTestVatNumber, testInternalId)).failedAttempts mustBe 2
+    "return true for a VRN when it has reached the limit, regardless of user, but without locking user" in {
+      val one = await(UserLockRepository.updateAttempts(testVatNumber, testInternalId))
+      val two = await(UserLockRepository.updateAttempts(testVatNumber, testCredentialId))
+      val three = await(UserLockRepository.updateAttempts(testVatNumber, testInternalId))
 
-      await(UserLockRepository.isVrnOrUserLocked(testVatNumber, testInternalId)) mustBe false
-    }
+      one("vrn") mustBe 1
+      one("user") mustBe 1
 
-    "return true for a VRN when it has reached the limit, regardless of user" in {
-      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).failedAttempts mustBe 1
-      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).failedAttempts mustBe 2
-      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).failedAttempts mustBe 3
+      two("vrn") mustBe 2
+      two("user") mustBe 1
+
+      three("vrn") mustBe 3
+      three("user") mustBe 2
+
 
       await(UserLockRepository.isVrnOrUserLocked(testVatNumber, testInternalId)) mustBe true
       await(UserLockRepository.isVrnOrUserLocked(testVatNumber, testCredentialId)) mustBe true
+      await(UserLockRepository.isVrnOrUserLocked(differentTestVatNumber, testCredentialId)) mustBe false
+      await(UserLockRepository.isVrnOrUserLocked(differentTestVatNumber, testCredentialId)) mustBe false
     }
 
     "return true for a VRN when it hasn't reached the limit but the user ID is locked from another VRN" in {
-      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).failedAttempts mustBe 1
-      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).failedAttempts mustBe 2
-      await(UserLockRepository.updateAttempts(differentTestVatNumber, testInternalId)).failedAttempts mustBe 1
-      await(UserLockRepository.updateAttempts(differentTestVatNumber, testInternalId)).failedAttempts mustBe 2
-      await(UserLockRepository.updateAttempts(differentTestVatNumber, testInternalId)).failedAttempts mustBe 3
+      val one = await(UserLockRepository.updateAttempts(testVatNumber, testInternalId))
+      val two = await(UserLockRepository.updateAttempts(testVatNumber, testInternalId))
+
+      val three = await(UserLockRepository.updateAttempts(differentTestVatNumber, testCredentialId))
+
+      await(UserLockRepository.isVrnOrUserLocked(testVatNumber, testInternalId)) mustBe false
+
+      one("vrn") mustBe 1
+      one("user") mustBe 1
+
+      two("vrn") mustBe 2
+      two("user") mustBe 2
+
+      three("vrn") mustBe 1
+      three("user") mustBe 1
+
+      val four = await(UserLockRepository.updateAttempts(differentTestVatNumber, testInternalId))
+
+      four("vrn") mustBe 2
+      four("user") mustBe 3
 
       await(UserLockRepository.isVrnOrUserLocked(testVatNumber, testInternalId)) mustBe true
     }
   }
-
 }

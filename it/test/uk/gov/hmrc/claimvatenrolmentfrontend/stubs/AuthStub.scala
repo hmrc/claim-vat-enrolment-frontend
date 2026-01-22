@@ -18,8 +18,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.stubs
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.libs.json.{JsObject, Json, Writes}
-import uk.gov.hmrc.auth.core.InvalidBearerToken
-import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.{testCredentialId, testInternalId}
+import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.testCredentialId
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.WireMockMethods
 
 trait AuthStub extends WireMockMethods {
@@ -40,7 +39,9 @@ trait AuthStub extends WireMockMethods {
     "internalId" -> internalId
   )
 
-  def successfulAuthResponse(groupId: Option[String], internalId: Option[String], credentialRole: Option[String] = Some("User")): JsObject = Json.obj(
+  def successfulAuthResponse(groupId: Option[String],
+                             internalId: Option[String],
+                             credentialRole: Option[String] = Some("User")): JsObject = Json.obj(
     "optionalCredentials" -> Json.obj(
       "providerId" -> testCredentialId,
       "providerType" -> "GovernmentGateway"
@@ -49,5 +50,4 @@ trait AuthStub extends WireMockMethods {
     "internalId" -> internalId,
     "credentialRole" -> credentialRole
   )
-
 }

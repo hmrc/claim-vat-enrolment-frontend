@@ -18,7 +18,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
 import play.api.http.HeaderNames
 import play.api.test.Helpers._
-import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.{testGroupId, testInternalId, testJourneyId, testVatNumber}
+import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.testJourneyId
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
 

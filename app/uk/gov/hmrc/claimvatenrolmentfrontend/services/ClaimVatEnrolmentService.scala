@@ -117,6 +117,9 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
               s"locked after $limit attempts")
             Left(KnownFactsMismatchLocked)
           } else {
+            sendAuditEventKnownFactsCheck(
+              journeyData, counts.values.max, "unlocked", InvalidKnownFacts.message
+            )
             Left(KnownFactsMismatchNotLocked)
           }
         }

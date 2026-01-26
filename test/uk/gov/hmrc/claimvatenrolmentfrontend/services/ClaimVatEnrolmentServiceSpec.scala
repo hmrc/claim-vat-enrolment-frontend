@@ -121,7 +121,7 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
         mockRetrieveJourneyData(testJourneyId, testInternalId)
         mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(InvalidKnownFacts))
         mockGetUserIds(testVatNumber)(Future.successful(NoUsersFound))
-        mockUpdateSubmissionData(testVatNumber, testInternalId)(Future.successful(testLock().get))
+        mockUpdateSubmissionData(testVatNumber, testInternalId)(Future.successful(testVrnLock()))
         mockIsVrnLocked(testVatNumber, testInternalId)(Future.successful(false))
 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
@@ -135,7 +135,7 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
         mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(InvalidKnownFacts))
         mockGetUserIds(testVatNumber)(Future.successful(NoUsersFound))
         mockIsVrnLocked(testVatNumber, testInternalId)(Future.successful(true))
-        mockUpdateSubmissionData(testVatNumber, testInternalId)(Future.successful(testLock(3).get))
+        mockUpdateSubmissionData(testVatNumber, testInternalId)(Future.successful(testVrnLock(3)))
         enable(KnownFactsCheckFlag)
 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))

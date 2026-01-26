@@ -99,16 +99,29 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
   private def callKnownFactsMismatchLogic(userId: String,
                                           journeyData: VatKnownFacts)
                                          (implicit hc: HeaderCarrier, request: Request[_], ec: ExecutionContext): Future[ClaimVatEnrolmentResponse] = {
+    val limit = config.knownFactsLockAttemptLimit
+
     lock.isVrnOrUserLocked(journeyData.vatNumber, userId).flatMap {
       case true => Future.successful(Left(KnownFactsMismatchLocked))
       case _ =>
-        lock.updateAttempts(journeyData.vatNumber, userId).map {
-          case lock if lock.failedAttempts == config.knownFactsLockAttemptLimit =>
-            sendAuditEventKnownFactsCheck(journeyData, lock.failedAttempts, "locked", Some(InvalidKnownFacts.message))
-            warnLog(s"[ClaimVatEnrolmentService][callKnownFactsMismatchLogic] - Attempt ${lock.failedAttempts} - " +
-              s"userId: $userId Journey will be locked for the vrn ${journeyData.vatNumber}")
+        lock.updateAttempts(journeyData.vatNumber, userId) map { counts =>
+          if(counts.values.exists(_ >= limit)) {
+            val lockedStatus: String = s"locked-${counts.collect { case (k,v) if v >= limit => k }.mkString("-and-")}"
+
+            sendAuditEventKnownFactsCheck(
+              journeyData, limit, lockedStatus, InvalidKnownFacts.message
+            )
+            warnLog(s"[ClaimVatEnrolmentService][callKnownFactsMismatchLogic] - " +
+              s"User attempts: ${counts(userId)} - " +
+              s"VRN attempts: ${counts(journeyData.vatNumber)} - " +
+              s"locked after $limit attempts")
             Left(KnownFactsMismatchLocked)
-          case _ => Left(KnownFactsMismatchNotLocked)
+          } else {
+            sendAuditEventKnownFactsCheck(
+              journeyData, counts.values.max, "unlocked", InvalidKnownFacts.message
+            )
+            Left(KnownFactsMismatchNotLocked)
+          }
         }
     }
   }
@@ -116,13 +129,20 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
   private def sendAuditEventKnownFactsCheck(vatKnownFacts: VatKnownFacts,
                                             submissionNumber: Int,
                                             accountStatus: String,
-                                            optFailureMessage: Option[String] = None
+                                            failureMessage: String
                             )(implicit hc: HeaderCarrier,
                               request: Request[_],
                               ec: ExecutionContext): Future[AuditResult] = {
     for {
       affinityGroup <- retrieveIdentityDetails()(hc, ec)
-      result <- auditConnector.sendEvent(buildClaimVatEnrolmentAuditEvent(vatKnownFacts, isSuccessful = false, optFailureMessage, affinityGroup, Some(submissionNumber), Some(accountStatus)))
+      result <- auditConnector.sendEvent(buildClaimVatEnrolmentAuditEvent(
+        vatKnownFacts = vatKnownFacts,
+        isSuccessful = false,
+        optFailureMessage = Some(failureMessage),
+        affinityGroup = affinityGroup,
+        submissionNumber = Some(submissionNumber),
+        accountStatus = Some(accountStatus))
+      )
     } yield result
   }
 
@@ -161,7 +181,7 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
     ) ++
       Option.when(config.isKnownFactsCheckEnabled)(
         submissionNumber.map("submissionNumber" -> _.toString).toMap ++
-          accountStatus.map("accountStatus" -> _).toMap
+        accountStatus.map("accountStatus" -> _).toMap
       ).getOrElse(Map.empty) ++
       Option.when(config.isKnownFactsCheckWithVanFlagEnabled)(
         vatKnownFacts.formBundleReference

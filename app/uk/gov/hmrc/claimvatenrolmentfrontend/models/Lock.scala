@@ -21,8 +21,7 @@ import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import java.time.Instant
 
-case class Lock(vrn: String,
-                userId: String,
+case class Lock(identifier: String,
                 failedAttempts: Int,
                 lastAttemptedAt: Instant)
 

@@ -43,6 +43,18 @@ trait JourneyMongoHelper extends ComponentSpecHelper {
 
   lazy val UserLockRepository: UserLockRepository = app.injector.instanceOf[UserLockRepository]
 
+  def find(identifier: String): Future[Option[Lock]] = {
+    UserLockRepository.collection
+      .find(Filters.or(Filters.eq("identifier", identifier)))
+      .headOption()
+  }
+
+  def find(vrn: String, userId: String): Future[Seq[Lock]] = {
+    UserLockRepository.collection
+      .find(Filters.or(Filters.eq("identifier", vrn), Filters.equal("identifier", userId)))
+      .toFuture()
+  }
+
   // Journey configuration mongo repository methods
   def dropConfigRepo: Future[Unit] =
     journeyConfigRepository.collection.drop().toFuture().map(_ => ())
@@ -97,13 +109,13 @@ trait JourneyMongoHelper extends ComponentSpecHelper {
     ).toFuture().map(_ => journeyId)
 
   def insertLockData(vrn: String, userId: String, attempts: Int = 1): Future[String] = {
-    def insert: Future[Lock] = UserLockRepository.updateAttempts(vrn, userId)
+    def insert: Future[Map[String, Int]] = UserLockRepository.updateAttempts(vrn, userId)
 
     for {
       a <- insert
-      b <- if (a.failedAttempts < attempts) insert else Future.successful(a)
-      _ <- if (b.failedAttempts < attempts) insert else Future.successful(b)
-    } yield a.vrn
+      b <- if (a.values.forall(_ < attempts)) insert else Future.successful(a)
+      _ <- if (b.values.forall(_ < attempts)) insert else Future.successful(b)
+    } yield a.keys.head
   }
 
   // Journey data mongo repository methods

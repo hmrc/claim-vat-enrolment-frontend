@@ -112,8 +112,8 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
               journeyData, limit, lockedStatus, InvalidKnownFacts.message
             )
             warnLog(s"[ClaimVatEnrolmentService][callKnownFactsMismatchLogic] - " +
-              s"User attempts: ${counts(userId)} - " +
-              s"VRN attempts: ${counts(journeyData.vatNumber)} - " +
+              s"User attempts: ${counts.getOrElse(userId,"N/A")} - " +
+              s"VRN attempts: ${counts.getOrElse(journeyData.vatNumber,"N/A")} - " +
               s"locked after $limit attempts")
             Left(KnownFactsMismatchLocked)
           } else {

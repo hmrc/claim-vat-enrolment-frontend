@@ -52,7 +52,8 @@ class UserLockRepository @Inject()(
         .sparse(true)
         .unique(true)
     )
-  )
+  ),
+  replaceIndexes = true
 ) {
 
   def isVrnOrUserLocked(vrn: String, userId: String): Future[Boolean] = {

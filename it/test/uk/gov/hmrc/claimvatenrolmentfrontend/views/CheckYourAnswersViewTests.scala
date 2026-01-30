@@ -202,8 +202,8 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
     "have a summary list which" should {
       lazy val summaryListRows = doc.getSummaryListRows.iterator().asScala.toList
 
-      "have 4 rows" in {
-        summaryListRows.size mustBe 4
+      "have 5 rows" in {
+        summaryListRows.size mustBe 5
       }
 
       "have a vat number row" in {
@@ -265,8 +265,8 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
     "have a summary list which" should {
       lazy val summaryListRows = doc.getSummaryListRows.iterator().asScala.toList
 
-      "have 3 rows" in {
-        summaryListRows.size mustBe 3
+      "have 4 rows" in {
+        summaryListRows.size mustBe 4
       }
 
       "have a vat number row" in {

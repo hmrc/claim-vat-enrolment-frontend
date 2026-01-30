@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.utils
 
-import org.scalatest
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}

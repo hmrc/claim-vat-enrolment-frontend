@@ -119,7 +119,7 @@ class CaptureSubmittedVatReturnVer2ControllerISpec extends JourneyMongoHelper wi
             "_id" -> testJourneyId,
             "authInternalId" -> testInternalId,
             "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-          ) ++ Json.toJsObject(testFullVatKnownFacts)
+          ) ++ Json.toJsObject(testFullVatKnownFactsWithReturnsInformation)
         ).toFuture())
         lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "no")
 

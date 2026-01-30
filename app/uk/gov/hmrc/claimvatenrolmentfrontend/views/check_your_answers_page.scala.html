@@ -106,7 +106,7 @@
                 if (appConfig.knownFactsCheckFlag && appConfig.knownFactsCheckWithVanFlag) {
                 Seq(SummaryListRow(
                     key = Key(content = Text(messages("check-your-answers.vat_application_number"))),
-                    value = Value(content = Text(vatKnownFacts.formBundleReference.getOrElse(""))),
+                    value = Value(content = Text(vatKnownFacts.formBundleReference.fold("")(_.value))),
                     actions = Some(Actions(items = Seq(
                          ActionItem(
                              href = Routes.CaptureVatApplicationNumberController.show(journeyId).url,

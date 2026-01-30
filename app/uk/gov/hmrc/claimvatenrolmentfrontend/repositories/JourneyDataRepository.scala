@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.repositories
 
-import play.api.libs.json._
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Indexes.ascending
 import org.mongodb.scala.model.Projections.include
-import org.mongodb.scala.model.{Filters, IndexModel, IndexOptions, UpdateOptions, Updates}
 import org.mongodb.scala.model.Updates.{combine, unset}
+import org.mongodb.scala.model._
+import play.api.libs.json._
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.{Postcode, ReturnsInformation, VatKnownFacts}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.{Postcode, ReturnsInformation, VatApplicationNumber, VatKnownFacts}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository._
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
@@ -34,68 +34,82 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class JourneyDataRepository @Inject()(mongoComponent: MongoComponent,
-                                      appConfig: AppConfig
-                                     )(implicit ec: ExecutionContext) extends PlayMongoRepository[JsObject](
-  collectionName = "claim-vat-enrolment-frontend-data",
-  mongoComponent = mongoComponent,
-  domainFormat = implicitly[Format[JsObject]],
-  indexes = Seq(timeToLiveIndex(appConfig.timeToLiveSeconds))
-) {
+class JourneyDataRepository @Inject() (mongoComponent: MongoComponent, appConfig: AppConfig)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[JsObject](
+      collectionName = "claim-vat-enrolment-frontend-data",
+      mongoComponent = mongoComponent,
+      domainFormat = implicitly[Format[JsObject]],
+      indexes = Seq(timeToLiveIndex(appConfig.timeToLiveSeconds))
+    ) {
 
   def insertJourneyVatNumber(journeyId: String, authInternalId: String, vatNumber: String): Future[String] =
-    collection.insertOne(
-      Json.obj(
-        JourneyIdKey -> journeyId,
-        AuthInternalIdKey -> authInternalId,
-        VatNumberKey -> vatNumber,
-        CreationTimestampKey -> Json.obj( "$date" -> Instant.now.toEpochMilli)
+    collection
+      .insertOne(
+        Json.obj(
+          JourneyIdKey         -> journeyId,
+          AuthInternalIdKey    -> authInternalId,
+          VatNumberKey         -> vatNumber,
+          CreationTimestampKey -> Json.obj("$date" -> Instant.now.toEpochMilli)
+        )
       )
-    ).toFuture().map(_ => journeyId)
+      .toFuture()
+      .map(_ => journeyId)
 
-   def getJourneyData(journeyId: String, authInternalId: String): Future[Option[VatKnownFacts]] = {
-     collection.find[JsObject](
-       Filters.and(
-         Filters.equal(JourneyIdKey, journeyId),
-         Filters.equal(AuthInternalIdKey, authInternalId)
-       )
-     ).headOption().map {
-       case Some(doc) => Some(doc.as[VatKnownFacts])
-       case _ => None
-     }
-   }
+  def getJourneyData(journeyId: String, authInternalId: String): Future[Option[VatKnownFacts]] =
+    collection
+      .find[JsObject](
+        Filters.and(
+          Filters.equal(JourneyIdKey, journeyId),
+          Filters.equal(AuthInternalIdKey, authInternalId)
+        )
+      )
+      .headOption()
+      .map {
+        case Some(doc) => Some(doc.as[VatKnownFacts])
+        case _         => None
+      }
 
   def getVRNInfo(journeyId: String, authInternalId: String): Future[Option[String]] = {
-    val res = collection.find[JsObject](
-      Filters.and(
-        Filters.equal(JourneyIdKey, journeyId),
-        Filters.equal(AuthInternalIdKey, authInternalId)
+    val res = collection
+      .find[JsObject](
+        Filters.and(
+          Filters.equal(JourneyIdKey, journeyId),
+          Filters.equal(AuthInternalIdKey, authInternalId)
+        )
       )
-    ).projection(include("vatNumber"))
-     .first().toFutureOption().map(_.flatMap(js => (js \ "vatNumber").asOpt[String]))
+      .projection(include("vatNumber"))
+      .first()
+      .toFutureOption()
+      .map(_.flatMap(js => (js \ "vatNumber").asOpt[String]))
     res
   }
 
   def updateJourneyData(journeyId: String, dataKey: String, data: JsValue, authInternalId: String): Future[Boolean] =
-    collection.updateOne(
-      filterJourneyData(journeyId, authInternalId),
-      Updates.set(dataKey, Codecs.toBson(data)),
-      UpdateOptions().upsert(false)
-    ).toFuture().map{
-      _.getMatchedCount == 1
-    }
+    collection
+      .updateOne(
+        filterJourneyData(journeyId, authInternalId),
+        Updates.set(dataKey, Codecs.toBson(data)),
+        UpdateOptions().upsert(false)
+      )
+      .toFuture()
+      .map {
+        _.getMatchedCount == 1
+      }
 
   def removeJourneyDataFields(journeyId: String, authInternalId: String, dataKeySeq: Seq[String]): Future[Boolean] = {
 
     val unsetDataKeySeq: Seq[Bson] = dataKeySeq.map(key => unset(key))
 
-    collection.updateOne(
-      filterJourneyData(journeyId, authInternalId),
-      combine(unsetDataKeySeq:_*),
-      UpdateOptions().upsert(false)
-    ).toFuture().map{
-      _.getMatchedCount == 1
-    }
+    collection
+      .updateOne(
+        filterJourneyData(journeyId, authInternalId),
+        combine(unsetDataKeySeq: _*),
+        UpdateOptions().upsert(false)
+      )
+      .toFuture()
+      .map {
+        _.getMatchedCount == 1
+      }
 
   }
 
@@ -108,54 +122,57 @@ class JourneyDataRepository @Inject()(mongoComponent: MongoComponent,
 }
 
 object JourneyDataRepository {
-  val JourneyIdKey: String = "_id"
-  val AuthInternalIdKey: String = "authInternalId"
-  val CreationTimestampKey = "creationTimestamp"
-  val VatNumberKey: String = "vatNumber"
-  val PostcodeKey: String = "vatRegPostcode"
-  val VatRegistrationDateKey: String = "vatRegistrationDate"
-  val SubmittedVatReturnKey: String = "submittedVatReturn"
-  val Box5FigureKey: String = "box5Figure"
-  val LastMonthSubmittedKey: String = "lastMonthSubmitted"
+  val JourneyIdKey: String             = "_id"
+  val AuthInternalIdKey: String        = "authInternalId"
+  val CreationTimestampKey             = "creationTimestamp"
+  val VatNumberKey: String             = "vatNumber"
+  val PostcodeKey: String              = "vatRegPostcode"
+  val VatRegistrationDateKey: String   = "vatRegistrationDate"
+  val SubmittedVatReturnKey: String    = "submittedVatReturn"
+  val Box5FigureKey: String            = "box5Figure"
+  val LastMonthSubmittedKey: String    = "lastMonthSubmitted"
   val SubmittedVatApplicationNumberKey = "formBundleReference"
 
   implicit lazy val vatKnownFactsReads: Reads[VatKnownFacts] =
-    (json: JsValue) => for {
-      vatNumber <- (json \ VatNumberKey).validate[String]
-      optPostcode <- (json \ PostcodeKey).validateOpt[String].map {
-        optPostcodeString => optPostcodeString.map { stringValue => Postcode(stringValue) } // may be a cleaner way to do this
-      }
-      optVatRegistrationDate <- (json \ VatRegistrationDateKey).validateOpt[LocalDate]
-      optSubmittedVatReturn <- (json \ SubmittedVatReturnKey).validateOpt[Boolean]
-      optReturnsInformation <- if (optSubmittedVatReturn.getOrElse(false)) {
-        for {
-          boxFiveFigure <- (json \ Box5FigureKey).validateOpt[String]
-          lastReturnMonth <- (json \ LastMonthSubmittedKey).validateOpt[Int].map(_.map(Month.of))
-        } yield Some(ReturnsInformation(boxFiveFigure, lastReturnMonth))
-      } else {
-        JsSuccess(None)
-      }
-      optFormBundleReference <- (json \ SubmittedVatApplicationNumberKey).validateOpt[String]
-    } yield VatKnownFacts(vatNumber, optPostcode, optVatRegistrationDate, optReturnsInformation, optFormBundleReference)
+    (json: JsValue) =>
+      for {
+        vatNumber <- (json \ VatNumberKey).validate[String]
+        optPostcode <- (json \ PostcodeKey).validateOpt[String].map { optPostcodeString =>
+          optPostcodeString.map(stringValue => Postcode(stringValue)) // may be a cleaner way to do this
+        }
+        optVatRegistrationDate <- (json \ VatRegistrationDateKey).validateOpt[LocalDate]
+        optSubmittedVatReturn  <- (json \ SubmittedVatReturnKey).validateOpt[Boolean]
+        optReturnsInformation <-
+          if (optSubmittedVatReturn.getOrElse(false)) {
+            for {
+              boxFiveFigure   <- (json \ Box5FigureKey).validateOpt[String]
+              lastReturnMonth <- (json \ LastMonthSubmittedKey).validateOpt[Int].map(_.map(Month.of))
+            } yield Some(ReturnsInformation(boxFiveFigure, lastReturnMonth))
+          } else {
+            JsSuccess(None)
+          }
+        optFormBundleReference <- (json \ SubmittedVatApplicationNumberKey).validateOpt[VatApplicationNumber]
+      } yield VatKnownFacts(vatNumber, optPostcode, optVatRegistrationDate, optReturnsInformation, optFormBundleReference)
 
   implicit lazy val vatKnownFactsWrites: OWrites[VatKnownFacts] =
-    (vatKnownFacts: VatKnownFacts) => Json.obj(
-      VatNumberKey -> vatKnownFacts.vatNumber,
-      VatRegistrationDateKey -> vatKnownFacts.vatRegistrationDate.get,
-      PostcodeKey -> vatKnownFacts.optPostcode.map(_.stringValue)
-    ) ++ {
-      if (vatKnownFacts.optReturnsInformation.isDefined) {
-        Json.obj(
-          SubmittedVatReturnKey -> true,
-          Box5FigureKey -> vatKnownFacts.optReturnsInformation.map(_.boxFive.get),
-          LastMonthSubmittedKey -> vatKnownFacts.optReturnsInformation.map(_.lastReturnMonth.get.getValue)
-        )
-      } else {
-        Json.obj(SubmittedVatReturnKey -> false)
-      }
-    } ++ Json.obj(
-      SubmittedVatApplicationNumberKey -> vatKnownFacts.formBundleReference
-    )
+    (vatKnownFacts: VatKnownFacts) =>
+      Json.obj(
+        VatNumberKey           -> vatKnownFacts.vatNumber,
+        VatRegistrationDateKey -> vatKnownFacts.vatRegistrationDate.get,
+        PostcodeKey            -> vatKnownFacts.optPostcode.map(_.stringValue)
+      ) ++ {
+        if (vatKnownFacts.optReturnsInformation.isDefined) {
+          Json.obj(
+            SubmittedVatReturnKey -> true,
+            Box5FigureKey         -> vatKnownFacts.optReturnsInformation.map(_.boxFive.get),
+            LastMonthSubmittedKey -> vatKnownFacts.optReturnsInformation.map(_.lastReturnMonth.get.getValue)
+          )
+        } else {
+          Json.obj(SubmittedVatReturnKey -> false)
+        }
+      } ++ Json.obj(
+        SubmittedVatApplicationNumberKey -> vatKnownFacts.formBundleReference
+      )
 
   def timeToLiveIndex(timeToLiveDuration: Long): IndexModel =
     IndexModel(
@@ -166,6 +183,3 @@ object JourneyDataRepository {
     )
 
 }
-
-
-

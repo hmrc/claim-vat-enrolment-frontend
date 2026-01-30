@@ -141,7 +141,7 @@ object MessageLookup {
   object CheckYourAnswers {
     val title = "Check Your Answers - Claim VAT Enrolment - GOV.UK"
     val heading = "Check Your Answers"
-    val vatNumberRow = "VAT Number"
+    val vatNumberRow = "VAT registration number"
     val vatRegDateRow = "VAT Registration Date"
     val businessPostcodeRow = "Where your business is registered for VAT"
     val vatReturnsRow = "You are currently submitting VAT returns"

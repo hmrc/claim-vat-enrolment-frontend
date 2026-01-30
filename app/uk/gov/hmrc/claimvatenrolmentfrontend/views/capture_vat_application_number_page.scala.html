@@ -1,5 +1,5 @@
 @*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,19 @@
  *@
 
 @import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.claimvatenrolmentfrontend.controllers.routes
 @import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.helpers._
 
-@this(
-    layout: templates.layout,
-    h1: h1,
-    p: p,
-    errorSummary: errorSummary,
-    formWithCSRF: FormWithCSRF,
-    inputText: inputText,
-    govukButton: GovukButton
+@this(layout: templates.layout,
+        h1: h1,
+        p: p,
+        errorSummary: errorSummary,
+        formWithCSRF: FormWithCSRF,
+        inputText: inputText,
+        govukButton: GovukButton
 )
 
-@(form: Form[_],formAction: Call)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@(form: Form[_], journeyId: String)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 @layout(Some(title(form, "capture-vat-application-number.title_heading"))) {
 
@@ -42,7 +42,7 @@
         @messages("capture-vat-application-number.line_2")
     }
 
-    @formWithCSRF(action = formAction) {
+    @formWithCSRF(action = routes.CaptureVatApplicationNumberController.submit(journeyId)) {
 
         @inputText(
             form = form,

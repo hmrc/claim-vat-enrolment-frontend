@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,20 +37,19 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
-                                         allocateEnrolmentService: AllocateEnrolmentService,
-                                         config: AppConfig,
-                                         journeyService: JourneyService,
-                                         lock: UserLockRepository,
-                                         val authConnector: AuthConnector) extends AuthorisedFunctions with FeatureSwitching {
+class ClaimVatEnrolmentService @Inject() (auditConnector: AuditConnector,
+                                          allocateEnrolmentService: AllocateEnrolmentService,
+                                          config: AppConfig,
+                                          journeyService: JourneyService,
+                                          lock: UserLockRepository,
+                                          val authConnector: AuthConnector)
+    extends AuthorisedFunctions
+    with FeatureSwitching {
 
-  def claimVatEnrolment(credentialId: String,
-                        groupId: String,
-                        internalId: String,
-                        journeyId: String
-                       )(implicit hc: HeaderCarrier,
-                         request: Request[_],
-                         ec: ExecutionContext): Future[ClaimVatEnrolmentResponse] = {
+  def claimVatEnrolment(credentialId: String, groupId: String, internalId: String, journeyId: String)(implicit
+      hc: HeaderCarrier,
+      request: Request[_],
+      ec: ExecutionContext): Future[ClaimVatEnrolmentResponse] =
     journeyService.retrieveJourneyData(journeyId, internalId).flatMap {
       case Some(journeyData) =>
         allocateEnrolmentService.allocateEnrolment(journeyData, credentialId, groupId).flatMap {
@@ -58,7 +57,7 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
             sendAuditEvent(journeyData, isSuccessful = true)
             journeyService.retrieveJourneyConfig(journeyId, internalId).map {
               case Some(journeyConfig) => Right(journeyConfig.continueUrl)
-              case None => Left(JourneyConfigFailure)
+              case None                => Left(JourneyConfigFailure)
             }
           case MultipleEnrolmentsInvalid =>
             sendAuditEvent(journeyData, isSuccessful = false, Some(MultipleEnrolmentsInvalid.message))
@@ -70,15 +69,11 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
         }
       case None => Future.successful(Left(JourneyDataFailure))
     }
-  }
 
-  private def callEnrolmentStoreProxy(internalId: String,
-                                      journeyData: VatKnownFacts,
-                                      enrolmentFailure: Boolean = false
-                                     )(implicit hc: HeaderCarrier,
-                                       request: Request[_],
-                                       ec: ExecutionContext): Future[ClaimVatEnrolmentResponse] = {
-
+  private def callEnrolmentStoreProxy(internalId: String, journeyData: VatKnownFacts, enrolmentFailure: Boolean = false)(implicit
+      hc: HeaderCarrier,
+      request: Request[_],
+      ec: ExecutionContext): Future[ClaimVatEnrolmentResponse] =
     allocateEnrolmentService.getUserIds(journeyData.vatNumber).flatMap {
       case NoUsersFound if enrolmentFailure =>
         sendAuditEvent(journeyData, isSuccessful = false, Some(NoUsersFound.message))
@@ -94,31 +89,38 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
         sendAuditEvent(journeyData, isSuccessful = false, Some(UsersFound.message))
         Future.successful(Left(EnrolmentAlreadyAllocated))
     }
-  }
 
-  private def callKnownFactsMismatchLogic(userId: String,
-                                          journeyData: VatKnownFacts)
-                                         (implicit hc: HeaderCarrier, request: Request[_], ec: ExecutionContext): Future[ClaimVatEnrolmentResponse] = {
+  private def callKnownFactsMismatchLogic(userId: String, journeyData: VatKnownFacts)(implicit
+      hc: HeaderCarrier,
+      request: Request[_],
+      ec: ExecutionContext): Future[ClaimVatEnrolmentResponse] = {
     val limit = config.knownFactsLockAttemptLimit
 
     lock.isVrnOrUserLocked(journeyData.vatNumber, userId).flatMap {
       case true => Future.successful(Left(KnownFactsMismatchLocked))
       case _ =>
         lock.updateAttempts(journeyData.vatNumber, userId) map { counts =>
-          if(counts.values.exists(_ >= limit)) {
-            val lockedStatus: String = s"locked-${counts.collect { case (k,v) if v >= limit => k }.mkString("-and-")}"
+          if (counts.values.exists(_ >= limit)) {
+            val lockedStatus: String = s"locked-${counts.collect { case (k, v) if v >= limit => k }.mkString("-and-")}"
 
             sendAuditEventKnownFactsCheck(
-              journeyData, limit, lockedStatus, InvalidKnownFacts.message
+              journeyData,
+              limit,
+              lockedStatus,
+              InvalidKnownFacts.message
             )
-            warnLog(s"[ClaimVatEnrolmentService][callKnownFactsMismatchLogic] - " +
-              s"User attempts: ${counts(userId)} - " +
-              s"VRN attempts: ${counts(journeyData.vatNumber)} - " +
-              s"locked after $limit attempts")
+            warnLog(
+              s"[ClaimVatEnrolmentService][callKnownFactsMismatchLogic] - " +
+                s"User attempts: ${counts(userId)} - " +
+                s"VRN attempts: ${counts(journeyData.vatNumber)} - " +
+                s"locked after $limit attempts")
             Left(KnownFactsMismatchLocked)
           } else {
             sendAuditEventKnownFactsCheck(
-              journeyData, counts.values.max, "unlocked", InvalidKnownFacts.message
+              journeyData,
+              counts.values.max,
+              "unlocked",
+              InvalidKnownFacts.message
             )
             Left(KnownFactsMismatchNotLocked)
           }
@@ -126,70 +128,69 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
     }
   }
 
-  private def sendAuditEventKnownFactsCheck(vatKnownFacts: VatKnownFacts,
-                                            submissionNumber: Int,
-                                            accountStatus: String,
-                                            failureMessage: String
-                            )(implicit hc: HeaderCarrier,
-                              request: Request[_],
-                              ec: ExecutionContext): Future[AuditResult] = {
+  private def sendAuditEventKnownFactsCheck(vatKnownFacts: VatKnownFacts, submissionNumber: Int, accountStatus: String, failureMessage: String)(
+      implicit
+      hc: HeaderCarrier,
+      request: Request[_],
+      ec: ExecutionContext): Future[AuditResult] =
     for {
       affinityGroup <- retrieveIdentityDetails()(hc, ec)
-      result <- auditConnector.sendEvent(buildClaimVatEnrolmentAuditEvent(
-        vatKnownFacts = vatKnownFacts,
-        isSuccessful = false,
-        optFailureMessage = Some(failureMessage),
-        affinityGroup = affinityGroup,
-        submissionNumber = Some(submissionNumber),
-        accountStatus = Some(accountStatus))
-      )
+      result <- auditConnector.sendEvent(
+        buildClaimVatEnrolmentAuditEvent(
+          vatKnownFacts = vatKnownFacts,
+          isSuccessful = false,
+          optFailureMessage = Some(failureMessage),
+          affinityGroup = affinityGroup,
+          submissionNumber = Some(submissionNumber),
+          accountStatus = Some(accountStatus)
+        ))
     } yield result
-  }
 
-  private def sendAuditEvent(vatKnownFacts: VatKnownFacts,
-                             isSuccessful: Boolean,
-                             optFailureMessage: Option[String] = None
-                            )(implicit hc: HeaderCarrier,
-                              request: Request[_],
-                              ec: ExecutionContext): Future[Unit] = {
+  private def sendAuditEvent(vatKnownFacts: VatKnownFacts, isSuccessful: Boolean, optFailureMessage: Option[String] = None)(implicit
+      hc: HeaderCarrier,
+      request: Request[_],
+      ec: ExecutionContext): Future[Unit] =
     for {
       affinityGroup <- retrieveIdentityDetails()(hc, ec)
-      _ <- auditConnector.sendEvent(buildClaimVatEnrolmentAuditEvent(vatKnownFacts, isSuccessful, optFailureMessage, affinityGroup))
+      _             <- auditConnector.sendEvent(buildClaimVatEnrolmentAuditEvent(vatKnownFacts, isSuccessful, optFailureMessage, affinityGroup))
     } yield {}
-  }
 
-  private def buildClaimVatEnrolmentAuditEvent(vatKnownFacts: VatKnownFacts,
-                                               isSuccessful: Boolean,
-                                               optFailureMessage: Option[String],
-                                               affinityGroup: AffinityGroup,
-                                               submissionNumber: Option[Int] = None,
-                                               accountStatus: Option[String] = Some("")
-                                              )(implicit hc: HeaderCarrier, request: Request[_]): DataEvent = {
+  private def buildClaimVatEnrolmentAuditEvent(
+      vatKnownFacts: VatKnownFacts,
+      isSuccessful: Boolean,
+      optFailureMessage: Option[String],
+      affinityGroup: AffinityGroup,
+      submissionNumber: Option[Int] = None,
+      accountStatus: Option[String] = Some(""))(implicit hc: HeaderCarrier, request: Request[_]): DataEvent = {
 
-    val auditSource = "claim-vat-enrolment"
+    val auditSource             = "claim-vat-enrolment"
     val transactionName: String = "MTDVATClaimSubscriptionRequest"
-    val auditType: String = "MTDVatClaimSubscription"
+    val auditType: String       = "MTDVatClaimSubscription"
 
     val detail: Map[String, String] = Map(
-      "vatNumber" -> vatKnownFacts.vatNumber,
-      "businessPostcode" -> vatKnownFacts.optPostcode.map(_.sanitisedPostcode).getOrElse(""),
-      "vatRegistrationDate" -> vatKnownFacts.vatRegistrationDate.get.format(etmpDateFormat),
-      "boxFiveAmount" -> vatKnownFacts.optReturnsInformation.map(_.boxFive.get).getOrElse(""),
-      "latestMonthReturn" -> vatKnownFacts.optReturnsInformation.map(x => formatString(x.lastReturnMonth.get.getValue)).getOrElse(""),
+      "vatNumber"                      -> vatKnownFacts.vatNumber,
+      "businessPostcode"               -> vatKnownFacts.optPostcode.map(_.sanitisedPostcode).getOrElse(""),
+      "vatRegistrationDate"            -> vatKnownFacts.vatRegistrationDate.get.format(etmpDateFormat),
+      "boxFiveAmount"                  -> vatKnownFacts.optReturnsInformation.map(_.boxFive.get).getOrElse(""),
+      "latestMonthReturn"              -> vatKnownFacts.optReturnsInformation.map(x => formatString(x.lastReturnMonth.get.getValue)).getOrElse(""),
       "vatSubscriptionClaimSuccessful" -> isSuccessful.toString,
       "enrolmentAndClientDatabaseFailureReason" -> optFailureMessage.getOrElse("")
     ) ++
-      Option.when(config.isKnownFactsCheckEnabled)(
-        submissionNumber.map("submissionNumber" -> _.toString).toMap ++
-        accountStatus.map("accountStatus" -> _).toMap
-      ).getOrElse(Map.empty) ++
-      Option.when(config.isKnownFactsCheckWithVanFlagEnabled)(
-        vatKnownFacts.formBundleReference
-          .map("vatApplicationNumber" -> _)
-          .toMap
-      ).getOrElse(Map.empty) ++ Map("userType" -> affinityGroup.toString)
+      Option
+        .when(config.isKnownFactsCheckEnabled)(
+          submissionNumber.map("submissionNumber" -> _.toString).toMap ++
+            accountStatus.map("accountStatus" -> _).toMap
+        )
+        .getOrElse(Map.empty) ++
+      Option
+        .when(config.isKnownFactsCheckWithVanFlagEnabled)(
+          vatKnownFacts.formBundleReference
+            .map("vatApplicationNumber" -> _.value)
+            .toMap
+        )
+        .getOrElse(Map.empty) ++ Map("userType" -> affinityGroup.toString)
 
-    val updatedDetail: Map[String, String] = detail.filter {case(_, value) => value.nonEmpty}
+    val updatedDetail: Map[String, String] = detail.filter { case (_, value) => value.nonEmpty }
 
     DataEvent(
       auditSource = auditSource,
@@ -199,20 +200,18 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
     )
   }
 
-  private def formatString(value: Int): String = {
+  private def formatString(value: Int): String =
     "%02d".format(value)
-  }
 
-  def buildPostCodeFailureAuditEvent(form: Form[Postcode])
-                                    (implicit hc: HeaderCarrier, request: Request[_]): DataEvent = {
+  def buildPostCodeFailureAuditEvent(form: Form[Postcode])(implicit hc: HeaderCarrier, request: Request[_]): DataEvent = {
 
-    val auditSource = "claim-vat-enrolment"
+    val auditSource             = "claim-vat-enrolment"
     val transactionName: String = "MTDVATPostCodeFail"
-    val auditType: String = "MTDVATPostCodeFail"
+    val auditType: String       = "MTDVATPostCodeFail"
 
     val postcodeString = form.value match {
       case Some(value) => value.stringValue
-      case _ => ""
+      case _           => ""
     }
 
     val detail: Map[String, String] = Map(
@@ -228,12 +227,11 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
 
   }
 
-  def retrieveIdentityDetails()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[AffinityGroup] = {
-   authorised().retrieve(affinityGroup) {
+  def retrieveIdentityDetails()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[AffinityGroup] =
+    authorised().retrieve(affinityGroup) {
       case Some(affinity) => Future.successful(affinity)
-      case _ => Future.failed(throw new InternalServerException("[ClaimVatEnrolmentService] Couldn't retrieve auth details for user"))
+      case _              => Future.failed(throw new InternalServerException("[ClaimVatEnrolmentService] Couldn't retrieve auth details for user"))
     }
-  }
 }
 
 object ClaimVatEnrolmentService {

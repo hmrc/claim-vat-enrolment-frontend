@@ -48,10 +48,10 @@ class JourneyDataRepositoryISpec extends JourneyMongoHelper {
         await(insertVatKnownFactsData(
           testJourneyId,
           testInternalId,
-          testFullVatKnownFacts
+          testFullVatKnownFactsWithReturnsInformation
         ))
 
-        await(journeyDataRepository.getJourneyData(testJourneyId, testInternalId)) mustBe Some(testFullVatKnownFacts)
+        await(journeyDataRepository.getJourneyData(testJourneyId, testInternalId)) mustBe Some(testFullVatKnownFactsWithReturnsInformation)
       }
     }
 

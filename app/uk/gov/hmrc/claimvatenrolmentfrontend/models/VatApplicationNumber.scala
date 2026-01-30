@@ -16,12 +16,10 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.models
 
-import java.time.{LocalDate, Month}
+import play.api.libs.json.{Json, OFormat}
 
-case class VatKnownFacts(vatNumber: String,
-                         optPostcode: Option[Postcode],
-                         vatRegistrationDate: Option[LocalDate],
-                         optReturnsInformation: Option[ReturnsInformation],
-                         formBundleReference: Option[VatApplicationNumber])
+case class VatApplicationNumber(value: String)
 
-case class ReturnsInformation(boxFive: Option[String], lastReturnMonth: Option[Month])
+object VatApplicationNumber {
+  implicit lazy val format: OFormat[VatApplicationNumber] = Json.format
+}

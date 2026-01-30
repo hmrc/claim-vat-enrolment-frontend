@@ -19,66 +19,70 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.forms
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.data.Form
-
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.VatApplicationNumber
 
 class CaptureVatApplicationNumberFormSpec extends AnyWordSpec with Matchers {
-  val form: Form[String] = CaptureVatApplicationNumberForm.form
 
-  val invalidLength = "capture-vat-application-number.error.message.invalid_length"
-  val nothing = "capture-vat-application-number.error.message.nothing"
-  val invalidFormat = "capture-vat-application-number.error.message.invalid_format"
+  private val form: Form[VatApplicationNumber] = CaptureVatApplicationNumberForm.form
 
-  "form with valid van number" must {
-    "bind successfully" in {
-      val res = form.bind(Map("vatApplicationNumber" -> "123456789102"))
-      res.errors.isEmpty mustBe true
+  private val invalidLength = "capture-vat-application-number.error.message.invalid_length"
+  private val nothing       = "capture-vat-application-number.error.message.nothing"
+  private val invalidFormat = "capture-vat-application-number.error.message.invalid_format"
+  private val dataKey       = "vatApplicationNumber"
+
+  "CaptureVatApplicationNumberForm .form" should {
+    "bind successfully" when {
+      "mapping a valid van number" in {
+        val res = form.bind(Map(dataKey -> "123456789102"))
+
+        res.value mustBe Some(VatApplicationNumber("123456789102"))
+        res.errors.isEmpty mustBe true
+      }
+
+      "mapping a valid van number, removing any white spaces" in {
+        val res = form.bind(Map(dataKey -> " 009 456789102 "))
+
+        res.value mustBe Some(VatApplicationNumber("009456789102"))
+        res.errors.isEmpty mustBe true
+      }
+    }
+
+    "not bind successfully" when {
+      "mapping data with invalid characters" in {
+        val res = form.bind(Map(dataKey -> "123x 4567 8910"))
+
+        res.value mustBe None
+        res.errors.exists(error => error.message.equals(invalidFormat)) mustBe true
+      }
+
+      "mapping valid data with too few characters" in {
+        val res = form.bind(Map(dataKey -> "12378910"))
+
+        res.value mustBe None
+        res.errors.exists(error => error.message.equals(invalidLength)) mustBe true
+      }
+
+      "mapping valid data with too many characters" in {
+        val res = form.bind(Map(dataKey -> "1237895555510"))
+
+        res.value mustBe None
+        res.errors.exists(error => error.message.equals(invalidLength)) mustBe true
+      }
+
+      "mapping data which is only whitespace" in {
+        val res = form.bind(Map(dataKey -> "            "))
+
+        res.value mustBe None
+        res.errors.exists(error => error.message.equals(nothing)) mustBe true
+      }
+
+      "mapping empty data" in {
+        val res = form.bind(Map(dataKey -> ""))
+
+        res.value mustBe None
+        res.errors.exists(error => error.message.equals(nothing)) mustBe true
+      }
     }
   }
 
-  "form with valid van number having trailing spaces" must {
-    "bind successfully" in {
-      val res = form.bind(Map("vatApplicationNumber" -> " 009 456789102 "))
-      res.errors.isEmpty mustBe true
-    }
-  }
-
-  "form with invalid data having some characters within a field" must {
-    "not bind successfully" in {
-
-      val res = form.bind(Map("vatApplicationNumber" -> "123x 4567 8910"))
-      res.errors.isEmpty mustBe false
-      res.errors.map(error => error.message.equals(invalidFormat)) mustBe List(true)
-    }
-  }
-
-  "form with invalid data having less length" must {
-    "not bind successfully" in {
-      val res = form.bind(Map("vatApplicationNumber" -> "12378910"))
-      res.errors.isEmpty mustBe false
-      res.errors.map(error => error.message.equals(invalidLength)) mustBe List(true)
-    }
-  }
-
-  "form with invalid data having more length" must {
-    "not bind successfully" in {
-      val res = form.bind(Map("vatApplicationNumber" -> "1237895555510"))
-      res.errors.isEmpty mustBe false
-      res.errors.map(error => error.message.equals(invalidLength)) mustBe List(true)
-    }
-  }
-
-  "form with empty spaces for the field" must {
-    "not bind successfully" in {
-      val res = form.bind(Map("vatApplicationNumber" -> "   "))
-      res.errors.isEmpty mustBe false
-      res.errors.map(error => error.message.equals(nothing)) mustBe List(true)
-    }
-  }
-
-  "form with empty data" must {
-    "not bind successfully" in {
-      val res = form.bind(Map.empty[String, String])
-      res.errors.isEmpty mustBe false
-    }
-  }
 }

@@ -16,12 +16,21 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.models
 
-import java.time.{LocalDate, Month}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import play.api.libs.json.{JsSuccess, Json}
 
-case class VatKnownFacts(vatNumber: String,
-                         optPostcode: Option[Postcode],
-                         vatRegistrationDate: Option[LocalDate],
-                         optReturnsInformation: Option[ReturnsInformation],
-                         formBundleReference: Option[VatApplicationNumber])
+class VatApplicationNumberSpec extends AnyWordSpec with Matchers {
 
-case class ReturnsInformation(boxFive: Option[String], lastReturnMonth: Option[Month])
+  private val model = VatApplicationNumber("123456789012")
+  private val json  = Json.obj("value" -> "123456789012")
+
+  "VatApplicationNumber" should {
+    "write a VatApplicationNumber model to JSON" in {
+      Json.toJson(model) mustBe json
+    }
+    "read valid Json to a VatApplicationNumber model" in {
+      json.validate[VatApplicationNumber] mustBe JsSuccess(model)
+    }
+  }
+}

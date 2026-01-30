@@ -21,37 +21,37 @@ import play.api.data.Forms._
 import play.api.data.validation.Constraint
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.utils.ConstraintUtil.ConstraintUtil
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.utils.ValidationHelper.{validate, validateNot}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.VatApplicationNumber
 
 object CaptureVatApplicationNumberForm {
 
   private val vatApplicationNumber: String = "vatApplicationNumber"
 
-  private val vatApplicationNumberEmpty: Constraint[String] = Constraint("vatApplicationNumber.not_entered")(
-    vatApplicationNumber => validate(
-      constraint = vatApplicationNumber.replaceAll(" ", "").isEmpty,
+  private val vatApplicationNumberEmpty: Constraint[String] = Constraint("vatApplicationNumber.not_entered")(vatApplicationNumber =>
+    validate(
+      constraint = vatApplicationNumber.isEmpty,
       errMsg = "capture-vat-application-number.error.message.nothing"
-    )
-  )
+    ))
 
-  private val vatApplicationNumberLength: Constraint[String] = Constraint("vatApplicationNumber.invalid_length")(
-    vatApplicationNumber => validateNot(
-      constraint = vatApplicationNumber.replaceAll(" ", "").length == 12,
+  private val vatApplicationNumberLength: Constraint[String] = Constraint("vatApplicationNumber.invalid_length")(vatApplicationNumber =>
+    validateNot(
+      constraint = vatApplicationNumber.length == 12,
       errMsg = "capture-vat-application-number.error.message.invalid_length"
-    )
-  )
+    ))
 
-  private val vatApplicationNumberFormat: Constraint[String] = Constraint("vatApplicationNumber.invalid_format")(
-    vatApplicationNumber => validateNot(
-      constraint = vatApplicationNumber.replaceAll(" ", "").forall(_.isDigit),
+  private val vatApplicationNumberFormat: Constraint[String] = Constraint("vatApplicationNumber.invalid_format")(vatApplicationNumber =>
+    validateNot(
+      constraint = vatApplicationNumber.forall(_.isDigit),
       errMsg = "capture-vat-application-number.error.message.invalid_format"
-    )
-  )
+    ))
 
-  val form: Form[String] = Form(
-    single(
-      vatApplicationNumber -> text.verifying(vatApplicationNumberEmpty andThen
-        vatApplicationNumberFormat andThen vatApplicationNumberLength)
-    )
+  val form: Form[VatApplicationNumber] = Form(
+    mapping(
+      vatApplicationNumber -> text
+        .transform[String](_.replaceAll(" ", ""), identity)
+        .verifying(vatApplicationNumberEmpty
+          andThen vatApplicationNumberFormat
+          andThen vatApplicationNumberLength)
+    )(VatApplicationNumber.apply)(VatApplicationNumber.unapply)
   )
 }
-

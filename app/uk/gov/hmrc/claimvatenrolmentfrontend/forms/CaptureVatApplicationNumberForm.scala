@@ -44,13 +44,6 @@ object CaptureVatApplicationNumberForm {
       errMsg = "capture-vat-application-number.error.message.invalid_format"
     ))
 
-//  val form: Form[String] = Form(
-//    single(
-//      vatApplicationNumber -> text.verifying(
-//        vatApplicationNumberEmpty andThen
-//          vatApplicationNumberFormat andThen vatApplicationNumberLength)
-//    )
-//  )
   val form: Form[String] = Form(
     single(
       vatApplicationNumber -> text

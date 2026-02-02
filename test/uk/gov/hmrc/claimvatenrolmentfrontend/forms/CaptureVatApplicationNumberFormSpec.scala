@@ -20,24 +20,27 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.data.Form
 
-
 class CaptureVatApplicationNumberFormSpec extends AnyWordSpec with Matchers {
   val form: Form[String] = CaptureVatApplicationNumberForm.form
 
-  val invalidLength = "capture-vat-application-number.error.message.invalid_length"
-  val nothing = "capture-vat-application-number.error.message.nothing"
-  val invalidFormat = "capture-vat-application-number.error.message.invalid_format"
+  val emptyDataError     = "capture-vat-application-number.error.message.nothing"
+  val invalidLengthError = "capture-vat-application-number.error.message.invalid_length"
+  val invalidFormatError = "capture-vat-application-number.error.message.invalid_format"
 
   "form with valid van number" must {
     "bind successfully" in {
       val res = form.bind(Map("vatApplicationNumber" -> "123456789102"))
+
+      res.value mustBe Some("123456789102")
       res.errors.isEmpty mustBe true
     }
   }
 
-  "form with valid van number having trailing spaces" must {
+  "form with valid van number, removing any whitespaces" must {
     "bind successfully" in {
-      val res = form.bind(Map("vatApplicationNumber" -> " 009 456789102 "))
+      val res = form.bind(Map("vatApplicationNumber" -> "\t 009\n 456789102\r "))
+
+      res.value mustBe Some("009456789102")
       res.errors.isEmpty mustBe true
     }
   }
@@ -47,7 +50,7 @@ class CaptureVatApplicationNumberFormSpec extends AnyWordSpec with Matchers {
 
       val res = form.bind(Map("vatApplicationNumber" -> "123x 4567 8910"))
       res.errors.isEmpty mustBe false
-      res.errors.map(error => error.message.equals(invalidFormat)) mustBe List(true)
+      res.errors.map(error => error.message.equals(invalidFormatError)) mustBe List(true)
     }
   }
 
@@ -55,7 +58,7 @@ class CaptureVatApplicationNumberFormSpec extends AnyWordSpec with Matchers {
     "not bind successfully" in {
       val res = form.bind(Map("vatApplicationNumber" -> "12378910"))
       res.errors.isEmpty mustBe false
-      res.errors.map(error => error.message.equals(invalidLength)) mustBe List(true)
+      res.errors.map(error => error.message.equals(invalidLengthError)) mustBe List(true)
     }
   }
 
@@ -63,22 +66,23 @@ class CaptureVatApplicationNumberFormSpec extends AnyWordSpec with Matchers {
     "not bind successfully" in {
       val res = form.bind(Map("vatApplicationNumber" -> "1237895555510"))
       res.errors.isEmpty mustBe false
-      res.errors.map(error => error.message.equals(invalidLength)) mustBe List(true)
+      res.errors.map(error => error.message.equals(invalidLengthError)) mustBe List(true)
     }
   }
 
   "form with empty spaces for the field" must {
     "not bind successfully" in {
       val res = form.bind(Map("vatApplicationNumber" -> "   "))
-      res.errors.isEmpty mustBe false
-      res.errors.map(error => error.message.equals(nothing)) mustBe List(true)
+
+      res.errors.map(_.message) must contain(emptyDataError)
     }
   }
 
   "form with empty data" must {
     "not bind successfully" in {
-      val res = form.bind(Map.empty[String, String])
-      res.errors.isEmpty mustBe false
+      val res = form.bind(Map("vatApplicationNumber" -> ""))
+
+      res.errors.map(_.message) must contain(emptyDataError)
     }
   }
 }

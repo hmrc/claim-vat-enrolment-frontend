@@ -36,12 +36,12 @@ class CaptureLastMonthSubmittedController @Inject()(mcc: MessagesControllerCompo
                                                     storeLastMonthSubmittedService: StoreLastMonthSubmittedService,
                                                     identify: AuthenticatedIdentifierAction,
                                                     getData: JourneyDataRetrievalAction,
-                                                    journeyValidateService: LockService
+                                                    locService: LockService
                                                    )(implicit val config: AppConfig, ec: ExecutionContext)
   extends FrontendController(mcc) with I18nSupport with LoggingUtil {
 
   def show(journeyId: String): Action[AnyContent] = (identify andThen getData).async { implicit request =>
-    journeyValidateService.continueIfJourneyIsNotLocked(request.journeyData.vatNumber, request.userId)(
+    locService.continueIfJourneyIsNotLocked(request.journeyData.vatNumber, request.userId)(
       Ok(view(routes.CaptureLastMonthSubmittedController.submit(journeyId), CaptureLastMonthSubmittedForm.form))
     )
   }

@@ -147,8 +147,8 @@ object JourneyDataRepository {
       if (vatKnownFacts.optReturnsInformation.isDefined) {
         Json.obj(
           SubmittedVatReturnKey -> true,
-          Box5FigureKey -> vatKnownFacts.optReturnsInformation.map(_.boxFive.get),
-          LastMonthSubmittedKey -> vatKnownFacts.optReturnsInformation.map(_.lastReturnMonth.get.getValue)
+          Box5FigureKey -> vatKnownFacts.optReturnsInformation.flatMap(_.boxFive),
+          LastMonthSubmittedKey -> vatKnownFacts.optReturnsInformation.flatMap(_.lastReturnMonth).map(_.getValue)
         )
       } else {
         Json.obj(SubmittedVatReturnKey -> false)

@@ -36,12 +36,12 @@ class CaptureVatRegistrationDateController @Inject()(mcc: MessagesControllerComp
                                                      storeVatRegistrationDateService: StoreVatRegistrationDateService,
                                                      identify: AuthenticatedIdentifierAction,
                                                      getData: JourneyDataRetrievalAction,
-                                                     journeyValidateService: LockService
+                                                     lockService: LockService
                                                     )(implicit ec: ExecutionContext, appConfig: AppConfig)
   extends FrontendController(mcc) with I18nSupport with LoggingUtil{
 
   def show(journeyId: String): Action[AnyContent] = (identify andThen getData).async { implicit request =>
-    journeyValidateService.continueIfJourneyIsNotLocked(request.journeyData.vatNumber, request.userId)(
+    lockService.continueIfJourneyIsNotLocked(request.journeyData.vatNumber, request.userId)(
       Ok(view(vatRegistrationDateForm, routes.CaptureVatRegistrationDateController.submit(journeyId)))
     )
   }

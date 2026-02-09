@@ -142,6 +142,18 @@ object TestConstants {
       formBundleReference = Some(testFormBundleReference)
     )
 
+  val testVatKnownFactsNoPostcodeNoRetInfo: VatKnownFacts =
+    VatKnownFacts(
+      vatNumber = testVatNumber,
+      optPostcode = None,
+      vatRegistrationDate = testVatRegDate,
+      optReturnsInformation = Some(ReturnsInformation(
+        boxFive = testBoxFive,
+        lastReturnMonth = None
+      )),
+      formBundleReference = None
+    )
+
   val testVatKnownFactsNoFormBundleReference: VatKnownFacts =
     VatKnownFacts(
       vatNumber = testVatNumber,

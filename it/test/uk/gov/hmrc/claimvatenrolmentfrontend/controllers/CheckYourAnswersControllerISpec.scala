@@ -29,7 +29,6 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.{AllocationEnrolmentStub, Aut
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.JourneyMongoHelper
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.WiremockHelper._
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.CheckYourAnswersViewTests
-
 import java.time.Instant
 
 
@@ -93,7 +92,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
           )
         }
       }
-      "be with JourneyData" when {
+      "be with JourneyData without PostCode" when {
         lazy val result = {
           disable(KnownFactsCheckFlag)
 
@@ -107,7 +106,6 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
           stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
           get(s"/$testJourneyId/check-your-answers-vat")
         }
-
         "return OK" in {
           result.status mustBe OK
         }
@@ -184,7 +182,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
       testCheckYourAnswersViewNoPostcode(result)
     }
 
-   "there is an invalid VatKnownFacts stored in the database" should {
+    "there is an invalid VatKnownFacts stored in the database" should {
       lazy val result = {
         await(journeyDataRepository.collection.insertOne(
           Json.obj(
@@ -201,13 +199,12 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
         get(s"/$testJourneyId/check-your-answers-vat")
       }
 
-      "return a redirect to the registration date page" in {
+      "Show an error page" in {
         result must have(
           httpStatus(SEE_OTHER),
           redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
         )
       }
-
     }
 
     "there is a VatKnownFacts with no returns stored in the database" should {
@@ -230,6 +227,31 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
 
       testCheckYourAnswersViewNoReturnsInformation(result)
     }
+
+    "there is a VatKnownFacts with submittedVatReturn as 'true' but no returns stored in the database" should {
+      lazy val result = {
+        await(journeyDataRepository.collection.insertOne(
+          Json.obj(
+            "_id" -> testJourneyId,
+            "authInternalId" -> testInternalId,
+            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli),
+            "submittedVatReturn" -> true
+          ) ++ Json.toJsObject(testVatKnownFactsNoPostcodeNoRetInfo)
+        ).toFuture())
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+        stubAudit
+        get(s"/$testJourneyId/check-your-answers-vat")
+      }
+
+      "redirect to " in {
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(routes.CaptureVatRegistrationDateController.show(journeyId = testJourneyId).url)
+        )
+      }
+    }
+
+
 
     "there is a VatKnownFacts with no returns and no postcode stored in the database" should {
       lazy val result = {
@@ -476,7 +498,6 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
         redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
       )
     }
-
 
     "return Internal Server Error when no credentials or groupId are retrieved from Auth" in {
       stubAuth(OK, successfulAuthResponse(Some(testGroupId)))

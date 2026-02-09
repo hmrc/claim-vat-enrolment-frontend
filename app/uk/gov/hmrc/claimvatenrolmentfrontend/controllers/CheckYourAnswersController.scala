@@ -20,6 +20,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.claimvatenrolmentfrontend.auth.{AuthenticatedIdentifierAction, JourneyDataRetrievalAction}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.VatKnownFacts
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.ClaimVatEnrolmentService._
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.{ClaimVatEnrolmentService, LockService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.check_your_answers_page
@@ -41,7 +42,11 @@ class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
 
   def show(journeyId: String): Action[AnyContent] = (identify andThen getData).async { implicit request =>
     journeyValidateService.continueIfJourneyIsNotLocked(request.journeyData.vatNumber, request.userId)(
-      Ok(view(routes.CheckYourAnswersController.submit(journeyId), journeyId, request.journeyData))
+      if (isJourneyDataValid(request.journeyData)) {
+        Ok(view(routes.CheckYourAnswersController.submit(journeyId), journeyId, request.journeyData))
+      } else {
+        Redirect(routes.CaptureVatRegistrationDateController.show(journeyId))
+      }
     )
   }
 
@@ -64,6 +69,15 @@ class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
         errorLog(s"[CheckYourAnswersController][submit] - Journey data could not be retrieved from the journeyDataRepository for journey: $journeyId")
         Redirect(errorPages.routes.ServiceTimeoutController.show())
     }
+  }
+
+  def isJourneyDataValid(vatKnownFacts: VatKnownFacts): Boolean = {
+    val hasRegDate = vatKnownFacts.vatRegistrationDate.isDefined
+    val isReturnInfoAvl = vatKnownFacts.optReturnsInformation.isDefined
+    val hasValidReturnInfo = vatKnownFacts.optReturnsInformation.exists(retInfo => retInfo.boxFive.isDefined && retInfo.lastReturnMonth.isDefined )
+    if(!hasRegDate) false
+    if(isReturnInfoAvl && !hasValidReturnInfo) false
+    else true
   }
 
 }

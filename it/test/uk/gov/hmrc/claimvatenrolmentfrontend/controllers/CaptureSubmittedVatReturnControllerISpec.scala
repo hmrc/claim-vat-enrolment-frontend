@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,14 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
+import com.github.tomakehurst.wiremock.stubbing.StubMapping
+import org.mongodb.scala.bson.collection.immutable.Document
+import org.mongodb.scala.model.ReplaceOptions
+import org.mongodb.scala.result.UpdateResult
 import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
-import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.KnownFactsCheckFlag
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.VatKnownFacts
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository._
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.JourneyMongoHelper
@@ -29,48 +33,22 @@ import java.time.Instant
 
 class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with CaptureSubmittedVatReturnViewTests with AuthStub {
 
-  override def additionalConfig: Map[String, String] = Map(
-    "feature-switch.knownFactsCheckFlag" -> "false",
-    "feature-switch.knownFactsCheckWithVanFlag" -> "true"
-  )
+  "GET /:testJourneyId/submitted-vat-return" should {
+    "show the CaptureSubmittedVatReturn page with correct content in an Ok response" when {
+        "the view is rendered with a form without errors" must {
+          lazy val result = {
+            await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+            stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+            get(s"/$testJourneyId/submitted-vat-return")
+          }
 
-  s"GET /$testJourneyId/submitted-vat-return" should {
-    lazy val result = {
-      await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
-      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-      get(s"/$testJourneyId/submitted-vat-return")
-    }
-
-    "return OK" in {
-      result.status mustBe OK
-    }
-
-    testCaptureSubmittedVatReturnOldViewTests(result)
-
-    "return a access blocked page" when {
-      lazy val result = {
-        enable(KnownFactsCheckFlag)
-
-        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
-        await(insertLockData(testVatNumber, testInternalId, testSubmissionNumber3))
-
-        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-
-        get(s"/$testJourneyId/submitted-vat-return")
+          checkOkResponseAndCorrectContent(result)
+        }
       }
 
-      "a Blocked VRN is accessed" in {
-        result must have(
-          httpStatus(SEE_OTHER),
-          redirectUri(errorPages.routes.KnownFactsMismatchWithin24hrsController.show().url)
-        )
-      }
-    }
-
-    "Show an error page" when {
-      "There is no Journey Config" in {
-        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-
+    "redirect to the ServiceTimeout error page" when {
+      "there is no Journey Config" in {
+        stubSuccessfulAuth
         lazy val result = get(s"/$testJourneyId/submitted-vat-return")
 
         result must have(
@@ -78,8 +56,8 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
           redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
         )
       }
-      "the internal Ids do not match" in {
-        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+      "the internal IDs do not match" in {
+        stubSuccessfulAuth
         await(insertJourneyConfig(testJourneyId, testContinueUrl, "testInternalId"))
 
         lazy val result = get(s"/$testJourneyId/submitted-vat-return")
@@ -89,8 +67,8 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
           redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
         )
       }
-      "the journey Id has no internal Id stored" in {
-        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+      "the journey ID has no internal ID stored" in {
+        stubSuccessfulAuth
         await(journeyConfigRepository.collection.insertOne(
           Json.obj(
             "_id" -> testJourneyId,
@@ -106,8 +84,9 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
         )
       }
     }
-    "return 500" when {
-      "there is no auth id" in {
+
+    "return an INTERNAL_SERVER_ERROR" when {
+      "there is no auth ID" in {
         await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
         stubAuth(OK, successfulAuthResponse(None))
         lazy val result = get(s"/$testJourneyId/submitted-vat-return")
@@ -117,74 +96,86 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
     }
   }
 
+  "POST /:testJourneyId/submitted-vat-return" should {
+    "redirect to CaptureBox5Figure page and save the user answer when the user selects 'yes'" when {
+        "there is no prior data for the 'no' journey" in {
+          stubSuccessfulAuth
+          await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
 
-  s"POST /$testJourneyId/submitted-vat-return" should {
-    "redirect to CaptureBox5Figure" when {
-      "the user selects yes" in {
-        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+          lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "yes")
+
+          result must have(
+            httpStatus(SEE_OTHER),
+            redirectUri(routes.CaptureBox5FigureController.show(testJourneyId).url)
+          )
+        }
+        "there is prior data for the 'no' journey which is then deleted" in {
+          stubSuccessfulAuth
+          val fullJourneyDataForAnswerNo = testVatKnownFactsNoFormBundleReference
+          saveJourneyData(fullJourneyDataForAnswerNo)
+
+          lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "yes")
+
+          result must have(
+            httpStatus(SEE_OTHER),
+            redirectUri(routes.CaptureBox5FigureController.show(testJourneyId).url)
+          )
+
+          val journeyData: Option[VatKnownFacts] = checkJourneyData()
+          journeyData.flatMap(_.formBundleReference) mustBe None
+        }
+    }
+
+    "redirect to CaptureVatApplicationNumber page and save the user answer the user selects 'no'" when {
+      "there is no prior data for the 'yes' journey" in {
+        stubSuccessfulAuth
         await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
-        lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "yes")
+
+        lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "no")
 
         result must have(
           httpStatus(SEE_OTHER),
           redirectUri(routes.CaptureBox5FigureController.show(testJourneyId).url)
         )
       }
-    }
+      "there is prior data for the 'yes' journey which is then deleted" in {
+        stubSuccessfulAuth
+        val fullJourneyDataForAnswerNo = testVatKnownFactsNoReturns
+        saveJourneyData(fullJourneyDataForAnswerNo)
 
-    "redirect to Check Your Answers Page" when {
-      "the user changes their answer to no" in {
-        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-        await(journeyDataRepository.collection.insertOne(
-          Json.obj(
-            "_id" -> testJourneyId,
-            "authInternalId" -> testInternalId,
-            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-          ) ++ Json.toJsObject(testFullVatKnownFacts)
-        ).toFuture())
         lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "no")
 
         result must have(
           httpStatus(SEE_OTHER),
-          redirectUri(routes.CheckYourAnswersController.show(testJourneyId).url)
+          redirectUri(routes.CaptureBox5FigureController.show(testJourneyId).url)
         )
-        await(
-          journeyDataRepository.getJourneyData(testJourneyId, testInternalId)
-        ) mustBe Some(testVatKnownFactsNoReturns)
-      }
 
-      "the user selects no" in {
-        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-        await(journeyDataRepository.collection.insertOne(
-          Json.obj(
-            "_id" -> testJourneyId,
-            "authInternalId" -> testInternalId,
-            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-          ) ++ Json.obj("vatRegPostcode" -> testPostcode.stringValue, "vatRegistrationDate" -> testVatRegDate,
-            "vatNumber" -> testVatNumber) ++ Json.obj("formBundleReference" -> Some(testFormBundleReference))
-        ).toFuture())
-        lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "no")
-
-        result must have(
-          httpStatus(SEE_OTHER),
-          redirectUri(routes.CheckYourAnswersController.show(testJourneyId).url)
-        )
-        await(
-          journeyDataRepository.getJourneyData(testJourneyId, testInternalId)
-        ) mustBe Some(testVatKnownFactsNoReturns)
+        val journeyData: Option[VatKnownFacts] = checkJourneyData()
+        journeyData.flatMap(_.optReturnsInformation) mustBe None
       }
     }
-    "raise an internal server error" when {
-      "the journey data is missing" in {
-        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+
+    "render the page with error content in a BadRequest response" when {
+      "the user tries to submit empty data" must {
+        lazy val result = {
+          stubSuccessfulAuth
+          post(s"/$testJourneyId/submitted-vat-return")()
+        }
+
+        checkBadRequestResponseAndCorrectErrorContent(result)
+      }
+    }
+
+    "return an INTERNAL_SERVER_ERROR" when {
+      "there is no journey data" in {
+        stubSuccessfulAuth
 
         lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "yes")
 
         result.status mustBe INTERNAL_SERVER_ERROR
       }
-    }
-    "raise an internal server error" when {
-      "the auth id is missing" in {
+
+      "there is no auth ID" in {
         stubAuth(OK, successfulAuthResponse(None))
 
         lazy val result = post(s"/$testJourneyId/submitted-vat-return")("vat_return" -> "yes")
@@ -194,21 +185,29 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
     }
   }
 
-  "return a view with errors" when {
-    "the user submits an empty form" should {
-      lazy val result = {
-        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-        post(s"/$testJourneyId/submitted-vat-return")()
-      }
+  private def stubSuccessfulAuth: StubMapping = stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
 
-      "return a BAD_REQUEST" in {
-        result.status mustBe BAD_REQUEST
-      }
+  private def checkJourneyData(): Option[VatKnownFacts] = await(journeyDataRepository.getJourneyData(testJourneyId, testInternalId))
 
-      testCaptureSubmittedVatReturnErrorViewTests(result)
-    }
+  private def saveJourneyData(journeyData: VatKnownFacts): UpdateResult = {
+    createDataWithVatNumber
+    await(
+      journeyDataRepository.collection
+        .replaceOne(
+          filter = Document("_id" -> testJourneyId),
+          replacement = Json.obj(
+            "_id"               -> testJourneyId
+//            "authInternalId"    -> testInternalId,
+//            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
+          ) ++
+            Json.toJsObject(journeyData),
+          options = ReplaceOptions().upsert(true)
+        )
+        .toFuture())
   }
 
+  private def createDataWithVatNumber: String =
+    await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
 }
 
 

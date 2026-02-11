@@ -39,7 +39,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
   with AllocationEnrolmentStub
   with EnrolmentStoreProxyStub {
 
-  def extraConfig: Map[String, String] = Map(
+  def extraConfig = Map(
     "auditing.enabled" -> "true",
     "feature-switch.knownFactsCheckWithVanFlag" -> "false",
     "feature-switch.knownFactsCheckFlag" -> "false",

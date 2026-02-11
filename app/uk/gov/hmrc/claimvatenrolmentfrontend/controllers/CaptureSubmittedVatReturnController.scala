@@ -17,8 +17,8 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
 import play.api.i18n.I18nSupport
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.claimvatenrolmentfrontend.auth.{AuthenticatedIdentifierAction, JourneyDataRetrievalAction}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import uk.gov.hmrc.claimvatenrolmentfrontend.auth.{AuthenticatedIdentifierAction, IdentifierRequest, JourneyDataRetrievalAction}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureSubmittedVatReturnForm
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, LockService, StoreSubmittedVatReturnService}
@@ -31,52 +31,47 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CaptureSubmittedVatReturnController @Inject()(mcc: MessagesControllerComponents,
-                                                    view: capture_submitted_vat_return_page,
-                                                    storeSubmittedVatService: StoreSubmittedVatReturnService,
-                                                    journeyService: JourneyService,
-                                                    identify: AuthenticatedIdentifierAction,
-                                                    getData: JourneyDataRetrievalAction,
-                                                    journeyValidateService: LockService
-                                                   )(implicit val config: AppConfig, ec: ExecutionContext)
-  extends FrontendController(mcc) with I18nSupport with LoggingUtil {
+class CaptureSubmittedVatReturnController @Inject() (mcc: MessagesControllerComponents,
+                                                     view: capture_submitted_vat_return_page,
+                                                     storeSubmittedVatService: StoreSubmittedVatReturnService,
+                                                     journeyService: JourneyService,
+                                                     identify: AuthenticatedIdentifierAction,
+                                                     getData: JourneyDataRetrievalAction,
+                                                     journeyValidateService: LockService)(implicit val config: AppConfig, ec: ExecutionContext)
+    extends FrontendController(mcc)
+    with I18nSupport
+    with LoggingUtil {
 
   def show(journeyId: String): Action[AnyContent] = (identify andThen getData).async { implicit request =>
     journeyValidateService.continueIfJourneyIsNotLocked(request.journeyData.vatNumber, request.userId)(
-      Ok(view(routes.CaptureSubmittedVatReturnController.submit(journeyId), CaptureSubmittedVatReturnForm.form))
+      Ok(view(journeyId, CaptureSubmittedVatReturnForm.form))
     )
   }
 
   def submit(journeyId: String): Action[AnyContent] = identify.async { implicit request =>
-    CaptureSubmittedVatReturnForm.form.bindFromRequest().fold(
-      formWithErrors => Future.successful(
-        BadRequest(view(routes.CaptureSubmittedVatReturnController.submit(journeyId), formWithErrors))
-      ),
-      submittedReturn =>
-        storeSubmittedVatService.storeStoreSubmittedVat(
-          journeyId,
-          submittedReturn,
-          request.userId
-        ) flatMap {
-          case true =>
-              if (submittedReturn) {
-                Future.successful(Redirect(routes.CaptureBox5FigureController.show(journeyId).url))
-              } else {
-                journeyService.removeAdditionalVatReturnFields(journeyId, request.userId).map {
-                  case true if config.knownFactsCheckFlag && config.knownFactsCheckWithVanFlag =>
-                      Redirect(routes.CaptureVatApplicationNumberController.show(journeyId).url)
-                  case true =>
-                      Redirect(routes.CheckYourAnswersController.show(journeyId).url)
-                  case _ =>
-                    errorLog(s"[CaptureSubmittedVatReturnController][submit] - The additional Vat return fields could not be removed for journey $journeyId")
-                    throw new InternalServerException(s"The additional Vat return fields could not be removed for journey $journeyId")
-                  }
-              }
-          case _ =>
-            errorLog(s"[CaptureSubmittedVatReturnController][submit] - The Vat return submitted flag could not be updated for journey $journeyId")
-            throw new InternalServerException(s"The Vat return submitted flag could not be updated for journey $journeyId")
-        }
-    )
-  }
-}
+    def handleSuccess(userAnswerIsYes: Boolean): Future[Result] =
+      for {
+        storeUserAnswerIsSuccessful <- storeSubmittedVatService.storeStoreSubmittedVat(journeyId, userAnswerIsYes, request.userId)
+        clearOtherDataIsSuccessful  <- journeyService.removeOppositePagesDataForGatewayQuestion(userAnswerIsYes, journeyId, request.userId)
+        nextPage =
+          if (userAnswerIsYes) routes.CaptureBox5FigureController.show(journeyId) else routes.CaptureVatApplicationNumberController.show(journeyId)
+      } yield (storeUserAnswerIsSuccessful, clearOtherDataIsSuccessful) match {
+        case (true, true) => Redirect(nextPage.url)
+        case (false, _)   => throwError(s"Unable to store user's answer ($userAnswerIsYes) for CaptureSubmittedVatReturn page.", journeyId)
+        case (_, false)   => throwError("Unable to clear data for alternative journey pages.", journeyId)
+      }
 
+    CaptureSubmittedVatReturnForm.form
+      .bindFromRequest()
+      .fold(
+        formWithErrors => Future.successful(BadRequest(view(journeyId, formWithErrors))),
+        userAnswer => handleSuccess(userAnswer)
+      )
+  }
+
+  private def throwError(errorMessage: String, journeyId: String)(implicit request: IdentifierRequest[_]): Nothing = {
+    errorLog(s"[CaptureSubmittedVatReturnController][submit] - $errorMessage JourneyID: $journeyId")
+    throw new InternalServerException(s"$errorMessage JourneyID: $journeyId")
+  }
+
+}

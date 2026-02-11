@@ -1,9 +1,9 @@
 $govuk-assets-path: "/claim-vat-enrolment/assets/lib/govuk-frontend/dist/govuk/assets/";
 $hmrc-assets-path: "/claim-vat-enrolment/assets/lib/hmrc-frontend/hmrc/";
+$govuk-suppressed-warnings: (libsass, legacy-organisation-colours);
 
-@import "lib/govuk-frontend/dist/govuk/all";
+@import "lib/govuk-frontend/dist/govuk/index";
 @import "lib/hmrc-frontend/hmrc/all";
-
 
 a.govuk-back-link {
   display:none;

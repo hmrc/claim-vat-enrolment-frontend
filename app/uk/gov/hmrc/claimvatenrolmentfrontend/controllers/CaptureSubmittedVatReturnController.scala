@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,12 +37,12 @@ class CaptureSubmittedVatReturnController @Inject()(mcc: MessagesControllerCompo
                                                     journeyService: JourneyService,
                                                     identify: AuthenticatedIdentifierAction,
                                                     getData: JourneyDataRetrievalAction,
-                                                    journeyValidateService: LockService
+                                                    lockService: LockService
                                                    )(implicit val config: AppConfig, ec: ExecutionContext)
   extends FrontendController(mcc) with I18nSupport with LoggingUtil {
 
   def show(journeyId: String): Action[AnyContent] = (identify andThen getData).async { implicit request =>
-    journeyValidateService.continueIfJourneyIsNotLocked(request.journeyData.vatNumber, request.userId)(
+    lockService.continueIfJourneyIsNotLocked(request.journeyData.vatNumber, request.userId)(
       Ok(view(routes.CaptureSubmittedVatReturnController.submit(journeyId), CaptureSubmittedVatReturnForm.form))
     )
   }

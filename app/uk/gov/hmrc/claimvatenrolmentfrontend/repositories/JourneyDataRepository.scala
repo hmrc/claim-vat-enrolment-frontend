@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -147,8 +147,8 @@ object JourneyDataRepository {
       if (vatKnownFacts.optReturnsInformation.isDefined) {
         Json.obj(
           SubmittedVatReturnKey -> true,
-          Box5FigureKey -> vatKnownFacts.optReturnsInformation.map(_.boxFive.get),
-          LastMonthSubmittedKey -> vatKnownFacts.optReturnsInformation.map(_.lastReturnMonth.get.getValue)
+          Box5FigureKey -> vatKnownFacts.optReturnsInformation.flatMap(_.boxFive),
+          LastMonthSubmittedKey -> vatKnownFacts.optReturnsInformation.flatMap(_.lastReturnMonth).map(_.getValue)
         )
       } else {
         Json.obj(SubmittedVatReturnKey -> false)

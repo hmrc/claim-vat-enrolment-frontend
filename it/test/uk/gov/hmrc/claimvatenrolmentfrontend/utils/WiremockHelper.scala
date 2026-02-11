@@ -31,10 +31,12 @@ object WiremockHelper extends Eventually with IntegrationPatience {
 
   def verifyPost(uri: String, optBody: Option[String] = None): Unit = {
     val uriMapping = postRequestedFor(urlEqualTo(uri))
+
     val postRequest = optBody match {
       case Some(body) => uriMapping.withRequestBody(equalTo(body))
       case None => uriMapping
     }
+    println(s"verifyPost-->postRequest: ${postRequest.toString}")
     verify(postRequest)
   }
 

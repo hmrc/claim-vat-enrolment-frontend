@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -140,6 +140,18 @@ object TestConstants {
         lastReturnMonth = testLastReturnMonth
       )),
       formBundleReference = Some(testFormBundleReference)
+    )
+
+  val testVatKnownFactsNoPostcodeNoRetInfo: VatKnownFacts =
+    VatKnownFacts(
+      vatNumber = testVatNumber,
+      optPostcode = None,
+      vatRegistrationDate = testVatRegDate,
+      optReturnsInformation = Some(ReturnsInformation(
+        boxFive = testBoxFive,
+        lastReturnMonth = None
+      )),
+      formBundleReference = None
     )
 
   val testVatKnownFactsNoFormBundleReference: VatKnownFacts =

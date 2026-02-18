@@ -38,7 +38,7 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
   with AllocationEnrolmentStub
   with EnrolmentStoreProxyStub {
 
-  def extraConfig: Map[String, String] = Map(
+  def extraConfig = Map(
     "auditing.enabled" -> "true",
     "feature-switch.knownFactsCheckWithVanFlag" -> "false",
     "feature-switch.knownFactsCheckFlag" -> "false",
@@ -251,8 +251,6 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
       }
     }
 
-
-
     "there is a VatKnownFacts with no returns and no postcode stored in the database" should {
       lazy val result = {
         await(journeyDataRepository.collection.insertOne(
@@ -464,7 +462,6 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
       )
       verifyAudit()
     }
-
 
     "Redirect to an error page when there is no journeyData" in {
       stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))

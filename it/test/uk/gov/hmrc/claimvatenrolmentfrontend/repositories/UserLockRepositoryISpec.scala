@@ -42,7 +42,7 @@ class UserLockRepositoryISpec extends JourneyMongoHelper {
 
   "updateAttempts" should {
     "successfully upsert data" in {
-      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).values.forall(_ == 1) mustBe true
+      await(userLockRepository.updateAttempts(testVatNumber, testInternalId)).values.forall(_ == 1) mustBe true
 
       await(find(testVatNumber)) match {
         case Some(Lock(vrn, attempts, _)) =>
@@ -60,9 +60,9 @@ class UserLockRepositoryISpec extends JourneyMongoHelper {
     }
 
     "successfully update data when data is already stored against a key" in {
-      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).values.forall(_ == 1) mustBe true
-      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).values.forall(_ == 2) mustBe true
-      await(UserLockRepository.updateAttempts(testVatNumber, testInternalId)).values.forall(_ == 3) mustBe true
+      await(userLockRepository.updateAttempts(testVatNumber, testInternalId)).values.forall(_ == 1) mustBe true
+      await(userLockRepository.updateAttempts(testVatNumber, testInternalId)).values.forall(_ == 2) mustBe true
+      await(userLockRepository.updateAttempts(testVatNumber, testInternalId)).values.forall(_ == 3) mustBe true
 
       await(find(testVatNumber)) match {
         case Some(Lock(vrn, attempts, _)) =>
@@ -82,8 +82,8 @@ class UserLockRepositoryISpec extends JourneyMongoHelper {
 
   "isVrnOrUserLocked" should {
     "return false for a VRN with 1 less than the configured attempt limit" in {
-      val one = await(UserLockRepository.updateAttempts(testVatNumber, testInternalId))
-      val two = await(UserLockRepository.updateAttempts(testVatNumber, testInternalId))
+      val one = await(userLockRepository.updateAttempts(testVatNumber, testInternalId))
+      val two = await(userLockRepository.updateAttempts(testVatNumber, testInternalId))
 
       one("vrn") mustBe 1
       one("user") mustBe 1
@@ -91,13 +91,13 @@ class UserLockRepositoryISpec extends JourneyMongoHelper {
       two("vrn") mustBe 2
       two("user") mustBe 2
 
-      await(UserLockRepository.isVrnOrUserLocked(testVatNumber, testInternalId)) mustBe false
+      await(userLockRepository.isVrnOrUserLocked(testVatNumber, testInternalId)) mustBe false
     }
 
     "return true for a VRN when it has reached the limit, regardless of user, but without locking user" in {
-      val one = await(UserLockRepository.updateAttempts(testVatNumber, testInternalId))
-      val two = await(UserLockRepository.updateAttempts(testVatNumber, testCredentialId))
-      val three = await(UserLockRepository.updateAttempts(testVatNumber, testInternalId))
+      val one = await(userLockRepository.updateAttempts(testVatNumber, testInternalId))
+      val two = await(userLockRepository.updateAttempts(testVatNumber, testCredentialId))
+      val three = await(userLockRepository.updateAttempts(testVatNumber, testInternalId))
 
       one("vrn") mustBe 1
       one("user") mustBe 1
@@ -109,19 +109,19 @@ class UserLockRepositoryISpec extends JourneyMongoHelper {
       three("user") mustBe 2
 
 
-      await(UserLockRepository.isVrnOrUserLocked(testVatNumber, testInternalId)) mustBe true
-      await(UserLockRepository.isVrnOrUserLocked(testVatNumber, testCredentialId)) mustBe true
-      await(UserLockRepository.isVrnOrUserLocked(differentTestVatNumber, testCredentialId)) mustBe false
-      await(UserLockRepository.isVrnOrUserLocked(differentTestVatNumber, testCredentialId)) mustBe false
+      await(userLockRepository.isVrnOrUserLocked(testVatNumber, testInternalId)) mustBe true
+      await(userLockRepository.isVrnOrUserLocked(testVatNumber, testCredentialId)) mustBe true
+      await(userLockRepository.isVrnOrUserLocked(differentTestVatNumber, testCredentialId)) mustBe false
+      await(userLockRepository.isVrnOrUserLocked(differentTestVatNumber, testCredentialId)) mustBe false
     }
 
     "return true for a VRN when it hasn't reached the limit but the user ID is locked from another VRN" in {
-      val one = await(UserLockRepository.updateAttempts(testVatNumber, testInternalId))
-      val two = await(UserLockRepository.updateAttempts(testVatNumber, testInternalId))
+      val one = await(userLockRepository.updateAttempts(testVatNumber, testInternalId))
+      val two = await(userLockRepository.updateAttempts(testVatNumber, testInternalId))
 
-      val three = await(UserLockRepository.updateAttempts(differentTestVatNumber, testCredentialId))
+      val three = await(userLockRepository.updateAttempts(differentTestVatNumber, testCredentialId))
 
-      await(UserLockRepository.isVrnOrUserLocked(testVatNumber, testInternalId)) mustBe false
+      await(userLockRepository.isVrnOrUserLocked(testVatNumber, testInternalId)) mustBe false
 
       one("vrn") mustBe 1
       one("user") mustBe 1
@@ -132,12 +132,12 @@ class UserLockRepositoryISpec extends JourneyMongoHelper {
       three("vrn") mustBe 1
       three("user") mustBe 1
 
-      val four = await(UserLockRepository.updateAttempts(differentTestVatNumber, testInternalId))
+      val four = await(userLockRepository.updateAttempts(differentTestVatNumber, testInternalId))
 
       four("vrn") mustBe 2
       four("user") mustBe 3
 
-      await(UserLockRepository.isVrnOrUserLocked(testVatNumber, testInternalId)) mustBe true
+      await(userLockRepository.isVrnOrUserLocked(testVatNumber, testInternalId)) mustBe true
     }
   }
 }

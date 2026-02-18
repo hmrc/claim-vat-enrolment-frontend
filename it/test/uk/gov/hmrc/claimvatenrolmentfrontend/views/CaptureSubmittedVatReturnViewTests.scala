@@ -18,6 +18,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.views
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import play.api.http.Status.{BAD_REQUEST, OK}
 import play.api.libs.ws.WSResponse
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.{Base, Header, CaptureSubmittedVATReturn => messages}
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.{ComponentSpecHelper, ViewSpecHelper}
@@ -25,9 +26,13 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.utils.{ComponentSpecHelper, ViewSpe
 trait CaptureSubmittedVatReturnViewTests extends ViewSpecHelper {
   this: ComponentSpecHelper =>
 
-  def testCaptureSubmittedVatReturnViewTests(result: => WSResponse): Unit = {
+  def checkOkResponseAndCorrectContent(result: => WSResponse): Unit = {
 
     lazy val doc: Document = Jsoup.parse(result.body)
+
+//    "be returned in an OK response" in {
+//      result.status mustBe OK
+//    }
 
     "have a sign out link in the header" in {
       doc.getSignOutText mustBe Header.signOut
@@ -51,31 +56,13 @@ trait CaptureSubmittedVatReturnViewTests extends ViewSpecHelper {
 
   }
 
-  def testCaptureSubmittedVatReturnOldViewTests(result: => WSResponse): Unit = {
+  def checkBadRequestResponseAndCorrectErrorContent(result: => WSResponse): Unit = {
 
     lazy val doc: Document = Jsoup.parse(result.body)
 
-    "have a sign out link in the header" in {
-      doc.getSignOutText mustBe Header.signOut
+    "be returned in a BAD_REQUEST response" in {
+      result.status mustBe BAD_REQUEST
     }
-
-    "have a view with the correct title" in {
-      doc.title mustBe messages.titleOld
-    }
-
-    "have the correct heading" in {
-      doc.getH1Elements.first.text mustBe messages.headingOld
-    }
-
-    "have a continue button" in {
-      doc.getSubmitButton.first.text mustBe Base.continue
-    }
-
-  }
-
-  def testCaptureSubmittedVatReturnErrorViewTests(result: => WSResponse): Unit = {
-
-    lazy val doc: Document = Jsoup.parse(result.body)
 
     "correctly display the error summary" in {
       doc.getErrorSummaryTitle.text mustBe Base.Error.title

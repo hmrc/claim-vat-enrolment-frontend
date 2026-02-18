@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ class AllocateEnrolmentConnectorISpec extends ComponentSpecHelper with Allocatio
   private implicit val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
 
   val testVatKnownFacts: VatKnownFacts = VatKnownFacts(testVatNumber, Some(testPostcode), Some(LocalDate.of(2021, 1, 1)),
-    Some(ReturnsInformation(testBoxFive, testLastReturnMonth)), Some(testFormBundleReference))
+    Some(ReturnsInformation(Some(testBoxFive), Some(testLastReturnMonth))), Some(testFormBundleReference))
 
   "allocateEnrolment" should {
     "return EnrolmentSuccess" when {

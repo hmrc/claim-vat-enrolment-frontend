@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2026 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,10 +24,8 @@ case class VatKnownFacts(vatNumber: String,
                          optReturnsInformation: Option[ReturnsInformation],
                          formBundleReference: Option[String]) {
 
-  def hasCompleteJourneyData: Boolean =
-    optPostcode.isDefined &&
-      vatRegistrationDate.isDefined &&
-      (optReturnsInformation.exists(_.hasCompleteData) || formBundleReference.isDefined)
+  def hasCompleteJourneyData: Boolean = vatRegistrationDate.isDefined &&
+    (optReturnsInformation.exists(_.hasCompleteData) || formBundleReference.isDefined)
 }
 
 case class ReturnsInformation(boxFive: Option[String], lastReturnMonth: Option[Month]) {

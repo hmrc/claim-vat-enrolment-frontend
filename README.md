@@ -20,6 +20,9 @@ This is a Scala/Play frontend to allow users to claim vat enrolment from HMRC.
 `./run.sh` or 
 `sbt 'run 9936 -Dapplication.router=testOnlyDoNotUseInAppConf.Routes'`and enable the `/test-only` routes for local testing.
 
+4. Run the Unit and Integration tests
+To run the unit and integration tests, you can either use ```sbt test it/test``` or ```sbt clean coverage test it/test scalastyle coverageReport``` or  ```./run-all-tests.sh```.
+
 ### Starting the journey
 
 1. In a browser, navigate to the Auth Login Stub on `http://localhost:9949/auth-login-stub/gg-sign-in`
@@ -86,8 +89,6 @@ This stub returns different responses based on the vatNumber.
 | Any other vat number                    | ```InternalServerError``` |
 
 
-### Unit and Integration tests
-To run the unit and integration tests, you can either use ```sbt test it/test``` or ```sbt clean coverage test it/test scalastyle coverageReport```.
 
 ### License
 

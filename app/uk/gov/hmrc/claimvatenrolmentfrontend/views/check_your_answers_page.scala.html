@@ -123,7 +123,7 @@
             returnsInformation =>
                 SummaryListRow(
                     key = Key(content = Text(messages("check-your-answers.box_five"))),
-                    value = Value(content = Text(returnsInformation.boxFive.get)),
+                    value = Value(content = Text(returnsInformation.boxFive.fold("")(identity))),
                     actions = Some(Actions(items = Seq(
                         ActionItem(
                             href = Routes.CaptureBox5FigureController.show(journeyId).url,
@@ -136,7 +136,7 @@
             returnsInformation =>
                 SummaryListRow(
                     key = Key(content = Text(messages("check-your-answers.last_return_month"))),
-                    value = Value(content = Text(messages(s"capture-last-month-submitted.${returnsInformation.lastReturnMonth.get.toString}"))),
+                    value = Value(content = Text(messages(s"capture-last-month-submitted.${returnsInformation.lastReturnMonth.fold("")(_.toString)}"))),
                     actions = Some(Actions(items = Seq(
                         ActionItem(
                             href = Routes.CaptureLastMonthSubmittedController.show(journeyId).url,

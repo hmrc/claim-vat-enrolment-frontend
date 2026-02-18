@@ -60,7 +60,7 @@ class CaptureSubmittedVatReturnController @Inject()(mcc: MessagesControllerCompo
         ) flatMap {
           case true =>
               if (submittedReturn) {
-                Future.successful(Redirect(routes.CaptureBox5FigureController.show(journeyId).url))
+                    Future.successful(Redirect(routes.CaptureBox5FigureController.show(journeyId).url))
               } else {
                 journeyService.removeAdditionalVatReturnFields(journeyId, request.userId).map {
                   case true if config.knownFactsCheckFlag && config.knownFactsCheckWithVanFlag =>

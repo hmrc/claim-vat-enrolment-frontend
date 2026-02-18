@@ -18,7 +18,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
 import play.api.mvc.Request
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, VatKnownFacts}
-import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{Box5FigureKey, LastMonthSubmittedKey, PostcodeKey}
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{Box5FigureKey, LastMonthSubmittedKey, PostcodeKey, SubmittedVatApplicationNumberKey}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.{JourneyConfigRepository, JourneyDataRepository}
 import utils.LoggingUtil
 
@@ -68,4 +68,7 @@ class JourneyService @Inject()(journeyConfigRepository: JourneyConfigRepository,
     journeyDataRepository.removeJourneyDataFields(journeyId, authInternalId, Seq(Box5FigureKey, LastMonthSubmittedKey))
   }
 
+  def removeAdditionalFormBundlRefField(journeyId: String, authInternalId: String): Future[Boolean] = {
+    journeyDataRepository.removeJourneyDataFields(journeyId, authInternalId, Seq(SubmittedVatApplicationNumberKey))
+  }
 }

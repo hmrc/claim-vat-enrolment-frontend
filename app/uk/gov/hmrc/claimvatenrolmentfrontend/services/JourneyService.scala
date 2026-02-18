@@ -68,7 +68,4 @@ class JourneyService @Inject()(journeyConfigRepository: JourneyConfigRepository,
     journeyDataRepository.removeJourneyDataFields(journeyId, authInternalId, Seq(Box5FigureKey, LastMonthSubmittedKey))
   }
 
-  def removeAdditionalFormBundlRefField(journeyId: String, authInternalId: String): Future[Boolean] = {
-    journeyDataRepository.removeJourneyDataFields(journeyId, authInternalId, Seq(SubmittedVatApplicationNumberKey))
-  }
 }

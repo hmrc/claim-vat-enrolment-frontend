@@ -60,13 +60,7 @@ class CaptureSubmittedVatReturnController @Inject()(mcc: MessagesControllerCompo
         ) flatMap {
           case true =>
               if (submittedReturn) {
-                journeyService.removeAdditionalFormBundlRefField(journeyId, request.userId).map {
-                  case true =>
-                    Redirect(routes.CaptureBox5FigureController.show(journeyId).url)
-                  case _ =>
-                    errorLog(s"[CaptureSubmittedVatReturnController][submit] - The formbundleRef field could not be removed for journey $journeyId")
-                    throw new InternalServerException(s"The formbundleRef field could not be removed for journey $journeyId")
-                }
+                    Future.successful(Redirect(routes.CaptureBox5FigureController.show(journeyId).url))
               } else {
                 journeyService.removeAdditionalVatReturnFields(journeyId, request.userId).map {
                   case true if config.knownFactsCheckFlag && config.knownFactsCheckWithVanFlag =>

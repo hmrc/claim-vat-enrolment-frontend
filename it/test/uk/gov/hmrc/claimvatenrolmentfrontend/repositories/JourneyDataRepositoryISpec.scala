@@ -24,20 +24,24 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.utils.JourneyMongoHelper
 
 class JourneyDataRepositoryISpec extends JourneyMongoHelper {
 
+  private val testFullVatKnownFacts                      = vatKnownFactsWithFullReturnsInformation(hasPostcode = true)
+  private val testVatKnownFactsWithoutPostcode           = vatKnownFactsWithFullReturnsInformation(hasPostcode = false)
+  private val testVatKnownFactsWithoutReturnsInformation = testFullVatKnownFacts.copy(optReturnsInformation = None)
+
   "insertJourneyVatNumber" should {
     "successfully insert the vatNumber" in {
 
       val expectedJson: JsObject = Json.obj(
-        JourneyIdKey -> testJourneyId,
+        JourneyIdKey      -> testJourneyId,
         AuthInternalIdKey -> testInternalId,
-        VatNumberKey -> testVatNumber
+        VatNumberKey      -> testVatNumber
       )
 
       await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
 
       await(retrieveJourneyDataAsJsObject(testJourneyId, testInternalId)) match {
         case Some(document: JsObject) => document - CreationTimestampKey mustBe expectedJson
-        case None => fail("A document should have been retrieved from the journey data database")
+        case None                     => fail("A document should have been retrieved from the journey data database")
       }
     }
   }
@@ -45,11 +49,12 @@ class JourneyDataRepositoryISpec extends JourneyMongoHelper {
   s"getJourneyData($testJourneyId)" should {
     "successfully return a full VatKnownFacts" when {
       "all data is populated" in {
-        await(insertVatKnownFactsData(
-          testJourneyId,
-          testInternalId,
-          testFullVatKnownFacts
-        ))
+        await(
+          insertVatKnownFactsData(
+            testJourneyId,
+            testInternalId,
+            testFullVatKnownFacts
+          ))
 
         await(journeyDataRepository.getJourneyData(testJourneyId, testInternalId)) mustBe Some(testFullVatKnownFacts)
       }
@@ -57,33 +62,36 @@ class JourneyDataRepositoryISpec extends JourneyMongoHelper {
 
     "successfully return partial VatKnownFacts" when {
       "there is no postcode" in {
-        await(insertVatKnownFactsData(
-          testJourneyId,
-          testInternalId,
-          testVatKnownFactsNoPostcode
-        ))
+        await(
+          insertVatKnownFactsData(
+            testJourneyId,
+            testInternalId,
+            testVatKnownFactsWithoutPostcode
+          ))
 
-        await(journeyDataRepository.getJourneyData(testJourneyId, testInternalId)) mustBe Some(testVatKnownFactsNoPostcode)
+        await(journeyDataRepository.getJourneyData(testJourneyId, testInternalId)) mustBe Some(testVatKnownFactsWithoutPostcode)
       }
 
       "there is no postcode and no returns information" in {
-        await(insertVatKnownFactsData(
-          testJourneyId,
-          testInternalId,
-          testVatKnownFactsNoReturnsNoPostcode
-        ))
+        await(
+          insertVatKnownFactsData(
+            testJourneyId,
+            testInternalId,
+            baseVatKnownFacts
+          ))
 
-        await(journeyDataRepository.getJourneyData(testJourneyId, testInternalId)) mustBe Some(testVatKnownFactsNoReturnsNoPostcode)
+        await(journeyDataRepository.getJourneyData(testJourneyId, testInternalId)) mustBe Some(baseVatKnownFacts)
       }
 
       "there is no returns information" in {
-        await(insertVatKnownFactsData(
-          testJourneyId,
-          testInternalId,
-          testVatKnownFactsNoReturns
-        ))
+        await(
+          insertVatKnownFactsData(
+            testJourneyId,
+            testInternalId,
+            testVatKnownFactsWithoutReturnsInformation
+          ))
 
-        await(journeyDataRepository.getJourneyData(testJourneyId, testInternalId)) mustBe Some(testVatKnownFactsNoReturns)
+        await(journeyDataRepository.getJourneyData(testJourneyId, testInternalId)) mustBe Some(testVatKnownFactsWithoutReturnsInformation)
       }
     }
   }
@@ -92,10 +100,10 @@ class JourneyDataRepositoryISpec extends JourneyMongoHelper {
     "successfully insert data" in {
 
       val expectedJson: JsObject = Json.obj(
-        JourneyIdKey -> testJourneyId,
+        JourneyIdKey      -> testJourneyId,
         AuthInternalIdKey -> testInternalId,
-        VatNumberKey -> testVatNumber,
-        testKey -> testData
+        VatNumberKey      -> testVatNumber,
+        testKey           -> testData
       )
 
       await(journeyDataRepository.insertJourneyVatNumber(testJourneyId, testInternalId, testVatNumber))
@@ -104,7 +112,7 @@ class JourneyDataRepositoryISpec extends JourneyMongoHelper {
 
       await(retrieveJourneyDataAsJsObject(testJourneyId, testInternalId)) match {
         case Some(document) => document - CreationTimestampKey mustBe expectedJson
-        case None => fail("A document should have been retrieved from the journey data database")
+        case None           => fail("A document should have been retrieved from the journey data database")
       }
     }
 
@@ -114,8 +122,7 @@ class JourneyDataRepositoryISpec extends JourneyMongoHelper {
       await(journeyDataRepository.updateJourneyData(testJourneyId, testKey, JsString(testData), testInternalId)) mustBe true
       await(journeyDataRepository.updateJourneyData(testJourneyId, testKey, JsString(updatedData), testInternalId)) mustBe true
 
-      await(retrieveJourneyDataAsJsObject(testJourneyId, testInternalId)).map(
-        json => (json \ testKey).as[String]) mustBe Some(updatedData)
+      await(retrieveJourneyDataAsJsObject(testJourneyId, testInternalId)).map(json => (json \ testKey).as[String]) mustBe Some(updatedData)
     }
 
     "return false when the journey does not exist" in {
@@ -131,39 +138,39 @@ class JourneyDataRepositoryISpec extends JourneyMongoHelper {
     "successfully remove one field" in {
 
       val expectedJson: JsObject = Json.obj(
-        JourneyIdKey -> testJourneyId,
+        JourneyIdKey      -> testJourneyId,
         AuthInternalIdKey -> testInternalId,
-        testKey -> testData
+        testKey           -> testData
       )
 
-      await(insertJourneyDataAsJsObject(
-        testJourneyId,
-        testInternalId,
-        Json.obj(
-          testKey -> testData,
-          testSecondKey -> testSecondData
+      await(
+        insertJourneyDataAsJsObject(
+          testJourneyId,
+          testInternalId,
+          Json.obj(
+            testKey       -> testData,
+            testSecondKey -> testSecondData
           )
-        )
-      )
+        ))
 
       await(journeyDataRepository.removeJourneyDataFields(testJourneyId, testInternalId, Seq(testSecondKey))) mustBe true
 
       await(retrieveJourneyDataAsJsObject(testJourneyId, testInternalId)) match {
         case Some(document: JsObject) => document - CreationTimestampKey mustBe expectedJson
-        case None => fail("A document should have been retrieved from the journey data database")
+        case None                     => fail("A document should have been retrieved from the journey data database")
       }
     }
     "return false if the journey does not exist" in {
 
-      await(insertJourneyDataAsJsObject(
-        testJourneyId,
-        testInternalId,
-        Json.obj(
-          testKey -> testData,
-          testSecondKey -> testSecondData
+      await(
+        insertJourneyDataAsJsObject(
+          testJourneyId,
+          testInternalId,
+          Json.obj(
+            testKey       -> testData,
+            testSecondKey -> testSecondData
           )
-        )
-      )
+        ))
 
       await(journeyDataRepository.removeJourneyDataFields(testJourneyId + 1, testInternalId, Seq(testSecondKey))) mustBe false
 
@@ -172,107 +179,107 @@ class JourneyDataRepositoryISpec extends JourneyMongoHelper {
     "pass successfully when the field is not present" in {
 
       val expectedJson: JsObject = Json.obj(
-        JourneyIdKey -> testJourneyId,
+        JourneyIdKey      -> testJourneyId,
         AuthInternalIdKey -> testInternalId,
-        testKey -> testData
+        testKey           -> testData
       )
 
-      await(insertJourneyDataAsJsObject(
-        testJourneyId,
-        testInternalId,
-        Json.obj(
-          testKey -> testData,
+      await(
+        insertJourneyDataAsJsObject(
+          testJourneyId,
+          testInternalId,
+          Json.obj(
+            testKey -> testData
           )
-        )
-      )
+        ))
 
       await(journeyDataRepository.removeJourneyDataFields(testJourneyId, testInternalId, Seq(testSecondKey))) mustBe true
 
       await(retrieveJourneyDataAsJsObject(testJourneyId, testInternalId)) match {
         case Some(document: JsObject) => document - CreationTimestampKey mustBe expectedJson
-        case None => fail("A document should have been retrieved from the journey data database")
+        case None                     => fail("A document should have been retrieved from the journey data database")
       }
     }
     "successfully remove two fields" in {
 
-      await(insertJourneyDataAsJsObject(
-        testJourneyId,
-        testInternalId,
-        Json.obj(
-          testKey -> testData,
-          testSecondKey -> testSecondData
+      await(
+        insertJourneyDataAsJsObject(
+          testJourneyId,
+          testInternalId,
+          Json.obj(
+            testKey       -> testData,
+            testSecondKey -> testSecondData
           )
-        )
-      )
+        ))
 
       await(journeyDataRepository.removeJourneyDataFields(testJourneyId, testInternalId, Seq(testKey, testSecondKey))) mustBe true
 
       await(retrieveJourneyDataAsJsObject(testJourneyId, testInternalId)) match {
         case Some(document: JsObject) => document - CreationTimestampKey mustBe emptyJourneyDataJson
-        case None => fail("A document should have been retrieved from the journey data database")
+        case None                     => fail("A document should have been retrieved from the journey data database")
       }
     }
     "successfully remove three fields" in {
 
       val expectedJson: JsObject = Json.obj(
-        JourneyIdKey -> testJourneyId,
+        JourneyIdKey      -> testJourneyId,
         AuthInternalIdKey -> testInternalId,
-        testKey -> testData,
-        testFourthKey -> testFourthData
+        testKey           -> testData,
+        testFourthKey     -> testFourthData
       )
 
-      await(insertJourneyDataAsJsObject(
-        testJourneyId,
-        testInternalId,
-        Json.obj(
-          testKey -> testData,
-          testSecondKey -> testSecondData,
-          testThirdKey -> testThirdData,
-          testFourthKey -> testFourthData,
-          testFifthKey -> testFifthData
+      await(
+        insertJourneyDataAsJsObject(
+          testJourneyId,
+          testInternalId,
+          Json.obj(
+            testKey       -> testData,
+            testSecondKey -> testSecondData,
+            testThirdKey  -> testThirdData,
+            testFourthKey -> testFourthData,
+            testFifthKey  -> testFifthData
           )
-        )
-      )
+        ))
 
-      await(journeyDataRepository.removeJourneyDataFields(testJourneyId, testInternalId,
-        Seq(testSecondKey, testThirdKey, testFifthKey))) mustBe true
+      await(journeyDataRepository.removeJourneyDataFields(testJourneyId, testInternalId, Seq(testSecondKey, testThirdKey, testFifthKey))) mustBe true
 
       await(retrieveJourneyDataAsJsObject(testJourneyId, testInternalId)) match {
         case Some(document: JsObject) => document - CreationTimestampKey mustBe expectedJson
-        case None => fail("A document should have been retrieved from the journey data database")
+        case None                     => fail("A document should have been retrieved from the journey data database")
       }
     }
     "successfully remove one field if the second field is not present" in {
 
-      await(insertJourneyDataAsJsObject(
-        testJourneyId,
-        testInternalId,
-        Json.obj(
-          testKey -> testData
-         )
-        )
-      )
+      await(
+        insertJourneyDataAsJsObject(
+          testJourneyId,
+          testInternalId,
+          Json.obj(
+            testKey -> testData
+          )
+        ))
 
       await(journeyDataRepository.removeJourneyDataFields(testJourneyId, testInternalId, Seq(testKey, testSecondKey))) mustBe true
 
       await(retrieveJourneyDataAsJsObject(testJourneyId, testInternalId)) match {
         case Some(document: JsObject) => document - CreationTimestampKey mustBe emptyJourneyDataJson
-        case None => fail("A document should have been retrieved from the journey data database")
+        case None                     => fail("A document should have been retrieved from the journey data database")
       }
     }
     "pass successfully when two keys are passed in but neither field is present" in {
 
-      await(insertJourneyDataAsJsObject(
-        testJourneyId,
-        testInternalId,
-        Json.obj()
-      ))
+      await(
+        insertJourneyDataAsJsObject(
+          testJourneyId,
+          testInternalId,
+          Json.obj()
+        ))
 
       await(journeyDataRepository.removeJourneyDataFields(testJourneyId, testInternalId, Seq(testKey, testSecondKey))) mustBe true
 
       await(retrieveJourneyDataAsJsObject(testJourneyId, testInternalId)) match {
         case Some(document: JsObject) => document - CreationTimestampKey mustBe emptyJourneyDataJson
-        case None => fail("A document should have been retrieved from the journey data database")
+        case None                     => fail("A document should have been retrieved from the journey data database")
       }
     }
   }

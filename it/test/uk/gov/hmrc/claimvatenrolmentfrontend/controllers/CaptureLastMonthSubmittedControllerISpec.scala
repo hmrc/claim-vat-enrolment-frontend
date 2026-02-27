@@ -30,7 +30,7 @@ class CaptureLastMonthSubmittedControllerISpec extends JourneyMongoHelper with C
 
   s"GET /$testJourneyId/last-vat-return-date" should {
     lazy val result = {
-      await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+      await(insertVatKnownFactsData(testJourneyId, testInternalId, baseVatKnownFacts))
       stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       get(s"/$testJourneyId/last-vat-return-date")
     }
@@ -44,7 +44,7 @@ class CaptureLastMonthSubmittedControllerISpec extends JourneyMongoHelper with C
       lazy val result = {
         enable(KnownFactsCheckFlag)
 
-        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+        await(insertVatKnownFactsData(testJourneyId, testInternalId, baseVatKnownFacts))
         await(insertLockData(testVatNumber, testInternalId, testSubmissionNumber3))
 
         stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
@@ -102,7 +102,7 @@ class CaptureLastMonthSubmittedControllerISpec extends JourneyMongoHelper with C
     }
     "return 500" when {
       "there is no auth id" in {
-        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+        await(insertVatKnownFactsData(testJourneyId, testInternalId, baseVatKnownFacts))
         stubAuth(OK, successfulAuthResponse(None))
         lazy val result = get(s"/$testJourneyId/last-vat-return-date")
 

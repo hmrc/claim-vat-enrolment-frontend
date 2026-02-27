@@ -32,7 +32,7 @@ object TestConstants {
   val testPostcode: Postcode           = Postcode("AA11AA")
   val testLastReturnMonth: Month       = Month.JANUARY
   val testBoxFive: String              = "1000.00"
-  val testFormBundleReference: String  = "123456789101"
+  val testFormBundleReference: String  = "099123456789"
   val testJourneyId: String            = UUID.randomUUID().toString
   val testInternalId: String           = UUID.randomUUID().toString
   val testContinueUrl: String          = "/test-continue-url"
@@ -40,9 +40,6 @@ object TestConstants {
   val testCredentialId: String         = UUID.randomUUID().toString
   val testCredentials: Credentials     = Credentials(testCredentialId, "GovernmentGateway")
   val testJourneyConfig: JourneyConfig = JourneyConfig(testContinueUrl)
-
-  val testSubmissionUpdateStatusTrue: Boolean  = true
-  val testSubmissionUpdateStatusFalse: Boolean = false
 
   val testKey        = "testKey"
   val testData       = "test"
@@ -63,46 +60,7 @@ object TestConstants {
   val testAccountStatusUnLocked: String = "UnLocked"
   val testAccountStatusLocked: String   = "Locked"
 
-  val accountStatusKey: String = "accountStatus"
-
-  val testSubmissionDataAttempt1: JourneySubmission =
-    JourneySubmission(
-      journeyId = testJourneyId,
-      vrn = testVatNumber,
-      submissionNumber = testSubmissionNumber1,
-      accountStatus = testAccountStatusUnLocked
-    )
-
-  val testSubmissionDataAttempt2: JourneySubmission =
-    JourneySubmission(
-      journeyId = testJourneyId,
-      vrn = testVatNumber,
-      submissionNumber = testSubmissionNumber2,
-      accountStatus = testAccountStatusUnLocked
-    )
-
-  val testSubmissionDataAttempt3: JourneySubmission =
-    JourneySubmission(
-      journeyId = testJourneyId,
-      vrn = testVatNumber,
-      submissionNumber = testSubmissionNumber3,
-      accountStatus = testAccountStatusLocked
-    )
-
-  val testFullVatKnownFacts: VatKnownFacts =
-    VatKnownFacts(
-      vatNumber = testVatNumber,
-      optPostcode = Some(testPostcode),
-      vatRegistrationDate = Some(testVatRegDate),
-      optReturnsInformation = Some(
-        ReturnsInformation(
-          boxFive = Some(testBoxFive),
-          lastReturnMonth = Some(testLastReturnMonth)
-        )),
-      formBundleReference = Some(testFormBundleReference)
-    )
-
-  val testVatKnownFactsDefault: VatKnownFacts =
+  val baseVatKnownFacts: VatKnownFacts =
     VatKnownFacts(
       vatNumber = testVatNumber,
       optPostcode = None,
@@ -111,28 +69,19 @@ object TestConstants {
       formBundleReference = None
     )
 
-  val testVatKnownFactsNoReturns: VatKnownFacts =
+  def vatKnownFactsWithFormBundleReference(hasPostcode: Boolean): VatKnownFacts =
     VatKnownFacts(
       vatNumber = testVatNumber,
-      optPostcode = Some(testPostcode),
+      optPostcode = if (hasPostcode) Some(testPostcode) else None,
       vatRegistrationDate = Some(testVatRegDate),
       optReturnsInformation = None,
       formBundleReference = Some(testFormBundleReference)
     )
 
-  val testVatKnownFactsNoReturnsNoPostcode: VatKnownFacts =
+  def vatKnownFactsWithFullReturnsInformation(hasPostcode: Boolean): VatKnownFacts =
     VatKnownFacts(
       vatNumber = testVatNumber,
-      optPostcode = None,
-      vatRegistrationDate = Some(testVatRegDate),
-      optReturnsInformation = None,
-      formBundleReference = Some(testFormBundleReference)
-    )
-
-  val testVatKnownFactsNoPostcode: VatKnownFacts =
-    VatKnownFacts(
-      vatNumber = testVatNumber,
-      optPostcode = None,
+      optPostcode = if (hasPostcode) Some(testPostcode) else None,
       vatRegistrationDate = Some(testVatRegDate),
       optReturnsInformation = Some(
         ReturnsInformation(
@@ -140,19 +89,6 @@ object TestConstants {
           lastReturnMonth = Some(testLastReturnMonth)
         )),
       formBundleReference = Some(testFormBundleReference)
-    )
-
-  val testVatKnownFactsNoPostcodeNoRetInfo: VatKnownFacts =
-    VatKnownFacts(
-      vatNumber = testVatNumber,
-      optPostcode = None,
-      vatRegistrationDate = Some(testVatRegDate),
-      optReturnsInformation = Some(
-        ReturnsInformation(
-          boxFive = Some(testBoxFive),
-          lastReturnMonth = None
-        )),
-      formBundleReference = None
     )
 
   val emptyJourneyDataJson: JsObject = Json.obj(

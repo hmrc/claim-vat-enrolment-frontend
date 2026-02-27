@@ -139,15 +139,16 @@ object MessageLookup {
   }
 
   object CheckYourAnswers {
-    val title               = "Check Your Answers - Claim VAT Enrolment - GOV.UK"
-    val heading             = "Check Your Answers"
-    val vatNumberRow        = "VAT Number"
-    val vatRegDateRow       = "VAT Registration Date"
-    val businessPostcodeRow = "Where your business is registered for VAT"
-    val vatReturnsRow       = "You are currently submitting VAT returns"
-    val boxFiveRow          = "Your VAT return total or Box 5 amount"
-    val lastReturnMonthRow  = "The last month in your latest accounting period"
-
+    val title                = "Check Your Answers - Claim VAT Enrolment - GOV.UK"
+    val heading              = "Check Your Answers"
+    val vatNumberRow         = "VAT registration number"
+    val vatRegDateRow        = "Date of VAT registration"
+    val changeVatRegDateRow  = "Change VAT Registration Date"
+    val businessPostcodeRow  = "Where your business is registered for VAT"
+    val vatReturnsRow        = "You are currently submitting VAT returns"
+    val boxFiveRow           = "Your VAT return total or Box 5 amount"
+    val lastReturnMonthRow   = "The last month in your latest accounting period"
+    val vatApplicationNumber = "VAT application number"
   }
 
   object KnownFactsMismatch {

@@ -34,7 +34,7 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
     "show the CaptureSubmittedVatReturn page with correct content in an Ok response" when {
       "the view is rendered with a form without errors" must {
         lazy val result = {
-          await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+          await(insertVatKnownFactsData(testJourneyId, testInternalId, baseVatKnownFacts))
           stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
           get(s"/$testJourneyId/submitted-vat-return")
         }
@@ -87,7 +87,7 @@ class CaptureSubmittedVatReturnControllerISpec extends JourneyMongoHelper with C
 
     "return an INTERNAL_SERVER_ERROR" when {
       "there is no auth ID" in {
-        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+        await(insertVatKnownFactsData(testJourneyId, testInternalId, baseVatKnownFacts))
         stubAuth(OK, successfulAuthResponse(None))
         lazy val result = get(s"/$testJourneyId/submitted-vat-return")
 

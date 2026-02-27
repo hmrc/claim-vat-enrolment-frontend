@@ -30,9 +30,9 @@ trait CaptureSubmittedVatReturnViewTests extends ViewSpecHelper {
 
     lazy val doc: Document = Jsoup.parse(result.body)
 
-//    "be returned in an OK response" in {
-//      result.status mustBe OK
-//    }
+    "be returned in an OK response" in {
+      result.status mustBe OK
+    }
 
     "have a sign out link in the header" in {
       doc.getSignOutText mustBe Header.signOut

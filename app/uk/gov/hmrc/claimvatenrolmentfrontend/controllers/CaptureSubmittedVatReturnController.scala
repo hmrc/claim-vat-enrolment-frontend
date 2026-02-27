@@ -37,13 +37,13 @@ class CaptureSubmittedVatReturnController @Inject() (mcc: MessagesControllerComp
                                                      journeyService: JourneyService,
                                                      identify: AuthenticatedIdentifierAction,
                                                      getData: JourneyDataRetrievalAction,
-                                                     journeyValidateService: LockService)(implicit val config: AppConfig, ec: ExecutionContext)
+                                                     lockService: LockService)(implicit val config: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport
     with LoggingUtil {
 
   def show(journeyId: String): Action[AnyContent] = (identify andThen getData).async { implicit request =>
-    journeyValidateService.continueIfJourneyIsNotLocked(request.journeyData.vatNumber, request.userId)(
+    lockService.continueIfJourneyIsNotLocked(request.journeyData.vatNumber, request.userId)(
       Ok(view(journeyId, CaptureSubmittedVatReturnForm.form))
     )
   }

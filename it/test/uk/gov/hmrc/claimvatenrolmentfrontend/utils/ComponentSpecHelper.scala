@@ -45,12 +45,12 @@ trait ComponentSpecHelper
     with Injecting {
 
   val mockHost: String = WiremockHelper.wiremockHost
-  val mockPort: Int = WiremockHelper.wiremockPort
+  val mockPort: String = WiremockHelper.wiremockPort.toString
   val mockUrl: String  = s"http://$mockHost:$mockPort"
 
   def additionalConfig: Map[String, String] = Map.empty
 
-  val config = Map(
+  val config: Map[String, String] = Map(
     "auditing.enabled"                                  -> "false",
     "play.http.router"                                  -> "testOnlyDoNotUseInAppConf.Routes",
     "play.filters.csrf.header.bypassHeaders.Csrf-Token" -> "nocheck",

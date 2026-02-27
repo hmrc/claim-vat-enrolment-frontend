@@ -141,7 +141,7 @@ object JourneyDataRepository {
   implicit lazy val vatKnownFactsWrites: OWrites[VatKnownFacts] =
     (vatKnownFacts: VatKnownFacts) => Json.obj(
       VatNumberKey -> vatKnownFacts.vatNumber,
-      VatRegistrationDateKey -> vatKnownFacts.vatRegistrationDate.get,
+      VatRegistrationDateKey -> vatKnownFacts.vatRegistrationDate,
       PostcodeKey -> vatKnownFacts.optPostcode.map(_.stringValue)
     ) ++ {
       if (vatKnownFacts.optReturnsInformation.isDefined) {

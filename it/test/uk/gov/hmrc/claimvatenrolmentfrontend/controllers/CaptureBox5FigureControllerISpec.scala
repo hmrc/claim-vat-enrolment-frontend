@@ -30,7 +30,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
 
   s"GET /$testJourneyId/box-5-figure" should {
     lazy val result = {
-      await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+      await(insertVatKnownFactsData(testJourneyId, testInternalId, baseVatKnownFacts))
       stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       get(s"/$testJourneyId/box-5-figure")
     }
@@ -44,7 +44,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
       lazy val result = {
         enable(KnownFactsCheckFlag)
 
-        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+        await(insertVatKnownFactsData(testJourneyId, testInternalId, baseVatKnownFacts))
         await(insertLockData(testVatNumber, testInternalId, testSubmissionNumber3))
 
         stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
@@ -104,7 +104,7 @@ class CaptureBox5FigureControllerISpec extends JourneyMongoHelper with CaptureBo
 
     "return 500" when {
       "there is no auth id" in {
-        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+        await(insertVatKnownFactsData(testJourneyId, testInternalId, baseVatKnownFacts))
         stubAuth(OK, successfulAuthResponse(None))
         lazy val result = get(s"/$testJourneyId/box-5-figure")
 

@@ -33,45 +33,49 @@ import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.http.SessionKeys
 import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto
 
-trait ComponentSpecHelper extends AnyWordSpec with Matchers
-  with CustomMatchers
-  with WiremockHelper
-  with BeforeAndAfterAll
-  with BeforeAndAfterEach
-  with GuiceOneServerPerSuite
-  with FeatureSwitching
-  with Injecting {
+trait ComponentSpecHelper
+    extends AnyWordSpec
+    with Matchers
+    with CustomMatchers
+    with WiremockHelper
+    with BeforeAndAfterAll
+    with BeforeAndAfterEach
+    with GuiceOneServerPerSuite
+    with FeatureSwitching
+    with Injecting {
 
   val mockHost: String = WiremockHelper.wiremockHost
   val mockPort: String = WiremockHelper.wiremockPort.toString
-  val mockUrl: String = s"http://$mockHost:$mockPort"
+  val mockUrl: String  = s"http://$mockHost:$mockPort"
 
   def additionalConfig: Map[String, String] = Map.empty
 
   val config: Map[String, String] = Map(
-    "auditing.enabled" -> "false",
-    "play.http.router" -> "testOnlyDoNotUseInAppConf.Routes",
+    "auditing.enabled"                                  -> "false",
+    "play.http.router"                                  -> "testOnlyDoNotUseInAppConf.Routes",
     "play.filters.csrf.header.bypassHeaders.Csrf-Token" -> "nocheck",
-    "microservice.services.auth.host" -> mockHost,
-    "microservice.services.auth.port" -> mockPort,
-    "microservice.services.base.host" -> mockHost,
-    "microservice.services.base.port" -> mockPort,
-    "microservice.services.self.host" -> mockHost,
-    "microservice.services.self.port" -> mockPort,
-    "microservice.services.self.url" -> mockUrl,
-    "microservice.services.tax-enrolments.host" -> mockHost,
-    "microservice.services.tax-enrolments.port" -> mockPort,
-    "microservice.services.enrolment-store-proxy.host" -> mockHost,
-    "microservice.services.enrolment-store-proxy.port" -> mockPort,
-    "microservice.services.business-account.host" -> mockHost,
-    "microservice.services.business-account.port" -> mockPort
+    "microservice.services.auth.host"                   -> mockHost,
+    "microservice.services.auth.port"                   -> mockPort,
+    "microservice.services.base.host"                   -> mockHost,
+    "microservice.services.base.port"                   -> mockPort,
+    "microservice.services.self.host"                   -> mockHost,
+    "microservice.services.self.port"                   -> mockPort,
+    "microservice.services.self.url"                    -> mockUrl,
+    "microservice.services.tax-enrolments.host"         -> mockHost,
+    "microservice.services.tax-enrolments.port"         -> mockPort,
+    "microservice.services.enrolment-store-proxy.host"  -> mockHost,
+    "microservice.services.enrolment-store-proxy.port"  -> mockPort,
+    "microservice.services.business-account.host"       -> mockHost,
+    "microservice.services.business-account.port"       -> mockPort,
+    "feature-switch.knownFactsCheckFlag"                -> "true",
+    "feature-switch.knownFactsCheckWithVanFlag"         -> "true"
   )
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .configure(config ++ additionalConfig)
     .build()
 
-  implicit val ws: WSClient = app.injector.instanceOf[WSClient]
+  implicit val ws: WSClient                    = app.injector.instanceOf[WSClient]
   lazy val featureSwitches: Seq[FeatureSwitch] = app.injector.instanceOf[FeatureSwitchingModule].switches
 
   override def beforeAll(): Unit = {
@@ -94,13 +98,12 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
 
   val enLangCookie: WSCookie = DefaultWSCookie("PLAY_LANG", "en")
 
-  def get(uri: String, cookie: WSCookie = enLangCookie): WSResponse = {
+  def get(uri: String, cookie: WSCookie = enLangCookie): WSResponse =
     await(
       buildClient(uri)
         .withCookies(cookie, mockSessionCookie)
         .get()
     )
-  }
 
   def post(uri: String, cookie: WSCookie = enLangCookie)(form: (String, String)*): WSResponse = {
     val formBody = (form map { case (k, v) => (k, Seq(v)) }).toMap
@@ -112,24 +115,21 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
     )
   }
 
-
-  def post(uri: String, json: JsValue): WSResponse = {
+  def post(uri: String, json: JsValue): WSResponse =
     await(
       buildClient(uri)
         .withHttpHeaders("Content-Type" -> "application/json")
         .withCookies(mockSessionCookie)
         .post(json.toString())
     )
-  }
 
-  def put[T](uri: String)(body: T)(implicit writes: Writes[T]): WSResponse = {
+  def put[T](uri: String)(body: T)(implicit writes: Writes[T]): WSResponse =
     await(
       buildClient(uri)
         .withHttpHeaders("Content-Type" -> "application/json")
         .withCookies(mockSessionCookie)
         .put(writes.writes(body).toString())
     )
-  }
 
   val baseUrl: String = "/claim-vat-enrolment"
 
@@ -139,18 +139,19 @@ trait ComponentSpecHelper extends AnyWordSpec with Matchers
   def mockSessionCookie: WSCookie = {
 
     def makeSessionCookie(session: Session): Cookie = {
-      val cookieCrypto = inject[SessionCookieCrypto]
-      val cookieBaker = inject[SessionCookieBaker]
-      val sessionCookie = cookieBaker.encodeAsCookie(session)
+      val cookieCrypto   = inject[SessionCookieCrypto]
+      val cookieBaker    = inject[SessionCookieBaker]
+      val sessionCookie  = cookieBaker.encodeAsCookie(session)
       val encryptedValue = cookieCrypto.crypto.encrypt(PlainText(sessionCookie.value))
       sessionCookie.copy(value = encryptedValue.value)
     }
 
-    val mockSession = Session(Map(
-      SessionKeys.lastRequestTimestamp -> System.currentTimeMillis().toString,
-      SessionKeys.authToken -> "mock-bearer-token",
-      SessionKeys.sessionId -> "mock-sessionid"
-    ))
+    val mockSession = Session(
+      Map(
+        SessionKeys.lastRequestTimestamp -> System.currentTimeMillis().toString,
+        SessionKeys.authToken            -> "mock-bearer-token",
+        SessionKeys.sessionId            -> "mock-sessionid"
+      ))
 
     val cookie = makeSessionCookie(mockSession)
 

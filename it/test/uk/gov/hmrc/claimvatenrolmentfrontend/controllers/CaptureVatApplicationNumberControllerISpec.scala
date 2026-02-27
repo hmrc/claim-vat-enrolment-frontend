@@ -32,7 +32,7 @@ class CaptureVatApplicationNumberControllerISpec
   s"GET VAN /$testJourneyId/vat-application-number" should {
     lazy val result = {
 
-      await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+      await(insertVatKnownFactsData(testJourneyId, testInternalId, baseVatKnownFacts))
       stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
       get(s"/$testJourneyId/vat-application-number")
     }
@@ -46,7 +46,7 @@ class CaptureVatApplicationNumberControllerISpec
       lazy val result = {
         enable(KnownFactsCheckFlag)
 
-        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+        await(insertVatKnownFactsData(testJourneyId, testInternalId, baseVatKnownFacts))
         await(insertLockData(testVatNumber, testInternalId, testSubmissionNumber3))
 
         stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))

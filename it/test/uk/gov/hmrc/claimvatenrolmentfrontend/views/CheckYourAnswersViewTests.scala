@@ -18,17 +18,143 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.views
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import play.api.http.Status.OK
 import play.api.libs.ws.WSResponse
+import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.CheckYourAnswers.changeVatRegDateRow
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.MessageLookup.{Base, Header, CheckYourAnswers => messages}
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.controllers.routes
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.{ComponentSpecHelper, ViewSpecHelper}
 
 import java.time.format.DateTimeFormatter
-import scala. jdk. CollectionConverters._
+import scala.jdk.CollectionConverters._
 
 trait CheckYourAnswersViewTests extends ViewSpecHelper {
   this: ComponentSpecHelper =>
+
+  def returnOkResult(result: => WSResponse): Unit = {
+    "return OK" in {
+      result.status mustBe OK
+    }
+  }
+
+  def checkPageDisplaysCompulsoryDetails(result: => WSResponse): Unit = {
+    lazy val doc: Document = Jsoup.parse(result.body)
+
+    "have a sign out link in the header" in {
+      doc.getSignOutText mustBe Header.signOut
+    }
+
+    "have the correct title" in {
+      doc.title mustBe messages.title
+    }
+
+    "have the correct heading" in {
+      doc.getH1Elements.text mustBe messages.heading
+    }
+
+    "have a summary list which" must {
+      lazy val summaryListRows = doc.getSummaryListRows.iterator().asScala.toList
+
+      "have a VRN row" in {
+        val vatNumberRow = summaryListRows.head
+
+        vatNumberRow.getSummaryListQuestion mustBe messages.vatNumberRow
+        vatNumberRow.getSummaryListAnswer mustBe testVatNumber
+      }
+
+      "have a VAT Registration Date row" in {
+        val vatRegDateRow = summaryListRows(1)
+
+        vatRegDateRow.getSummaryListQuestion mustBe messages.vatRegDateRow
+        vatRegDateRow.getSummaryListAnswer mustBe testVatRegDate.format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
+        vatRegDateRow.getSummaryListChangeLink mustBe routes.CaptureVatRegistrationDateController.show(testJourneyId).url
+        vatRegDateRow.getSummaryListChangeText mustBe changeVatRegDateRow
+      }
+    }
+
+    "have a continue and confirm button" in {
+      doc.getSubmitButton.first.text mustBe Base.continue
+    }
+  }
+
+  def checkPageDisplaysReturnTotalAndLastMonthDetailsWhenCurrentlySubmittingIsTrue(result: => WSResponse, hasPostCode: Boolean): Unit = {
+    lazy val doc: Document = Jsoup.parse(result.body)
+
+    "have a summary list which" must {
+      lazy val summaryListRows = doc.getSummaryListRows.iterator().asScala.toList
+
+      "have a 'Currently Submitting VAT Returns' row" in {
+        val vatReturnRow = summaryListRows(if (hasPostCode) 3 else 2)
+
+        vatReturnRow.getSummaryListQuestion mustBe messages.vatReturnsRow
+        vatReturnRow.getSummaryListAnswer mustBe Base.yes
+        vatReturnRow.getSummaryListChangeLink mustBe routes.CaptureSubmittedVatReturnController.show(testJourneyId).url
+        vatReturnRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.vatReturnsRow}"
+      }
+
+      "have a 'Return Total or Box 5 Amount' row" in {
+        val boxFiveRow = summaryListRows(if (hasPostCode) 4 else 3)
+
+        boxFiveRow.getSummaryListQuestion mustBe messages.boxFiveRow
+        boxFiveRow.getSummaryListAnswer mustBe testBoxFive
+        boxFiveRow.getSummaryListChangeLink mustBe routes.CaptureBox5FigureController.show(testJourneyId).url
+        boxFiveRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.boxFiveRow}"
+      }
+
+      "have a 'Last Accounting Month' row" in {
+        val lastReturnMonthRow = summaryListRows.last
+
+        lastReturnMonthRow.getSummaryListQuestion mustBe messages.lastReturnMonthRow
+        lastReturnMonthRow.getSummaryListAnswer mustBe "January"
+        lastReturnMonthRow.getSummaryListChangeLink mustBe routes.CaptureLastMonthSubmittedController.show(testJourneyId).url
+        lastReturnMonthRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.lastReturnMonthRow}"
+      }
+    }
+  }
+
+  def checkPageDisplaysVatApplicationNumberDetailsWhenCurrentlySubmittingIsFalse(result: => WSResponse, hasPostCode: Boolean): Unit = {
+    lazy val doc: Document = Jsoup.parse(result.body)
+
+    "have a summary list which" must {
+      lazy val summaryListRows = doc.getSummaryListRows.iterator().asScala.toList
+
+      "have a 'Currently Submitting VAT Returns' row" in {
+        val vatReturnRow = summaryListRows(if (hasPostCode) 3 else 2)
+
+        vatReturnRow.getSummaryListQuestion mustBe messages.vatReturnsRow
+        vatReturnRow.getSummaryListAnswer mustBe Base.no
+        vatReturnRow.getSummaryListChangeLink mustBe routes.CaptureSubmittedVatReturnController.show(testJourneyId).url
+        vatReturnRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.vatReturnsRow}"
+      }
+
+      "have a 'VAT Application Number' row" in {
+        val lastReturnMonthRow = summaryListRows.last
+
+        lastReturnMonthRow.getSummaryListQuestion mustBe messages.vatApplicationNumber
+        lastReturnMonthRow.getSummaryListAnswer mustBe "099123456789"
+        lastReturnMonthRow.getSummaryListChangeLink mustBe routes.CaptureVatApplicationNumberController.show(testJourneyId).url
+        lastReturnMonthRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.vatApplicationNumber}"
+      }
+    }
+  }
+
+  def checkPageDisplaysPostcodeDetails(result: => WSResponse): Unit = {
+    lazy val doc: Document = Jsoup.parse(result.body)
+
+    "have a summary list which" must {
+      lazy val summaryListRows = doc.getSummaryListRows.iterator().asScala.toList
+
+      "have a Postcode row" in {
+        val businessPostcodeRow = summaryListRows(2)
+
+        businessPostcodeRow.getSummaryListQuestion mustBe messages.businessPostcodeRow
+        businessPostcodeRow.getSummaryListAnswer mustBe testPostcode.sanitisedPostcode
+        businessPostcodeRow.getSummaryListChangeLink mustBe routes.CaptureBusinessPostcodeController.show(testJourneyId).url
+        businessPostcodeRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.businessPostcodeRow}"
+      }
+    }
+  }
 
   def testCheckYourAnswersViewFull(result: => WSResponse): Unit = {
 
@@ -64,7 +190,7 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
         val vatRegDateRow = summaryListRows(1)
 
         vatRegDateRow.getSummaryListQuestion mustBe messages.vatRegDateRow
-        vatRegDateRow.getSummaryListAnswer mustBe testVatRegDate.get.format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
+        vatRegDateRow.getSummaryListAnswer mustBe testVatRegDate.format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
         vatRegDateRow.getSummaryListChangeLink mustBe routes.CaptureVatRegistrationDateController.show(testJourneyId).url
         vatRegDateRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.vatRegDateRow}"
       }
@@ -91,7 +217,7 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
         val boxFiveRow = summaryListRows(4)
 
         boxFiveRow.getSummaryListQuestion mustBe messages.boxFiveRow
-        boxFiveRow.getSummaryListAnswer mustBe testBoxFive.get
+        boxFiveRow.getSummaryListAnswer mustBe testBoxFive
         boxFiveRow.getSummaryListChangeLink mustBe routes.CaptureBox5FigureController.show(testJourneyId).url
         boxFiveRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.boxFiveRow}"
       }
@@ -145,7 +271,7 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
         val vatRegDateRow = summaryListRows(1)
 
         vatRegDateRow.getSummaryListQuestion mustBe messages.vatRegDateRow
-        vatRegDateRow.getSummaryListAnswer mustBe testVatRegDate.get.format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
+        vatRegDateRow.getSummaryListAnswer mustBe testVatRegDate.format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
         vatRegDateRow.getSummaryListChangeLink mustBe routes.CaptureVatRegistrationDateController.show(testJourneyId).url
         vatRegDateRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.vatRegDateRow}"
       }
@@ -163,7 +289,7 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
         val boxFiveRow = summaryListRows(3)
 
         boxFiveRow.getSummaryListQuestion mustBe messages.boxFiveRow
-        boxFiveRow.getSummaryListAnswer mustBe testBoxFive.get
+        boxFiveRow.getSummaryListAnswer mustBe testBoxFive
         boxFiveRow.getSummaryListChangeLink mustBe routes.CaptureBox5FigureController.show(testJourneyId).url
         boxFiveRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.boxFiveRow}"
       }
@@ -217,7 +343,7 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
         val vatRegDateRow = summaryListRows(1)
 
         vatRegDateRow.getSummaryListQuestion mustBe messages.vatRegDateRow
-        vatRegDateRow.getSummaryListAnswer mustBe testVatRegDate.get.format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
+        vatRegDateRow.getSummaryListAnswer mustBe testVatRegDate.format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
         vatRegDateRow.getSummaryListChangeLink mustBe routes.CaptureVatRegistrationDateController.show(testJourneyId).url
         vatRegDateRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.vatRegDateRow}"
       }
@@ -280,7 +406,7 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
         val vatRegDateRow = summaryListRows(1)
 
         vatRegDateRow.getSummaryListQuestion mustBe messages.vatRegDateRow
-        vatRegDateRow.getSummaryListAnswer mustBe testVatRegDate.get.format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
+        vatRegDateRow.getSummaryListAnswer mustBe testVatRegDate.format(DateTimeFormatter.ofPattern("d MMMM yyyy"))
         vatRegDateRow.getSummaryListChangeLink mustBe routes.CaptureVatRegistrationDateController.show(testJourneyId).url
         vatRegDateRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.vatRegDateRow}"
       }

@@ -23,6 +23,7 @@ case class VatKnownFacts(vatNumber: String,
                          vatRegistrationDate: Option[LocalDate],
                          optReturnsInformation: Option[ReturnsInformation],
                          formBundleReference: Option[String]) {
+
   def hasCompleteJourneyData: Boolean = vatRegistrationDate.isDefined &&
     (optReturnsInformation.exists(_.hasCompleteData) || formBundleReference.isDefined)
 }
@@ -30,5 +31,3 @@ case class VatKnownFacts(vatNumber: String,
 case class ReturnsInformation(boxFive: Option[String], lastReturnMonth: Option[Month]) {
   def hasCompleteData: Boolean = boxFive.isDefined && lastReturnMonth.isDefined
 }
-
-

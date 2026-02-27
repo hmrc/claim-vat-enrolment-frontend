@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.utils
 
+import org.mongodb.scala.bson.collection.immutable.Document
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.result.InsertOneResult
 import play.api.libs.json.{JsObject, Json}
@@ -31,26 +32,26 @@ import scala.concurrent.Future
 trait JourneyMongoHelper extends ComponentSpecHelper {
 
   override def beforeEach(): Unit = {
+    super.beforeEach()
     await(dropConfigRepo)
     await(dropDataRepo)
     await(dropLockData)
-    super.beforeEach()
   }
 
   lazy val journeyConfigRepository: JourneyConfigRepository = app.injector.instanceOf[JourneyConfigRepository]
 
   lazy val journeyDataRepository: JourneyDataRepository = app.injector.instanceOf[JourneyDataRepository]
 
-  lazy val UserLockRepository: UserLockRepository = app.injector.instanceOf[UserLockRepository]
+  lazy val userLockRepository: UserLockRepository = app.injector.instanceOf[UserLockRepository]
 
   def find(identifier: String): Future[Option[Lock]] = {
-    UserLockRepository.collection
+    userLockRepository.collection
       .find(Filters.or(Filters.eq("identifier", identifier)))
       .headOption()
   }
 
   def find(vrn: String, userId: String): Future[Seq[Lock]] = {
-    UserLockRepository.collection
+    userLockRepository.collection
       .find(Filters.or(Filters.eq("identifier", vrn), Filters.equal("identifier", userId)))
       .toFuture()
   }
@@ -109,7 +110,7 @@ trait JourneyMongoHelper extends ComponentSpecHelper {
     ).toFuture().map(_ => journeyId)
 
   def insertLockData(vrn: String, userId: String, attempts: Int = 1): Future[String] = {
-    def insert: Future[Map[String, Int]] = UserLockRepository.updateAttempts(vrn, userId)
+    def insert: Future[Map[String, Int]] = userLockRepository.updateAttempts(vrn, userId)
 
     for {
       a <- insert
@@ -120,6 +121,6 @@ trait JourneyMongoHelper extends ComponentSpecHelper {
 
   // Journey data mongo repository methods
   def dropLockData: Future[Unit] =
-    UserLockRepository.collection.drop().toFuture().map(_ => ())
+    userLockRepository.collection.drop().toFuture().map(_ => ())
 
 }

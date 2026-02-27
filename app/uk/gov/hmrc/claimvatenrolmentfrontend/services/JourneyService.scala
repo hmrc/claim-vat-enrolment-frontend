@@ -18,7 +18,12 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
 import play.api.mvc.Request
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, VatKnownFacts}
-import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{Box5FigureKey, LastMonthSubmittedKey, PostcodeKey}
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{
+  Box5FigureKey,
+  LastMonthSubmittedKey,
+  PostcodeKey,
+  SubmittedVatApplicationNumberKey
+}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.{JourneyConfigRepository, JourneyDataRepository}
 import utils.LoggingUtil
 
@@ -26,10 +31,10 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class JourneyService @Inject()(journeyConfigRepository: JourneyConfigRepository,
-                               journeyDataRepository: JourneyDataRepository,
-                               journeyIdGenerationService: JourneyIdGenerationService
-                              )(implicit ec: ExecutionContext) extends LoggingUtil{
+class JourneyService @Inject() (journeyConfigRepository: JourneyConfigRepository,
+                                journeyDataRepository: JourneyDataRepository,
+                                journeyIdGenerationService: JourneyIdGenerationService)(implicit ec: ExecutionContext)
+    extends LoggingUtil {
 
   def createJourney(journeyConfig: JourneyConfig, vatNumber: String, authInternalId: String): Future[String] = {
     val id = journeyIdGenerationService.generateJourneyId()
@@ -49,23 +54,26 @@ class JourneyService @Inject()(journeyConfigRepository: JourneyConfigRepository,
         None
     }
 
-  def retrieveJourneyData(journeyId: String, authInternalId: String)(implicit request: Request[_]): Future[Option[VatKnownFacts]] = {
-      journeyDataRepository.getJourneyData(journeyId, authInternalId).map {
-        case Some(journeyData) =>
-          infoLog(s"[JourneyService][retrieveJourneyData] - successfully retrieved the journey data for journey ID $journeyId")
-          Some(journeyData)
-        case None =>
-          errorLog(s"[JourneyService][retrieveJourneyData] - Journey data was not found for journey ID $journeyId")
-          None
-      }
-  }
+  def retrieveJourneyData(journeyId: String, authInternalId: String)(implicit request: Request[_]): Future[Option[VatKnownFacts]] =
+    journeyDataRepository.getJourneyData(journeyId, authInternalId).map {
+      case Some(journeyData) =>
+        infoLog(s"[JourneyService][retrieveJourneyData] - successfully retrieved the journey data for journey ID $journeyId")
+        Some(journeyData)
+      case None =>
+        errorLog(s"[JourneyService][retrieveJourneyData] - Journey data was not found for journey ID $journeyId")
+        None
+    }
 
-  def removePostcodeField(journeyId: String, authInternalId: String): Future[Boolean] = {
+  def removePostcodeField(journeyId: String, authInternalId: String): Future[Boolean] =
     journeyDataRepository.removeJourneyDataFields(journeyId, authInternalId, Seq(PostcodeKey))
-  }
 
-  def removeAdditionalVatReturnFields(journeyId: String, authInternalId: String): Future[Boolean] = {
+  def removeOppositePagesDataForGatewayQuestion(userAnswerIsYes: Boolean, journeyId: String, authInternalId: String): Future[Boolean] =
+    if (userAnswerIsYes) removeFormBundleNumberFields(journeyId, authInternalId) else removeAdditionalVatReturnFields(journeyId, authInternalId)
+
+  private def removeAdditionalVatReturnFields(journeyId: String, authInternalId: String): Future[Boolean] =
     journeyDataRepository.removeJourneyDataFields(journeyId, authInternalId, Seq(Box5FigureKey, LastMonthSubmittedKey))
-  }
+
+  private def removeFormBundleNumberFields(journeyId: String, authInternalId: String): Future[Boolean] =
+    journeyDataRepository.removeJourneyDataFields(journeyId, authInternalId, Seq(SubmittedVatApplicationNumberKey))
 
 }

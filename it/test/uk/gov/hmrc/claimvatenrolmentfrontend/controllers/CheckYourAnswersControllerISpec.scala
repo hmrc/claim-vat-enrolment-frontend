@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
+import org.mongodb.scala.result.InsertOneResult
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
@@ -24,24 +25,24 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.{routes => errorRoutes}
 import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.KnownFactsCheckFlag
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.AllocateEnrolmentResponseHttpParser.MultipleEnrolmentsInvalidKey
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.VatKnownFacts
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository._
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.{AllocationEnrolmentStub, AuthStub, EnrolmentStoreProxyStub}
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.JourneyMongoHelper
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.WiremockHelper._
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.CheckYourAnswersViewTests
+
 import java.time.Instant
 
-
-class CheckYourAnswersControllerISpec extends JourneyMongoHelper
-  with CheckYourAnswersViewTests
-  with AuthStub
-  with AllocationEnrolmentStub
-  with EnrolmentStoreProxyStub {
+class CheckYourAnswersControllerISpec
+    extends JourneyMongoHelper
+    with CheckYourAnswersViewTests
+    with AuthStub
+    with AllocationEnrolmentStub
+    with EnrolmentStoreProxyStub {
 
   def extraConfig: Map[String, String] = Map(
-    "auditing.enabled" -> "true",
-    "feature-switch.knownFactsCheckWithVanFlag" -> "false",
-    "feature-switch.knownFactsCheckFlag" -> "false",
+    "auditing.enabled"               -> "true",
     "auditing.consumer.baseUri.host" -> mockHost,
     "auditing.consumer.baseUri.port" -> mockPort
   )
@@ -52,154 +53,95 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
 
   override def beforeEach(): Unit = {
     super.beforeEach()
+    enable(KnownFactsCheckFlag)
   }
 
-  s"GET /$testJourneyId/check-your-answers-vat" when {
-    "there is a full VatKnownFacts stored in the database" should {
-      lazy val result = {
-        await(journeyDataRepository.collection.insertOne(
-          Json.obj(
-            "_id" -> testJourneyId,
-            "authInternalId" -> testInternalId,
-            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-          ) ++ Json.toJsObject(testFullVatKnownFacts)
-        ).toFuture())
-        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-        stubAudit
-        get(s"/$testJourneyId/check-your-answers-vat")
-      }
-
-      "return OK" in {
-        result.status mustBe OK
-      }
-      testCheckYourAnswersViewFull(result)
-    }
-
-    "a Valid request passed in the request (with knownFactsCheckFlag disabled)" should {
-
-      "be without JourneyData" when {
+  "GET /<testJourneyId?/check-your-answers-vat" should {
+    "render the page correctly" when {
+      "user has saved data for VRN, Reg date, Currently submitting: Yes, Return total, and Last month values" should {
+        val knownFactsData = vatKnownFactsWithFullReturnsInformation(hasPostcode = false)
         lazy val result = {
-          disable(KnownFactsCheckFlag)
-
+          createSavedJourneyData(knownFactsData)
           stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+          stubAudit
           get(s"/$testJourneyId/check-your-answers-vat")
         }
 
-        "Show an error page" in {
-          result must have(
-            httpStatus(SEE_OTHER),
-            redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
-          )
-        }
+        returnOkResult(result)
+        checkPageDisplaysCompulsoryDetails(result)
+        checkPageDisplaysReturnTotalAndLastMonthDetailsWhenCurrentlySubmittingIsTrue(result, hasPostCode = false)
       }
-      "be with JourneyData without PostCode" when {
-        lazy val result = {
-          disable(KnownFactsCheckFlag)
 
-          await(journeyDataRepository.collection.insertOne(
-            Json.obj(
-              "_id" -> testJourneyId,
-              "authInternalId" -> testInternalId,
-              "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-            ) ++ Json.toJsObject(testVatKnownFactsNoPostcode)
-          ).toFuture())
+      "user has saved data for VRN, Reg date, Postcode, Currently submitting: No, and VAN" should {
+        val knownFactsData = vatKnownFactsWithFormBundleReference(hasPostcode = true)
+        lazy val result = {
+          createSavedJourneyData(knownFactsData)
           stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+          stubAudit
           get(s"/$testJourneyId/check-your-answers-vat")
         }
-        "return OK" in {
-          result.status mustBe OK
-        }
+
+        returnOkResult(result)
+        checkPageDisplaysCompulsoryDetails(result)
+        checkPageDisplaysPostcodeDetails(result)
+        checkPageDisplaysVatApplicationNumberDetailsWhenCurrentlySubmittingIsFalse(result, hasPostCode = true)
       }
     }
 
-    "a Locked VRN is passed in the request (with knownFactsCheckFlag Enabled)" should {
-
-      "be without JourneyData" when {
+    "redirect to the first page in journey (CaptureVatRegistrationDate page)" when {
+      "user has incomplete journey data" in {
+        val incompleteJourneyData = vatKnownFactsWithFormBundleReference(hasPostcode = false).copy(vatRegistrationDate = None)
         lazy val result = {
-          enable(KnownFactsCheckFlag)
+          createSavedJourneyData(incompleteJourneyData)
+          stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+          stubAudit
+          get(s"/$testJourneyId/check-your-answers-vat")
+        }
 
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(routes.CaptureVatRegistrationDateController.show(testJourneyId).url)
+        )
+      }
+    }
+
+    "redirect to the KnownFactsMismatchWithin24hrs lockout page" when {
+      "user ID is locked in the UserLockRepository" in {
+        lazy val result = {
+          createSavedJourneyData(baseVatKnownFacts)
           await(insertLockData(testVatNumber, testInternalId, testSubmissionNumber3))
           stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-
+          stubAudit
           get(s"/$testJourneyId/check-your-answers-vat")
         }
 
-        "Show an error page" in {
-          result must have(
-            httpStatus(SEE_OTHER),
-            redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
-          )
-        }
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorRoutes.KnownFactsMismatchWithin24hrsController.show().url)
+        )
       }
+    }
 
-      "be with JourneyData" when {
-
+    "redirect to the generic error page" when {
+      "user has no journey data" in {
         lazy val result = {
-          enable(KnownFactsCheckFlag)
-
-          await(journeyDataRepository.collection.insertOne(
-            Json.obj(
-              "_id" -> testJourneyId,
-              "authInternalId" -> testInternalId,
-              "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-            ) ++ Json.toJsObject(testVatKnownFactsNoPostcode)
-          ).toFuture())
-
-          await(insertLockData(testVatNumber, testInternalId, testSubmissionNumber3))
-
           stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-
           get(s"/$testJourneyId/check-your-answers-vat")
         }
 
-        "show the access blocked page" in {
-          result must have(
-            httpStatus(SEE_OTHER),
-            redirectUri(errorPages.routes.KnownFactsMismatchWithin24hrsController.show().url)
-          )
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
+        )
+      }
+
+      "the internal IDs do not match" in {
+        lazy val result = {
+          stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some("aDifferentInternalID")))
+          stubAudit
+          get(s"/$testJourneyId/check-your-answers-vat")
         }
-      }
-    }
 
-    "there is a VatKnownFacts with no postcode stored in the database" should {
-      lazy val result = {
-        await(journeyDataRepository.collection.insertOne(
-          Json.obj(
-            "_id" -> testJourneyId,
-            "authInternalId" -> testInternalId,
-            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-          ) ++ Json.toJsObject(testVatKnownFactsNoPostcode)
-        ).toFuture())
-        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-        stubAudit
-        get(s"/$testJourneyId/check-your-answers-vat")
-      }
-
-      "return OK" in {
-        result.status mustBe OK
-      }
-
-      testCheckYourAnswersViewNoPostcode(result)
-    }
-
-    "there is an invalid VatKnownFacts stored in the database" should {
-      lazy val result = {
-        await(journeyDataRepository.collection.insertOne(
-          Json.obj(
-            "_id" -> testJourneyId,
-            "authInternalId" -> testInternalId,
-            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli),
-            VatNumberKey -> 12,
-            VatRegistrationDateKey -> testVatRegDate,
-            SubmittedVatReturnKey -> true
-          )
-        ).toFuture())
-        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-        stubAudit
-        get(s"/$testJourneyId/check-your-answers-vat")
-      }
-
-      "Show an error page" in {
         result must have(
           httpStatus(SEE_OTHER),
           redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
@@ -207,98 +149,11 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
       }
     }
 
-    "there is a VatKnownFacts with no returns stored in the database" should {
-      lazy val result = {
-        await(journeyDataRepository.collection.insertOne(
-          Json.obj(
-            "_id" -> testJourneyId,
-            "authInternalId" -> testInternalId,
-            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-          ) ++ Json.toJsObject(testVatKnownFactsNoReturns)
-        ).toFuture())
-        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-        stubAudit
-        get(s"/$testJourneyId/check-your-answers-vat")
-      }
-
-      "return OK" in {
-        result.status mustBe OK
-      }
-
-      testCheckYourAnswersViewNoReturnsInformation(result)
-    }
-
-    "there is a VatKnownFacts with submittedVatReturn as 'true' but no returns stored in the database" should {
-      lazy val result = {
-        await(journeyDataRepository.collection.insertOne(
-          Json.obj(
-            "_id" -> testJourneyId,
-            "authInternalId" -> testInternalId,
-            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli),
-            "submittedVatReturn" -> true
-          ) ++ Json.toJsObject(testVatKnownFactsNoPostcodeNoRetInfo)
-        ).toFuture())
-        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-        stubAudit
-        get(s"/$testJourneyId/check-your-answers-vat")
-      }
-
-      "redirect to " in {
-        result must have(
-          httpStatus(SEE_OTHER),
-          redirectUri(routes.CaptureVatRegistrationDateController.show(journeyId = testJourneyId).url)
-        )
-      }
-    }
-
-
-
-    "there is a VatKnownFacts with no returns and no postcode stored in the database" should {
-      lazy val result = {
-        await(journeyDataRepository.collection.insertOne(
-          Json.obj(
-            "_id" -> testJourneyId,
-            "authInternalId" -> testInternalId,
-            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-          ) ++ Json.toJsObject(testVatKnownFactsNoReturnsNoPostcode)
-        ).toFuture())
-        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-        stubAudit
-        get(s"/$testJourneyId/check-your-answers-vat")
-      }
-
-      "return OK" in {
-        result.status mustBe OK
-      }
-
-      testCheckYourAnswersViewNoReturnsNoPostcode(result)
-    }
-
-    "the internal Ids do not match" should {
-      lazy val result = {
-        await(journeyDataRepository.collection.insertOne(
-          Json.obj(
-            "_id" -> testJourneyId,
-            "authInternalId" -> "testInternalId",
-            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-          ) ++ Json.toJsObject(testVatKnownFactsNoReturnsNoPostcode)
-        ).toFuture())
-        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-        stubAudit
-        get(s"/$testJourneyId/check-your-answers-vat")
-      }
-      "Show an error page" in {
-        result must have(
-          httpStatus(SEE_OTHER),
-          redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
-        )
-      }
-    }
-
-    "return 500" when {
-      "there is no auth id" in {
-        await(insertVatKnownFactsData(testJourneyId, testInternalId, testVatKnownFactsDefault))
+    "return a 500 response" when {
+      "there is no Auth ID" in {
+        await(insertVatKnownFactsData(testJourneyId, testInternalId, baseVatKnownFacts))
         stubAuth(OK, successfulAuthResponse(None))
+
         lazy val result = get(s"/$testJourneyId/check-your-answers-vat")
 
         result.status mustBe INTERNAL_SERVER_ERROR
@@ -307,207 +162,166 @@ class CheckYourAnswersControllerISpec extends JourneyMongoHelper
   }
 
   s"POST /$testJourneyId/check-your-answers-vat" should {
-    "redirect to SignUpComplete page when the allocation was successfully created" in {
-      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-      await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
-      await(journeyDataRepository.collection.insertOne(
-        Json.obj(
-          "_id" -> testJourneyId,
-          "authInternalId" -> testInternalId,
-          "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-        ) ++ Json.toJsObject(testFullVatKnownFacts)
-      ).toFuture())
-      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(CREATED, Json.obj())
-      stubAudit
+    val fullJourneyData = vatKnownFactsWithFormBundleReference(true)
 
-      lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
+    "redirect to the SignUpComplete page" when {
+      "the allocation was successfully created" in {
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+        await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
+        createSavedJourneyData(fullJourneyData)
+        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(CREATED, Json.obj())
+        stubAudit
 
-      result must have(
-        httpStatus(SEE_OTHER),
-        redirectUri(routes.SignUpCompleteController.signUpComplete(testJourneyId).url)
-      )
-      verifyAudit()
+        lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
+
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(routes.SignUpCompleteController.signUpComplete(testJourneyId).url)
+        )
+        verifyAudit()
+      }
     }
 
-    "redirect to UnmatchedUser if the user group already has a matching enrolment, but the user does not" in {
-      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-      await(journeyDataRepository.collection.insertOne(
-        Json.obj(
-          "_id" -> testJourneyId,
-          "authInternalId" -> testInternalId,
-          "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-        ) ++ Json.toJsObject(testFullVatKnownFacts)
-      ).toFuture())
-      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(CONFLICT, Json.obj("code" -> MultipleEnrolmentsInvalidKey))
-      stubAudit
+    "redirect to the KnownFactsMismatch page" when {
+      "the enrolment returns a BAD_REQUEST and enrolment store proxy ES0 returns NO_CONTENT" in {
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+        createSavedJourneyData(fullJourneyData)
+        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj())
+        stubGetUserIds(testVatNumber)(NO_CONTENT)
+        stubAudit
 
-      lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
+        lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 
-      result must have(
-        httpStatus(SEE_OTHER),
-        redirectUri(errorRoutes.UnmatchedUserErrorController.show().url)
-      )
-      verifyAudit()
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorRoutes.KnownFactsMismatchController.show().url)
+        )
+        verifyAudit()
+      }
     }
 
-    "redirect to KnownFactsMismatch if the enrolment returns BAD_REQUEST and enrolment store proxy ES0 returns NO_CONTENT" in {
-      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-      await(journeyDataRepository.collection.insertOne(
-        Json.obj(
-          "_id" -> testJourneyId,
-          "authInternalId" -> testInternalId,
-          "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-        ) ++ Json.toJsObject(testFullVatKnownFacts)
-      ).toFuture())
-      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(BAD_REQUEST, Json.obj())
-      stubGetUserIds(testVatNumber)(NO_CONTENT)
-      stubAudit
+    "redirect to the ThirdAttemptLockout page" when {
+      "the enrolment returns BAD_REQUEST for 3 invalid attempts consecutively" in {
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+        createSavedJourneyData(fullJourneyData)
+        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj())
+        stubGetUserIds(testVatNumber)(NO_CONTENT)
+        stubAudit
 
-      lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
+        await(insertLockData(testVatNumber, testInternalId, testSubmissionNumber3))
 
+        lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 
-      result must have(
-        httpStatus(SEE_OTHER),
-        redirectUri(errorRoutes.KnownFactsMismatchController.show().url)
-      )
-      verifyAudit()
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorRoutes.ThirdAttemptLockoutController.show().url)
+        )
+        verifyAudit()
+      }
     }
 
-    "redirect to AttemptLocked if the enrolment returns BAD_REQUEST for 3 invalid attempts consecutively" in {
-      enable(KnownFactsCheckFlag) //enable the knownFactsCheck Feature-Switch for the CVE-CR
+    "redirect to the EnrolmentAlreadyAllocated page" when {
+      "the enrolment returns BAD_REQUEST and enrolment store proxy ES0 returns OK" in {
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+        createSavedJourneyData(fullJourneyData)
+        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj())
+        stubGetUserIds(testVatNumber)(OK)
+        stubAudit
 
-      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+        lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 
-      await(journeyDataRepository.collection.insertOne(
-        Json.obj(
-          "_id" -> testJourneyId,
-          "authInternalId" -> testInternalId,
-          "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-        ) ++ Json.toJsObject(testFullVatKnownFacts)
-      ).toFuture())
-      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(BAD_REQUEST, Json.obj())
-      stubGetUserIds(testVatNumber)(NO_CONTENT)
-      stubAudit
-
-      await(insertLockData(testVatNumber, testInternalId, testSubmissionNumber2))
-
-      lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
-
-      result must have(
-        httpStatus(SEE_OTHER),
-        redirectUri(errorRoutes.ThirdAttemptLockoutController.show().url)
-      )
-      verifyAudit()
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorRoutes.EnrolmentAlreadyAllocatedController.show().url)
+        )
+        verifyAudit()
+      }
     }
 
-    "redirect to EnrolmentAlreadyAllocated if the enrolment returns BAD_REQUEST and enrolment store proxy ES0 returns OK" in {
-      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-      await(journeyDataRepository.collection.insertOne(
-        Json.obj(
-          "_id" -> testJourneyId,
-          "authInternalId" -> testInternalId,
-          "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-        ) ++ Json.toJsObject(testFullVatKnownFacts)
-      ).toFuture())
-      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(BAD_REQUEST, Json.obj())
-      stubGetUserIds(testVatNumber)(OK)
-      stubAudit
+    "redirect to the UnmatchedUser page" when {
+      "the user group already has a matching enrolment, but the user does not" in {
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+        createSavedJourneyData(fullJourneyData)
+        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(
+          CONFLICT,
+          Json.obj("code" -> MultipleEnrolmentsInvalidKey))
+        stubAudit
 
-      lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
+        lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 
-      result must have(
-        httpStatus(SEE_OTHER),
-        redirectUri(errorRoutes.EnrolmentAlreadyAllocatedController.show().url)
-      )
-      verifyAudit()
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorRoutes.UnmatchedUserErrorController.show().url)
+        )
+        verifyAudit()
+      }
     }
 
-    "redirect to EnrolmentAlreadyAllocated error page when enrolment fails and enrolment store proxy ES0 returns OK" in {
-      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-      await(journeyDataRepository.collection.insertOne(
-        Json.obj(
-          "_id" -> testJourneyId,
-          "authInternalId" -> testInternalId,
-          "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-        ) ++ Json.toJsObject(testFullVatKnownFacts)
-      ).toFuture())
-      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(INTERNAL_SERVER_ERROR, Json.obj())
-      stubGetUserIds(testVatNumber)(OK)
-      stubAudit
+    "redirect to the generic error page" when {
+      "there is no journeyData" in {
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj())
+        stubGetUserIds(testVatNumber)(NO_CONTENT)
+        stubAudit
 
-      lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
+        lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 
-      result must have(
-        httpStatus(SEE_OTHER),
-        redirectUri(errorRoutes.EnrolmentAlreadyAllocatedController.show().url)
-      )
-      verifyAudit()
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
+        )
+      }
+
+      "there is no journeyConfig" in {
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+        createSavedJourneyData(fullJourneyData)
+
+        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(CREATED, Json.obj())
+        lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
+
+        result must have(
+          httpStatus(SEE_OTHER),
+          redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
+        )
+      }
     }
 
-    "throw an exception when no userIds are connected with the vatNumber" in {
-      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-      await(journeyDataRepository.collection.insertOne(
-        Json.obj(
-          "_id" -> testJourneyId,
-          "authInternalId" -> testInternalId,
-          "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-        ) ++ Json.toJsObject(testFullVatKnownFacts)
-      ).toFuture())
-      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(INTERNAL_SERVER_ERROR, Json.obj())
-      stubGetUserIds(testVatNumber)(NO_CONTENT)
-      stubAudit
+    "return an InternalServerError" when {
+      "no credentials or groupId are retrieved from Auth" in {
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId)))
+        stubAudit
 
-      lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
+        lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 
-      result must have(
-        httpStatus(INTERNAL_SERVER_ERROR)
-      )
-      verifyAudit()
-    }
+        result.status mustBe INTERNAL_SERVER_ERROR
+      }
 
+      "no userIds are connected with the vatNumber" in {
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+        createSavedJourneyData(fullJourneyData)
+        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(INTERNAL_SERVER_ERROR, Json.obj())
+        stubGetUserIds(testVatNumber)(NO_CONTENT)
+        stubAudit
 
-    "Redirect to an error page when there is no journeyData" in {
-      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(BAD_REQUEST, Json.obj())
-      stubGetUserIds(testVatNumber)(NO_CONTENT)
-      stubAudit
+        lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 
-      lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
-
-      result must have(
-        httpStatus(SEE_OTHER),
-        redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
-      )
-    }
-
-    "Redirect to an error page when there is no journeyConfig" in {
-      stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-      await(journeyDataRepository.collection.insertOne(
-        Json.obj(
-          "_id" -> testJourneyId,
-          "authInternalId" -> testInternalId,
-          "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
-        ) ++ Json.toJsObject(testFullVatKnownFacts)
-      ).toFuture())
-
-      stubAllocateEnrolment(testFullVatKnownFacts, testCredentialId, includeFormBundleReference = false, testGroupId)(CREATED, Json.obj())
-      lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
-
-      result must have(
-        httpStatus(SEE_OTHER),
-        redirectUri(errorPages.routes.ServiceTimeoutController.show().url)
-      )
-    }
-
-    "return Internal Server Error when no credentials or groupId are retrieved from Auth" in {
-      stubAuth(OK, successfulAuthResponse(Some(testGroupId)))
-      stubAudit
-
-      lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
-
-      result.status mustBe INTERNAL_SERVER_ERROR
+        result.status mustBe INTERNAL_SERVER_ERROR
+        verifyAudit()
+      }
     }
 
   }
+
+  private def createSavedJourneyData(journeyData: VatKnownFacts): InsertOneResult =
+    await(
+      journeyDataRepository.collection
+        .insertOne(
+          Json.obj(
+            "_id"               -> testJourneyId,
+            "authInternalId"    -> testInternalId,
+            "creationTimestamp" -> Json.obj("$date" -> Instant.now.toEpochMilli)
+          ) ++ Json.toJsObject(journeyData)
+        )
+        .toFuture())
 
 }

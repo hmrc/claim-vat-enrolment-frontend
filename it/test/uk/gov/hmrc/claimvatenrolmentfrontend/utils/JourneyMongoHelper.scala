@@ -121,6 +121,6 @@ trait JourneyMongoHelper extends ComponentSpecHelper {
 
   // Journey data mongo repository methods
   def dropLockData: Future[Unit] =
-    userLockRepository.collection.deleteMany(Document()).toFuture().map(_ => ())
+    userLockRepository.collection.drop().toFuture().map(_ => ())
 
 }

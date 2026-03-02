@@ -91,6 +91,19 @@ object TestConstants {
       formBundleReference = Some(testFormBundleReference)
     )
 
+  def vatKnownFactsWithPartialReturnsInformation(hasPostcode: Boolean): VatKnownFacts =
+    VatKnownFacts(
+      vatNumber = testVatNumber,
+      optPostcode = if (hasPostcode) Some(testPostcode) else None,
+      vatRegistrationDate = Some(testVatRegDate),
+      optReturnsInformation = Some(
+        ReturnsInformation(
+          boxFive = Some(testBoxFive),
+          lastReturnMonth = None
+        )),
+      formBundleReference = Some(testFormBundleReference)
+    )
+
   val emptyJourneyDataJson: JsObject = Json.obj(
     JourneyIdKey      -> testJourneyId,
     AuthInternalIdKey -> testInternalId

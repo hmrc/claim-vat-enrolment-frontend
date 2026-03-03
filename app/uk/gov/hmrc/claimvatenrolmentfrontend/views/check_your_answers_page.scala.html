@@ -37,93 +37,94 @@
         rows = Seq(
             SummaryListRow(
                 key = Key(content = Text(messages(
-            if (appConfig.knownFactsCheckFlag && appConfig.knownFactsCheckWithVanFlag) {
-                "check-your-answers.ver2.vat_number"
-            } else {
-                "check-your-answers.vat_number"
-            }
-            ))),
+                    if (appConfig.knownFactsCheckFlag && appConfig.knownFactsCheckWithVanFlag) {
+                        "check-your-answers.ver2.vat_number"
+                    } else {
+                        "check-your-answers.vat_number"
+                    }
+                ))),
                 value = Value(content = Text(vatKnownFacts.vatNumber)),
                 actions = None
-            ),
-            SummaryListRow(
-                key = Key(content = Text(messages(
-            if (appConfig.knownFactsCheckFlag && appConfig.knownFactsCheckWithVanFlag) {
-                "check-your-answers.ver2.registration_date"
-            } else {
-                "check-your-answers.registration_date"
-            }
-            ))),
-                value = Value(content = Text(dateFormat(vatKnownFacts.vatRegistrationDate.get))),
-                actions = Some(Actions(items = Seq(
-                    ActionItem(
-                        href = Routes.CaptureVatRegistrationDateController.show(journeyId).url,
-                        content = Text(messages("app.common.change")),
-                        visuallyHiddenText = Some(messages("check-your-answers.registration_date"))
+            )) ++ vatKnownFacts.vatRegistrationDate.map {
+                vatRegDate =>
+                    SummaryListRow(
+                        key = Key(content = Text(messages(
+                            if (appConfig.knownFactsCheckFlag && appConfig.knownFactsCheckWithVanFlag) {
+                                "check-your-answers.ver2.registration_date"
+                            } else {
+                                "check-your-answers.registration_date"
+                            }
+                        ))),
+                        value = Value(content = Text(dateFormat(vatRegDate))),
+                        actions = Some(Actions(items = Seq(
+                            ActionItem(
+                                href = Routes.CaptureVatRegistrationDateController.show(journeyId).url,
+                                content = Text(messages("app.common.change")),
+                                visuallyHiddenText = Some(messages("check-your-answers.registration_date"))
+                            )
+                        )))
                     )
-                )))
-            )
-        ) ++ vatKnownFacts.optPostcode.map {
-            postcode =>
-                SummaryListRow(
-                    key = Key(content = Text(messages("check-your-answers.business_postcode"))),
-                    value = Value(content = Text(postcode.sanitisedPostcode)),
-                    actions = Some(Actions(items = Seq(
-                        ActionItem(
-                            href = Routes.CaptureBusinessPostcodeController.show(journeyId).url,
-                            content = Text(messages("app.common.change")),
-                            visuallyHiddenText = Some(messages("check-your-answers.business_postcode"))
-                        )
-                    )))
-                )
-        } ++ (vatKnownFacts.optReturnsInformation match {
-            case Some(_) =>
-                Seq(SummaryListRow(
-                    key = Key(content = Text(messages("check-your-answers.vat_returns"))),
-                    value = Value(content = Text(messages("app.common.yes"))),
-                    actions = Some(Actions(items = Seq(
-                        ActionItem(
-                            href = Routes.CaptureSubmittedVatReturnController.show(journeyId).url,
-                            content = Text(messages("app.common.change")),
-                            visuallyHiddenText = Some(messages("check-your-answers.vat_returns"))
-                        )
-                    )))
-                ))
-            case None =>
-                Seq(SummaryListRow(
-                    key = Key(content = Text(messages("check-your-answers.vat_returns"))),
-                    value = Value(content = Text(messages("app.common.no"))),
-                    actions = Some(Actions(items = Seq(
-                        ActionItem(
-                            href = Routes.CaptureSubmittedVatReturnController.show(journeyId).url,
-                            content = Text(messages("app.common.change")),
-                            visuallyHiddenText = Some(messages("check-your-answers.vat_returns"))
-                        )
-                    )))
-                )
-        ) ++
-        (
-                if (appConfig.knownFactsCheckFlag && appConfig.knownFactsCheckWithVanFlag) {
-                Seq(SummaryListRow(
-                    key = Key(content = Text(messages("check-your-answers.vat_application_number"))),
-                    value = Value(content = Text(vatKnownFacts.formBundleReference.getOrElse(""))),
-                    actions = Some(Actions(items = Seq(
-                         ActionItem(
-                             href = Routes.CaptureVatApplicationNumberController.show(journeyId).url,
-                             content = Text(messages("app.common.change")),
-                             visuallyHiddenText = Some(messages("check-your-answers.vat_application_number"))
-                         )
-                    )))
-                ))
-                } else {
-                  Seq.empty
-                }
-        )
-        }) ++ vatKnownFacts.optReturnsInformation.map {
-            returnsInformation =>
+            } ++ vatKnownFacts.optPostcode.map {
+                postcode =>
+                    SummaryListRow(
+                        key = Key(content = Text(messages("check-your-answers.business_postcode"))),
+                        value = Value(content = Text(postcode.sanitisedPostcode)),
+                        actions = Some(Actions(items = Seq(
+                            ActionItem(
+                                href = Routes.CaptureBusinessPostcodeController.show(journeyId).url,
+                                content = Text(messages("app.common.change")),
+                                visuallyHiddenText = Some(messages("check-your-answers.business_postcode"))
+                            )
+                        )))
+                    )
+            } ++ (
+            vatKnownFacts.optReturnsInformation match {
+                case Some(_) =>
+                    Seq(SummaryListRow(
+                        key = Key(content = Text(messages("check-your-answers.vat_returns"))),
+                        value = Value(content = Text(messages("app.common.yes"))),
+                        actions = Some(Actions(items = Seq(
+                            ActionItem(
+                                href = Routes.CaptureSubmittedVatReturnController.show(journeyId).url,
+                                content = Text(messages("app.common.change")),
+                                visuallyHiddenText = Some(messages("check-your-answers.vat_returns"))
+                            )
+                        )))
+                    ))
+                case None =>
+                    Seq(SummaryListRow(
+                        key = Key(content = Text(messages("check-your-answers.vat_returns"))),
+                        value = Value(content = Text(messages("app.common.no"))),
+                        actions = Some(Actions(items = Seq(
+                            ActionItem(
+                                href = Routes.CaptureSubmittedVatReturnController.show(journeyId).url,
+                                content = Text(messages("app.common.change")),
+                                visuallyHiddenText = Some(messages("check-your-answers.vat_returns"))
+                            )
+                        )))
+                    )) ++
+                    (if (appConfig.knownFactsCheckFlag && appConfig.knownFactsCheckWithVanFlag) {
+                        vatKnownFacts.formBundleReference.map { vatApplRef =>
+                            SummaryListRow(
+                                key = Key(content = Text(messages("check-your-answers.vat_application_number"))),
+                                value = Value(content = Text(vatApplRef)),
+                                actions = Some(Actions(items = Seq(
+                                     ActionItem(
+                                         href = Routes.CaptureVatApplicationNumberController.show(journeyId).url,
+                                         content = Text(messages("app.common.change")),
+                                         visuallyHiddenText = Some(messages("check-your-answers.vat_application_number"))
+                                     )
+                                )))
+                            )
+                        }
+                    } else {
+                      Seq.empty
+                    })
+            }) ++  vatKnownFacts.optReturnsInformation.flatMap(_.boxFive).map {
+            boxFive =>
                 SummaryListRow(
                     key = Key(content = Text(messages("check-your-answers.box_five"))),
-                    value = Value(content = Text(returnsInformation.boxFive.fold("")(identity))),
+                    value = Value(content = Text(boxFive)),
                     actions = Some(Actions(items = Seq(
                         ActionItem(
                             href = Routes.CaptureBox5FigureController.show(journeyId).url,
@@ -132,11 +133,11 @@
                         )
                     )))
                 )
-        } ++ vatKnownFacts.optReturnsInformation.map {
-            returnsInformation =>
+        } ++ vatKnownFacts.optReturnsInformation.flatMap(_.lastReturnMonth).map {
+            lastReturnMonth =>
                 SummaryListRow(
                     key = Key(content = Text(messages("check-your-answers.last_return_month"))),
-                    value = Value(content = Text(messages(s"capture-last-month-submitted.${returnsInformation.lastReturnMonth.fold("")(_.toString)}"))),
+                    value = Value(content = Text(messages(s"capture-last-month-submitted.${lastReturnMonth}"))),
                     actions = Some(Actions(items = Seq(
                         ActionItem(
                             href = Routes.CaptureLastMonthSubmittedController.show(journeyId).url,

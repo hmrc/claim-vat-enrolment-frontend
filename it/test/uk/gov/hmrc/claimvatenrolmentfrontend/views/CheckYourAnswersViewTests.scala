@@ -129,21 +129,13 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
         vatReturnRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.vatReturnsRow}"
       }
 
-      "have a 'Return Total or Box 5 Amount' row" in {
-        val boxFiveRow = summaryListRows(if (hasPostCode) 4 else 3)
+      "have a 'Return Total or Box 5 Amount' as a last row" in {
+        val boxFiveRow = summaryListRows.last
 
         boxFiveRow.getSummaryListQuestion mustBe messages.boxFiveRow
         boxFiveRow.getSummaryListAnswer mustBe testBoxFive
         boxFiveRow.getSummaryListChangeLink mustBe routes.CaptureBox5FigureController.show(testJourneyId).url
         boxFiveRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.boxFiveRow}"
-      }
-
-      "have a 'Last Accounting Month' row" in {
-        val lastReturnMonthRow = summaryListRows.last
-        lastReturnMonthRow.getSummaryListQuestion mustBe messages.lastReturnMonthRow
-        lastReturnMonthRow.getSummaryListAnswer mustBe "capture-last-month-submitted."
-        lastReturnMonthRow.getSummaryListChangeLink mustBe routes.CaptureLastMonthSubmittedController.show(testJourneyId).url
-        lastReturnMonthRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.lastReturnMonthRow}"
       }
     }
   }

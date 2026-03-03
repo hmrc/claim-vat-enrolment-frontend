@@ -86,6 +86,20 @@ class CheckYourAnswersControllerISpec
         checkPageDisplaysPostcodeDetails(result)
         checkPageDisplaysVatApplicationNumberDetailsWhenCurrentlySubmittingIsFalse(result, hasPostCode = true)
       }
+
+      "user has saved data for VRN, Reg date, Currently submitting: Yes, Return total but no Last month value" should {
+        val knownPartialFactsData = vatKnownFactsWithPartialReturnsInformation(hasPostcode = false)
+        lazy val result = {
+          createSavedJourneyData(knownPartialFactsData)
+          stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+          stubAudit
+          get(s"/$testJourneyId/check-your-answers-vat")
+        }
+
+        returnOkResult(result)
+        checkPageDisplaysCompulsoryDetails(result)
+        checkPageDisplaysReturnTotalWithoutLastMonthDetailsWhenCurrentlySubmittingIsTrue(result, hasPostCode = false)
+      }
     }
 
     "redirect to the first page in journey (CaptureVatRegistrationDate page)" when {

@@ -113,6 +113,33 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
     }
   }
 
+
+  def checkPageDisplaysReturnTotalWithoutLastMonthDetailsWhenCurrentlySubmittingIsTrue(result: => WSResponse, hasPostCode: Boolean): Unit = {
+    lazy val doc: Document = Jsoup.parse(result.body)
+
+    "have a summary list which" must {
+      lazy val summaryListRows = doc.getSummaryListRows.iterator().asScala.toList
+
+      "have a 'Currently Submitting VAT Returns' row" in {
+        val vatReturnRow = summaryListRows(if (hasPostCode) 3 else 2)
+
+        vatReturnRow.getSummaryListQuestion mustBe messages.vatReturnsRow
+        vatReturnRow.getSummaryListAnswer mustBe Base.yes
+        vatReturnRow.getSummaryListChangeLink mustBe routes.CaptureSubmittedVatReturnController.show(testJourneyId).url
+        vatReturnRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.vatReturnsRow}"
+      }
+
+      "have a 'Return Total or Box 5 Amount' as a last row" in {
+        val boxFiveRow = summaryListRows.last
+
+        boxFiveRow.getSummaryListQuestion mustBe messages.boxFiveRow
+        boxFiveRow.getSummaryListAnswer mustBe testBoxFive
+        boxFiveRow.getSummaryListChangeLink mustBe routes.CaptureBox5FigureController.show(testJourneyId).url
+        boxFiveRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.boxFiveRow}"
+      }
+    }
+  }
+
   def checkPageDisplaysVatApplicationNumberDetailsWhenCurrentlySubmittingIsFalse(result: => WSResponse, hasPostCode: Boolean): Unit = {
     lazy val doc: Document = Jsoup.parse(result.body)
 
@@ -419,7 +446,6 @@ trait CheckYourAnswersViewTests extends ViewSpecHelper {
         vatReturnRow.getSummaryListChangeLink mustBe routes.CaptureSubmittedVatReturnController.show(testJourneyId).url
         vatReturnRow.getSummaryListChangeText mustBe s"${Base.change} ${messages.vatReturnsRow}"
       }
-
     }
 
     "have a continue and confirm button" in {

@@ -45,7 +45,7 @@ trait EnrolmentAlreadyAllocatedErrorViewTest extends ViewSpecHelper {
     }
 
     "have the correct text" in {
-      doc.getParagraphs.get(1).text mustBe messages.line_1
+      doc.getParagraphs.get(0).text mustBe messages.line_1
     }
 
     "have the correct link" in {

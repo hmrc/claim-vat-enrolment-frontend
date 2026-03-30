@@ -44,9 +44,9 @@ trait ThirdAttemptLockoutViewTests extends ViewSpecHelper {
     }
 
     "have the correct text" in {
-      doc.getParagraphs.get(1).text mustBe messages.line_1
-      doc.getParagraphs.get(2).text mustBe messages.line_2
-      doc.getParagraphs.get(3).text mustBe messages.line_3
+      doc.getParagraphs.get(0).text mustBe messages.line_1
+      doc.getParagraphs.get(1).text mustBe messages.line_2
+      doc.getParagraphs.get(2).text mustBe messages.line_3
     }
 
     "have a correct button" in {

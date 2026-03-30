@@ -40,10 +40,10 @@ trait ServiceTimeoutViewTest extends ViewSpecHelper {
     }
 
     "have the correct text" in {
-      doc.getParagraphs.get(1).text mustBe messages.line_1
-      doc.getParagraphs.get(2).text mustBe messages.line_2
-      doc.getParagraphs.get(3).text mustBe messages.line_3
-      doc.getParagraphs.get(4).text mustBe messages.line_4
+      doc.getParagraphs.get(0).text mustBe messages.line_1
+      doc.getParagraphs.get(1).text mustBe messages.line_2
+      doc.getParagraphs.get(2).text mustBe messages.line_3
+      doc.getParagraphs.get(3).text mustBe messages.line_4
     }
 
     "have the correct link" in {

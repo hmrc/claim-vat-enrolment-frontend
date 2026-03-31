@@ -44,7 +44,7 @@ trait KnownFactsMismatchViewTests extends ViewSpecHelper {
     }
 
     "have the correct text" in {
-      doc.getParagraphs.get(1).text mustBe messages.line_1
+      doc.getParagraphs.get(0).text mustBe messages.line_1
     }
 
     "have a try again button" in {
@@ -71,8 +71,8 @@ trait KnownFactsMismatchViewTests extends ViewSpecHelper {
     }
 
     "have the correct text" in {
-      doc.getParagraphs.get(1).text mustBe messages.ver2Line_1
-      doc.getParagraphs.get(2).text mustBe messages.ver2Line_2
+      doc.getParagraphs.get(0).text mustBe messages.ver2Line_1
+      doc.getParagraphs.get(1).text mustBe messages.ver2Line_2
     }
 
     "have a try again button" in {

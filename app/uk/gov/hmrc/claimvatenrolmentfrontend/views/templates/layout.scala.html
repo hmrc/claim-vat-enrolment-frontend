@@ -55,6 +55,6 @@
     signOutUrl = if (showSignOut) Some(SignInOutController.signOut.url) else None,
     isWelshTranslationAvailable = appConfig.welshLanguageSupportEnabled,
     backLink = if (showBackLink) Some(BackLink.mimicsBrowserBackButtonViaJavaScript) else None,
-    displayHmrcBanner = true,
+    displayHmrcBanner = false,
     phaseBanner = None
 )(content)

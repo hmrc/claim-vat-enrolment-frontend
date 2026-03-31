@@ -43,11 +43,11 @@ trait CaptureBox5FigureViewTests extends ViewSpecHelper {
     }
 
     "have the correct text" in {
-      doc.getParagraphs.get(1).text mustBe messages.line_1
+      doc.getParagraphs.get(0).text mustBe messages.line_1
     }
 
     "have the correct paragraph2" in {
-      doc.getParagraphs.get(2).text mustBe messages.line_2
+      doc.getParagraphs.get(1).text mustBe messages.line_2
     }
 
     "have a continue button" in {

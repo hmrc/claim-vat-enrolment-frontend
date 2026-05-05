@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.models
 
+import play.api.libs.json.{Format, Json, OFormat}
 import uk.gov.hmrc.http.InternalServerException
 
 case class Postcode(stringValue: String) {
@@ -30,4 +31,6 @@ case class Postcode(stringValue: String) {
 
 object Postcode {
   private[models] val standardPostcodeFormat = "([A-Z]{1,2}[0-9][0-9A-Z]?)([0-9][A-Z]{2})".r
+
+  implicit val format: OFormat[Postcode] = Json.format[Postcode]
 }

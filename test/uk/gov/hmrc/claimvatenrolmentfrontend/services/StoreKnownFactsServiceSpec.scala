@@ -19,11 +19,13 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.services
 import com.mongodb.MongoException
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
 import uk.gov.hmrc.claimvatenrolmentfrontend.helpers.TestConstants.{testInternalId, testJourneyId}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.Postcode
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.mocks.MockJourneyDataRepository
 
+import java.time.{LocalDate, Month}
 import scala.concurrent.Future
 
 class StoreKnownFactsServiceSpec extends AnyWordSpec with Matchers with MockJourneyDataRepository {
@@ -50,17 +52,85 @@ class StoreKnownFactsServiceSpec extends AnyWordSpec with Matchers with MockJour
     }
 
     "return 'true'" when {
-      "the repository returns 'true', indicating it has updated the journey data" in {
-        mockUpdateJourneyData(
-          journeyId = testJourneyId,
-          dataKey = "dataKey",
-          data = Json.toJson("dataToUpdate"),
-          authId = testInternalId
-        )(Future.successful(true))
+      "given a String value" when {
+        "the repository returns 'true', indicating it has updated the journey data" in {
+          mockUpdateJourneyData(
+            journeyId = testJourneyId,
+            dataKey = "dataKey",
+            data = Json.toJson("dataToUpdate"),
+            authId = testInternalId
+          )(Future.successful(true))
 
-        val result = await(TestService.storeKnownFactAnswer("dataToUpdate", "dataKey", testJourneyId, testInternalId))
+          val result = await(TestService.storeKnownFactAnswer("dataToUpdate", "dataKey", testJourneyId, testInternalId))
 
-        result mustBe true
+          result mustBe true
+        }
+      }
+
+      "given a Boolean value" when {
+        "the repository returns 'true', indicating it has updated the journey data" in {
+          mockUpdateJourneyData(
+            journeyId = testJourneyId,
+            dataKey = "dataKey",
+            data = Json.toJson(true),
+            authId = testInternalId
+          )(Future.successful(true))
+
+          val result = await(TestService.storeKnownFactAnswer(value = true, "dataKey", testJourneyId, testInternalId))
+
+          result mustBe true
+        }
+      }
+
+      "given a Postcode object to parse" when {
+        "parsed successfully and the repository returns 'true', indicating it has updated the journey data" in {
+          val dataToParseAndStore: Postcode = Postcode("AA1 1AA")
+          val parsedPostcode: JsValue       = Json.toJson("AA1 1AA")
+          mockUpdateJourneyData(
+            journeyId = testJourneyId,
+            dataKey = "dataKey",
+            data = parsedPostcode,
+            authId = testInternalId
+          )(Future.successful(true))
+
+          val result = await(TestService.storeKnownFactAnswer[Postcode](dataToParseAndStore, "dataKey", testJourneyId, testInternalId))
+
+          result mustBe true
+        }
+      }
+
+      "given a Month's Int value to parse" when {
+        "parsed successfully and the repository returns 'true', indicating it has updated the journey data" in {
+          val dataToParseAndStore: Int = Month.JULY.getValue
+          val parsedMonthInt: JsValue  = Json.toJson(7)
+          mockUpdateJourneyData(
+            journeyId = testJourneyId,
+            dataKey = "dataKey",
+            data = parsedMonthInt,
+            authId = testInternalId
+          )(Future.successful(true))
+
+          val result = await(TestService.storeKnownFactAnswer[Int](dataToParseAndStore, "dataKey", testJourneyId, testInternalId))
+
+          result mustBe true
+        }
+      }
+
+      "given a LocalDate object to parse" when {
+        "parsed successfully and the repository returns 'true', indicating it has updated the journey data" in {
+          val dataToParseAndStore: LocalDate = LocalDate.of(2000, 2, 2)
+          val parsedLocalDate: JsValue       = Json.toJson("2000-02-02")
+          mockUpdateJourneyData(
+            journeyId = testJourneyId,
+            dataKey = "dataKey",
+            data = parsedLocalDate,
+            authId = testInternalId
+          )(Future.successful(true))
+
+          val result = await(TestService.storeKnownFactAnswer[LocalDate](dataToParseAndStore, "dataKey", testJourneyId, testInternalId))
+
+          result mustBe true
+        }
       }
     }
 

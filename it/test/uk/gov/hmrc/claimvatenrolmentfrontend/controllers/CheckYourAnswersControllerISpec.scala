@@ -24,7 +24,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.{routes => errorRoutes}
 import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.KnownFactsCheckFlag
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.AllocateEnrolmentResponseHttpParser.MultipleEnrolmentsInvalidKey
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.AllocateEnrolmentResponseHttpParser.{InvalidKnownFactsKey, MultipleEnrolmentsInvalidKey}
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.VatKnownFacts
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository._
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.{AllocationEnrolmentStub, AuthStub, EnrolmentStoreProxyStub}
@@ -200,7 +200,7 @@ class CheckYourAnswersControllerISpec
       "the enrolment returns a BAD_REQUEST and enrolment store proxy ES0 returns NO_CONTENT" in {
         stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         createSavedJourneyData(fullJourneyData)
-        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj())
+        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj("code" -> InvalidKnownFactsKey))
         stubGetUserIds(testVatNumber)(NO_CONTENT)
         stubAudit
 
@@ -218,7 +218,7 @@ class CheckYourAnswersControllerISpec
       "the enrolment returns BAD_REQUEST for 3 invalid attempts consecutively" in {
         stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         createSavedJourneyData(fullJourneyData)
-        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj())
+        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj("code" -> InvalidKnownFactsKey))
         stubGetUserIds(testVatNumber)(NO_CONTENT)
         stubAudit
 
@@ -238,7 +238,7 @@ class CheckYourAnswersControllerISpec
       "the enrolment returns BAD_REQUEST and enrolment store proxy ES0 returns OK" in {
         stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         createSavedJourneyData(fullJourneyData)
-        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj())
+        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj("code" -> InvalidKnownFactsKey))
         stubGetUserIds(testVatNumber)(OK)
         stubAudit
 

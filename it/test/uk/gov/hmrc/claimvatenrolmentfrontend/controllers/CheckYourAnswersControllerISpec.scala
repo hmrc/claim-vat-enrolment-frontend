@@ -234,6 +234,21 @@ class CheckYourAnswersControllerISpec
       }
     }
 
+    "redirect to the generic error page" when {
+      "the enrolment returns BAD_REQUEST without INVALID_KNOWN_FACTS_SUPPLIED" in {
+        stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
+        createSavedJourneyData(fullJourneyData)
+        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj("code" -> "INVALID_IDENTIFIERS"))
+        stubGetUserIds(testVatNumber)(NO_CONTENT)
+        stubAudit
+
+        lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
+
+        result.status mustBe INTERNAL_SERVER_ERROR
+        verifyAudit()
+      }
+    }
+
     "redirect to the EnrolmentAlreadyAllocated page" when {
       "the enrolment returns BAD_REQUEST and enrolment store proxy ES0 returns OK" in {
         stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))

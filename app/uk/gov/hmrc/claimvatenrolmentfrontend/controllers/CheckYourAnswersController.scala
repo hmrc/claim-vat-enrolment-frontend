@@ -19,7 +19,7 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.claimvatenrolmentfrontend.auth.{AuthenticatedIdentifierAction, JourneyDataRetrievalAction}
-import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
+import uk.gov.hmrc.claimvatenrolmentfrontend.config.{AppConfig, ErrorHandler}
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.ClaimVatEnrolmentService._
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.{ClaimVatEnrolmentService, LockService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.check_your_answers_page
@@ -35,7 +35,8 @@ class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
                                            claimVatEnrolmentService: ClaimVatEnrolmentService,
                                            identify: AuthenticatedIdentifierAction,
                                            getData: JourneyDataRetrievalAction,
-                                           journeyValidateService: LockService
+                                           journeyValidateService: LockService,
+                                           errorHandler: ErrorHandler
                                           )(implicit appConfig: AppConfig, ec: ExecutionContext)
   extends FrontendController(mcc) with I18nSupport with LoggingUtil {
 
@@ -67,6 +68,9 @@ class CheckYourAnswersController @Inject()(mcc: MessagesControllerComponents,
       case Left(JourneyDataFailure) =>
         errorLog(s"[CheckYourAnswersController][submit] - Journey data could not be retrieved from the journeyDataRepository for journey: $journeyId")
         Redirect(errorPages.routes.ServiceTimeoutController.show())
+      case Left(NoUsersFoundFailure) =>
+        errorLog(s"[CheckYourAnswersController][submit] - No users found in enrolment store after allocation failure for journey: $journeyId")
+        InternalServerError(errorHandler.internalServerErrorTemplate)
     }
   }
 

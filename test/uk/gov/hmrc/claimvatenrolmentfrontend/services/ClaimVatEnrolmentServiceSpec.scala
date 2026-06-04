@@ -33,7 +33,7 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.models._
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.mocks.MockUserLockRepository
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.ClaimVatEnrolmentService._
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.mocks.{MockAllocateEnrolmentService, MockClaimVatEnrolmentService, MockJourneyService}
-import uk.gov.hmrc.http.{HeaderCarrier, InternalServerException}
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -218,16 +218,17 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
       }
     }
 
-    "throw an exception" when {
+    "return a Left(NoUsersFoundFailure)" when {
       "the enrolment cannot be claimed but is not allocated to another user" in {
         mockAuthorise()
         mockRetrieveJourneyData(testJourneyId, testInternalId)
         mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(EnrolmentFailure("Failure")))
         mockGetUserIds(testVatNumber)(Future.successful(NoUsersFound))
 
-        intercept[InternalServerException] {
-          await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
+        val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
 
+        result mustBe Left(NoUsersFoundFailure)
+        eventually {
           verifyAuditEvent
           auditEventCaptor.getValue.detail mustBe testAuditDetails(testFullVatKnownFacts.get, isSuccessful = false, Some(NoUsersFound.message))
         }

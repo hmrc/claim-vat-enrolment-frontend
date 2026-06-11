@@ -21,7 +21,8 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.claimvatenrolmentfrontend.auth.{AuthenticatedIdentifierAction, JourneyDataRetrievalAction}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureLastMonthSubmittedForm
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.{LockService, StoreLastMonthSubmittedService}
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.LastMonthSubmittedKey
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.{LockService, StoreKnownFactsService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_last_month_submitted_page
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -31,14 +32,15 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CaptureLastMonthSubmittedController @Inject()(mcc: MessagesControllerComponents,
-                                                    view: capture_last_month_submitted_page,
-                                                    storeLastMonthSubmittedService: StoreLastMonthSubmittedService,
-                                                    identify: AuthenticatedIdentifierAction,
-                                                    getData: JourneyDataRetrievalAction,
-                                                    locService: LockService
-                                                   )(implicit val config: AppConfig, ec: ExecutionContext)
-  extends FrontendController(mcc) with I18nSupport with LoggingUtil {
+class CaptureLastMonthSubmittedController @Inject() (mcc: MessagesControllerComponents,
+                                                     view: capture_last_month_submitted_page,
+                                                     storeKnownFactsService: StoreKnownFactsService,
+                                                     identify: AuthenticatedIdentifierAction,
+                                                     getData: JourneyDataRetrievalAction,
+                                                     locService: LockService)(implicit val config: AppConfig, ec: ExecutionContext)
+    extends FrontendController(mcc)
+    with I18nSupport
+    with LoggingUtil {
 
   def show(journeyId: String): Action[AnyContent] = (identify andThen getData).async { implicit request =>
     locService.continueIfJourneyIsNotLocked(request.journeyData.vatNumber, request.userId)(
@@ -47,17 +49,20 @@ class CaptureLastMonthSubmittedController @Inject()(mcc: MessagesControllerCompo
   }
 
   def submit(journeyId: String): Action[AnyContent] = identify.async { implicit request =>
-    CaptureLastMonthSubmittedForm.form.bindFromRequest().fold(
-      formWithErrors => Future.successful(
-        BadRequest(view(routes.CaptureLastMonthSubmittedController.submit(journeyId), formWithErrors))
-      ),
-      lastMonthSubmitted =>
-        storeLastMonthSubmittedService.storeLastMonthSubmitted(journeyId, lastMonthSubmitted, request.userId) map {
-          case true => Redirect(routes.CheckYourAnswersController.show(journeyId).url)
-          case _ =>
-            errorLog(s"The last month a Vat return was submitted could not be updated for journey $journeyId")
-            throw new InternalServerException(s"The last month a Vat return was submitted could not be updated for journey $journeyId")
-        }
-    )
+    CaptureLastMonthSubmittedForm.form
+      .bindFromRequest()
+      .fold(
+        formWithErrors =>
+          Future.successful(
+            BadRequest(view(routes.CaptureLastMonthSubmittedController.submit(journeyId), formWithErrors))
+          ),
+        lastMonthSubmitted =>
+          storeKnownFactsService.storeKnownFactAnswer(lastMonthSubmitted.getValue, LastMonthSubmittedKey, journeyId, request.userId) map {
+            case true => Redirect(routes.CheckYourAnswersController.show(journeyId).url)
+            case _ =>
+              errorLog(s"The last month a Vat return was submitted could not be updated for journey $journeyId")
+              throw new InternalServerException(s"The last month a Vat return was submitted could not be updated for journey $journeyId")
+          }
+      )
   }
 }

@@ -21,7 +21,8 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.claimvatenrolmentfrontend.auth.{AuthenticatedIdentifierAction, JourneyDataRetrievalAction}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureVatApplicationNumberForm
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.{LockService, StoreSubmittedVANService}
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.SubmittedVatApplicationNumberKey
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.{LockService, StoreKnownFactsService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_vat_application_number_page
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -31,14 +32,15 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CaptureVatApplicationNumberController @Inject()(mcc: MessagesControllerComponents,
-                                                      view: capture_vat_application_number_page,
-                                                      storeSubmittedVanService: StoreSubmittedVANService,
-                                                      identify: AuthenticatedIdentifierAction,
-                                                      getData: JourneyDataRetrievalAction,
-                                                      lockService: LockService
-                                                     )(implicit val config: AppConfig, ec: ExecutionContext)
-  extends FrontendController(mcc) with I18nSupport with LoggingUtil {
+class CaptureVatApplicationNumberController @Inject() (mcc: MessagesControllerComponents,
+                                                       view: capture_vat_application_number_page,
+                                                       storeKnownFactsService: StoreKnownFactsService,
+                                                       identify: AuthenticatedIdentifierAction,
+                                                       getData: JourneyDataRetrievalAction,
+                                                       lockService: LockService)(implicit val config: AppConfig, ec: ExecutionContext)
+    extends FrontendController(mcc)
+    with I18nSupport
+    with LoggingUtil {
 
   def show(journeyId: String): Action[AnyContent] = (identify andThen getData).async { implicit request =>
     lockService.continueIfJourneyIsNotLocked(request.journeyData.vatNumber, request.userId)(
@@ -47,17 +49,17 @@ class CaptureVatApplicationNumberController @Inject()(mcc: MessagesControllerCom
   }
 
   def submit(journeyId: String): Action[AnyContent] = identify.async { implicit request =>
-    CaptureVatApplicationNumberForm.form.bindFromRequest().fold(
-      formWithErrors =>
-        Future.successful(BadRequest(view(formWithErrors, routes.CaptureVatApplicationNumberController.submit(journeyId)))),
-      vatApplicationNumber =>
-        storeSubmittedVanService.storeSubmittedVan(journeyId, vatApplicationNumber, request.userId) map {
-          case true => Redirect(routes.CheckYourAnswersController.show(journeyId).url)
-          case _ =>
-            errorLog(s"[CaptureVatApplicationNumberController][submit] - The date of Vat registration could not be updated for journey $journeyId")
-            throw new InternalServerException(s"The date of Vat registration could not be updated for journey $journeyId")
-        }
-    )
+    CaptureVatApplicationNumberForm.form
+      .bindFromRequest()
+      .fold(
+        formWithErrors => Future.successful(BadRequest(view(formWithErrors, routes.CaptureVatApplicationNumberController.submit(journeyId)))),
+        vatApplicationNumber =>
+          storeKnownFactsService.storeKnownFactAnswer(vatApplicationNumber, SubmittedVatApplicationNumberKey, journeyId, request.userId) map {
+            case true => Redirect(routes.CheckYourAnswersController.show(journeyId).url)
+            case _ =>
+              errorLog(s"[CaptureVatApplicationNumberController][submit] - The date of Vat registration could not be updated for journey $journeyId")
+              throw new InternalServerException(s"The date of Vat registration could not be updated for journey $journeyId")
+          }
+      )
   }
 }
-

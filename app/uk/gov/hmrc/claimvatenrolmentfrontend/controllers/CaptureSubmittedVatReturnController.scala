@@ -21,7 +21,8 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.claimvatenrolmentfrontend.auth.{AuthenticatedIdentifierAction, IdentifierRequest, JourneyDataRetrievalAction}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureSubmittedVatReturnForm
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, LockService, StoreSubmittedVatReturnService}
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.SubmittedVatReturnKey
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, LockService, StoreKnownFactsService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_submitted_vat_return_page
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -33,7 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class CaptureSubmittedVatReturnController @Inject() (mcc: MessagesControllerComponents,
                                                      view: capture_submitted_vat_return_page,
-                                                     storeSubmittedVatService: StoreSubmittedVatReturnService,
+                                                     storeKnownFactsService: StoreKnownFactsService,
                                                      journeyService: JourneyService,
                                                      identify: AuthenticatedIdentifierAction,
                                                      getData: JourneyDataRetrievalAction,
@@ -51,7 +52,7 @@ class CaptureSubmittedVatReturnController @Inject() (mcc: MessagesControllerComp
   def submit(journeyId: String): Action[AnyContent] = identify.async { implicit request =>
     def handleSuccess(userAnswerIsYes: Boolean): Future[Result] =
       for {
-        storeUserAnswerIsSuccessful <- storeSubmittedVatService.storeStoreSubmittedVat(journeyId, userAnswerIsYes, request.userId)
+        storeUserAnswerIsSuccessful <- storeKnownFactsService.storeKnownFactAnswer(userAnswerIsYes, SubmittedVatReturnKey, journeyId, request.userId)
         clearOtherDataIsSuccessful  <- journeyService.removeOppositePagesDataForGatewayQuestion(userAnswerIsYes, journeyId, request.userId)
         nextPage =
           if (userAnswerIsYes) routes.CaptureBox5FigureController.show(journeyId) else routes.CaptureVatApplicationNumberController.show(journeyId)

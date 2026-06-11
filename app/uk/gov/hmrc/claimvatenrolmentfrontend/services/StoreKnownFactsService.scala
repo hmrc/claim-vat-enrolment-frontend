@@ -16,27 +16,20 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, Writes}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.StoreBox5FigureService.Box5FigureKey
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
-class StoreBox5FigureService @Inject()(journeyDataRepository: JourneyDataRepository) {
+class StoreKnownFactsService @Inject() (journeyDataRepository: JourneyDataRepository) {
 
-  def storeBox5Figure(journeyId: String,
-                      box5Figure: String,
-                      authInternalId: String): Future[Boolean] =
+  def storeKnownFactAnswer[A](value: A, pageKey: String, journeyId: String, authInternalId: String)(implicit writes: Writes[A]): Future[Boolean] =
     journeyDataRepository.updateJourneyData(
       journeyId = journeyId,
-      dataKey = Box5FigureKey,
-      data = Json.toJson(box5Figure),
+      dataKey = pageKey,
+      data = Json.toJson(value),
       authInternalId = authInternalId
     )
-}
-
-object StoreBox5FigureService {
-  val Box5FigureKey = "box5Figure"
 }

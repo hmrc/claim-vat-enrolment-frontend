@@ -26,11 +26,11 @@
 
 @()(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
-@layout(Some(titleNoForm(messages("invalid_account_type.title")))) {
+@layout(Some(titleNoForm(messages("user_is_an_agent.title")))) {
 
-    @h1(messages("invalid_account_type.heading"))
+    @h1(messages("user_is_an_agent.title"))
 
-    @p { @messages("invalid_account_type.line_1") }
+    @p { @messages("user_is_an_agent.p1") }
 
     @govukButton(Button(
         href = Some(routes.SignInOutController.signOut.url),
@@ -40,4 +40,5 @@
     ))
 
     <br/>
+
 }

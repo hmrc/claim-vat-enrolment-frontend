@@ -18,21 +18,24 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages
 
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
-import uk.gov.hmrc.claimvatenrolmentfrontend.controllers.{routes => appRoutes}
-import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.errorPages.invalid_account_type
+import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.errorPages.{invalid_account_type, user_is_an_agent_error_page}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
-class InvalidAccountTypeController @Inject()(mcc: MessagesControllerComponents,
-                                             view: invalid_account_type
-                                            )(implicit appConfig: AppConfig) extends FrontendController(mcc) {
+class InvalidAccountTypeController @Inject() (mcc: MessagesControllerComponents,
+                                              invalidAccountTypeView: invalid_account_type,
+                                              userIsAnAgentView: user_is_an_agent_error_page)(implicit appConfig: AppConfig)
+    extends FrontendController(mcc) {
 
-  val show: Action[AnyContent] = Action.async {
-    implicit request =>
-      Future.successful(Ok(view(appRoutes.SignInOutController.signOut)))
+  val showInvalidAccountTypeError: Action[AnyContent] = Action.async { implicit request =>
+    Future.successful(Ok(invalidAccountTypeView()))
+  }
+
+  val showUserIsAnAgentError: Action[AnyContent] = Action.async { implicit request =>
+    Future.successful(Ok(userIsAnAgentView()))
   }
 
 }

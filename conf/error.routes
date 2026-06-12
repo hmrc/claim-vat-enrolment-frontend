@@ -1,5 +1,8 @@
 # Invalid Account Type Error
-GET         /not-authorised                             uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.InvalidAccountTypeController.show()
+GET         /not-authorised                             uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.InvalidAccountTypeController.showInvalidAccountTypeError()
+
+# Invalid User Is An Agent Error
+GET         /agent-not-authorised                       uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.InvalidAccountTypeController.showUserIsAnAgentError()
 
 # Unmatched User Error
 GET         /not-enrolled                               uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.UnmatchedUserErrorController.show()

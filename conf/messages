@@ -134,6 +134,10 @@ unmatched_user.heading                                      = You cannot use thi
 unmatched_user.line_1                                       = Go to your business tax account to
 unmatched_user.link                                         = manage who can access your taxes, duties and schemes
 
+# User Is An Agent Error Page
+user_is_an_agent.title                                      = Agents are not authorised to claim enrolments
+user_is_an_agent.p1                                         = This can only be done by registered users and their nominated assistants.
+
 # Enrolment Already Allocated Error Page
 enrolment_already_allocated.title                           = This business’s VAT has already been added to another business tax account
 enrolment_already_allocated.heading                         = This business’s VAT has already been added to another business tax account

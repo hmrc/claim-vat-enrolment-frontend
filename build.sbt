@@ -59,7 +59,6 @@ lazy val microservice = Project(appName, file("."))
     // ***************
   )
   .settings(scoverageSettings)
-  .settings(resolvers += Resolver.jcenterRepo)
   .disablePlugins(JUnitXmlReportPlugin)
 
 Test / Keys.fork := true

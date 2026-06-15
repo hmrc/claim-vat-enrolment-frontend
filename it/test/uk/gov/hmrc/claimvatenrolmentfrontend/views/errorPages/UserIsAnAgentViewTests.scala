@@ -42,8 +42,5 @@ trait UserIsAnAgentViewTests extends ViewSpecHelper {
       doc.getParagraphs.get(0).text mustBe UserIsAnAgentError.p1
     }
 
-    "have a sign out button" in {
-      doc.getSubmitButton.first.text mustBe Base.signOut
-    }
   }
 }

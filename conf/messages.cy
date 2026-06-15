@@ -134,10 +134,8 @@ unmatched_user.line_1                                       = Ewch i’ch cyfrif
 unmatched_user.link                                         = reoli pwy all gael mynediad at eich trethi, eich tollau a’ch cynlluniau
 
 # User Is And Agent Error Page
-user_is_an_agent.title                                      = PLACEHOLDER
-user_is_an_agent.heading                                    = PLACEHOLDER
-user_is_an_agent.line_1                                     = PLACEHOLDER
-user_is_an_agent.link                                       = PLACEHOLDER
+user_is_an_agent.title                                      = Nid yw asiantau wedi’u hawdurdodi i hawlio ymrestriadau
+user_is_an_agent.p1                                         = Dim ond defnyddwyr cofrestredig a’u cynorthwywyr enwebedig all wneud hyn.
 
 # Enrolment Already Allocated Error Page
 enrolment_already_allocated.title                           = Mae TAW y busnes hwn eisoes wedi cael ei hychwanegu at gyfrif treth busnes arall

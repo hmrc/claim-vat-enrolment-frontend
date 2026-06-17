@@ -18,6 +18,8 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.stubs
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.libs.json.{JsObject, Json, Writes}
+import uk.gov.hmrc.auth.core.AffinityGroup
+import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.testCredentialId
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.WireMockMethods
 
@@ -25,15 +27,13 @@ trait AuthStub extends WireMockMethods {
 
   val authUrl = "/auth/authorise"
 
-  def stubAuth[T](status: Int, body: T)(implicit writes: Writes[T]): StubMapping = {
+  def stubAuth[T](status: Int, body: T)(implicit writes: Writes[T]): StubMapping =
     when(method = POST, uri = authUrl)
       .thenReturn(status = status, body = writes.writes(body))
-  }
 
-  def stubAuthFailure(): StubMapping = {
+  def stubAuthFailure(): StubMapping =
     when(method = POST, uri = authUrl)
       .thenReturn(status = 401, body = successfulAuthResponse(None))
-  }
 
   def successfulAuthResponse(internalId: Option[String]): JsObject = Json.obj(
     "internalId" -> internalId
@@ -41,13 +41,15 @@ trait AuthStub extends WireMockMethods {
 
   def successfulAuthResponse(groupId: Option[String],
                              internalId: Option[String],
-                             credentialRole: Option[String] = Some("User")): JsObject = Json.obj(
+                             credentialRole: Option[String] = Some("User"),
+                             affinityGroup: AffinityGroup = Individual): JsObject = Json.obj(
     "optionalCredentials" -> Json.obj(
-      "providerId" -> testCredentialId,
+      "providerId"   -> testCredentialId,
       "providerType" -> "GovernmentGateway"
     ),
     "groupIdentifier" -> groupId,
-    "internalId" -> internalId,
-    "credentialRole" -> credentialRole
+    "internalId"      -> internalId,
+    "credentialRole"  -> credentialRole,
+    "affinityGroup"   -> affinityGroup
   )
 }

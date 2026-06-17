@@ -20,6 +20,8 @@ import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{INTERNAL_SERVER_ERROR, OK, SEE_OTHER}
+import uk.gov.hmrc.auth.core.AffinityGroup.{Agent, Individual}
+import uk.gov.hmrc.auth.core.User
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants.{testContinueUrl, testInternalId, testJourneyId, testVatNumber}
 import uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages.{routes => errorRoutes}
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.JourneyIdGenerationService
@@ -33,29 +35,46 @@ class JourneyControllerISpec extends ComponentSpecHelper with AuthStub {
     .configure(config)
     .build()
 
+  private val url = s"/journey/$testVatNumber?continueUrl=$testContinueUrl"
+
   s"GET  /journey/$testVatNumber" should {
-    "redirect to the Capture VAT Registration Date page" in {
-      stubAuth(OK, successfulAuthResponse(None, Some(testInternalId)))
+    "redirect to the Capture VAT Registration Date page" when {
+      "able to fetch their authID and they are a User credentialRole and a non-Agent affinityGroup" in {
+        stubAuth(OK, successfulAuthResponse(None, Some(testInternalId), credentialRole = Some(User.toString), affinityGroup = Individual))
 
-      lazy val result = get(s"/journey/$testVatNumber?continueUrl=$testContinueUrl")
+        lazy val result = get(url)
 
-      result.status mustBe SEE_OTHER
-
-      result.header("Location").getOrElse("None") mustBe routes.CaptureVatRegistrationDateController.show(testJourneyId).url
+        result.status mustBe SEE_OTHER
+        result.header("Location").getOrElse("None") mustBe routes.CaptureVatRegistrationDateController.show(testJourneyId).url
+      }
     }
-    "redirect to Invalid Account Error page" in {
-      stubAuth(OK, successfulAuthResponse(None, Some(testInternalId), Some("Assistant")))
 
-      lazy val result = get(s"/journey/$testVatNumber?continueUrl=$testContinueUrl")
+    "redirect to the User Is An Agent Error page" when {
+      "able to fetch their authID and they are a User credentialRole BUT they have an Agent affinityGroup" in {
+        stubAuth(OK, successfulAuthResponse(None, Some(testInternalId), credentialRole = Some(User.toString), affinityGroup = Agent))
 
-      result.status mustBe SEE_OTHER
+        lazy val result = get(url)
 
-      result.header("Location").getOrElse("None") mustBe errorRoutes.InvalidAccountTypeController.show().url
+        result.status mustBe SEE_OTHER
+        result.header("Location").getOrElse("None") mustBe errorRoutes.InvalidAccountTypeController.showUserIsAnAgentError().url
+      }
     }
+
+    "redirect to Invalid Account Error page" when {
+      "they do not have a User credentialRole" in {
+        stubAuth(OK, successfulAuthResponse(None, Some(testInternalId), Some("Assistant")))
+
+        lazy val result = get(url)
+
+        result.status mustBe SEE_OTHER
+        result.header("Location").getOrElse("None") mustBe errorRoutes.InvalidAccountTypeController.showInvalidAccountTypeError().url
+      }
+    }
+
     "return Internal Server Error" in {
       stubAuth(OK, successfulAuthResponse(None, None, None))
 
-      lazy val result = get(s"/journey/$testVatNumber?continueUrl=$testContinueUrl")
+      lazy val result = get(url)
 
       result.status mustBe INTERNAL_SERVER_ERROR
 

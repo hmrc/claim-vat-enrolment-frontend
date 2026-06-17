@@ -201,6 +201,12 @@ object MessageLookup {
 
   }
 
+  object UserIsAnAgentError {
+    val title = "Agents are not authorised to claim enrolments"
+    val p1    = "This can only be done by registered users and their nominated assistants."
+
+  }
+
   object UnmatchedUserError {
     val title   = "You cannot use this service - Claim VAT Enrolment - GOV.UK"
     val heading = "You cannot use this service"

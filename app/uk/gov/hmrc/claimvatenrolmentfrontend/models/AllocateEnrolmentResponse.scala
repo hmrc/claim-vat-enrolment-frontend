@@ -37,7 +37,6 @@ object AllocateEnrolmentResponseHttpParser {
 
   val CodeKey = "code"
   val MultipleEnrolmentsInvalidKey = "MULTIPLE_ENROLMENTS_INVALID"
-  val InvalidKnownFactsKey = "INVALID_KNOWN_FACTS_SUPPLIED"
 
   implicit object AllocateEnrolmentResponseReads extends HttpReads[AllocateEnrolmentResponse] {
     override def read(method: String, url: String, response: HttpResponse): AllocateEnrolmentResponse = {
@@ -47,8 +46,7 @@ object AllocateEnrolmentResponseHttpParser {
       response.status match {
         case CREATED => EnrolmentSuccess
         case CONFLICT if responseCode contains MultipleEnrolmentsInvalidKey => MultipleEnrolmentsInvalid
-        case BAD_REQUEST if responseCode contains InvalidKnownFactsKey => InvalidKnownFacts
-        case BAD_REQUEST => EnrolmentFailure(response.body)
+        case BAD_REQUEST => InvalidKnownFacts
         case _ => EnrolmentFailure(response.body)
       }
     }

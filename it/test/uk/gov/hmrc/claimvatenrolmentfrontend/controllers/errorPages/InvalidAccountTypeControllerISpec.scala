@@ -19,9 +19,9 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.controllers.errorPages
 import play.api.test.Helpers._
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AuthStub
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
-import uk.gov.hmrc.claimvatenrolmentfrontend.views.errorPages.InvalidAccountTypeViewTests
+import uk.gov.hmrc.claimvatenrolmentfrontend.views.errorPages.{InvalidAccountTypeViewTests, UserIsAnAgentViewTests}
 
-class InvalidAccountTypeControllerISpec extends ComponentSpecHelper with InvalidAccountTypeViewTests with AuthStub {
+class InvalidAccountTypeControllerISpec extends ComponentSpecHelper with InvalidAccountTypeViewTests with UserIsAnAgentViewTests with AuthStub {
 
   s"GET /error/not-authorised" should {
     lazy val result = get("/error/not-authorised")
@@ -31,6 +31,16 @@ class InvalidAccountTypeControllerISpec extends ComponentSpecHelper with Invalid
     }
 
     testInvalidAccountTypeView(result)
+  }
+
+  s"GET /error/agent-not-authorised" should {
+    lazy val result = get("/error/agent-not-authorised")
+
+    "return OK" in {
+      result.status mustBe OK
+    }
+
+    testUserIsAnAgentErrorView(result)
   }
 
 }

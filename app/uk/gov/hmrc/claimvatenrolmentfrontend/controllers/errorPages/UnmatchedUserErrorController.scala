@@ -29,7 +29,7 @@ class UnmatchedUserErrorController @Inject()(mcc: MessagesControllerComponents,
                                              view: unmatched_user_error_page
                                             )(implicit appConfig: AppConfig) extends FrontendController(mcc) {
 
-  def show: Action[AnyContent] = Action.async {
+  def show(): Action[AnyContent] = Action.async {
     implicit request =>
       Future.successful(Ok(view()))
   }

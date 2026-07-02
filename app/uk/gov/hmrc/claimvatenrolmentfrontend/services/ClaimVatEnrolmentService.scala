@@ -82,7 +82,7 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
     allocateEnrolmentService.getUserIds(journeyData.vatNumber).flatMap {
       case NoUsersFound if enrolmentFailure =>
         sendAuditEvent(journeyData, isSuccessful = false, Some(NoUsersFound.message))
-        throw new InternalServerException(NoUsersFound.message)
+        Future.successful(Left(NoUsersFoundFailure))
       case NoUsersFound =>
         if (isEnabled(KnownFactsCheckFlag)) {
           callKnownFactsMismatchLogic(internalId, journeyData)
@@ -253,5 +253,7 @@ object ClaimVatEnrolmentService {
   case object JourneyConfigFailure extends ClaimVatEnrolmentFailure
 
   case object JourneyDataFailure extends ClaimVatEnrolmentFailure
+
+  case object NoUsersFoundFailure extends ClaimVatEnrolmentFailure
 
 }

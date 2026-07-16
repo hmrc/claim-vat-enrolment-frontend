@@ -24,7 +24,6 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureLastMonthSubmittedForm
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.LastMonthSubmittedKey
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.{LockService, StoreKnownFactsService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_last_month_submitted_page
-import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.LoggingUtil
 
@@ -52,16 +51,10 @@ class CaptureLastMonthSubmittedController @Inject() (mcc: MessagesControllerComp
     CaptureLastMonthSubmittedForm.form
       .bindFromRequest()
       .fold(
-        formWithErrors =>
-          Future.successful(
-            BadRequest(view(routes.CaptureLastMonthSubmittedController.submit(journeyId), formWithErrors))
-          ),
+        formWithErrors => Future.successful(BadRequest(view(routes.CaptureLastMonthSubmittedController.submit(journeyId), formWithErrors))),
         lastMonthSubmitted =>
-          storeKnownFactsService.storeKnownFactAnswer(lastMonthSubmitted.getValue, LastMonthSubmittedKey, journeyId, request.userId) map {
-            case true => Redirect(routes.CheckYourAnswersController.show(journeyId).url)
-            case _ =>
-              errorLog(s"The last month a Vat return was submitted could not be updated for journey $journeyId")
-              throw new InternalServerException(s"The last month a Vat return was submitted could not be updated for journey $journeyId")
+          storeKnownFactsService.storeKnownFactAnswerOrHandleFailure(lastMonthSubmitted.getValue, LastMonthSubmittedKey, journeyId, request.userId) {
+            Future.successful(Redirect(routes.CheckYourAnswersController.show(journeyId).url))
           }
       )
   }

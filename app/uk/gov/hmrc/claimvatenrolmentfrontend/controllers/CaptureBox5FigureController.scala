@@ -24,7 +24,6 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureBox5FigureForm
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.Box5FigureKey
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.{LockService, StoreKnownFactsService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_box5_figure_page
-import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.LoggingUtil
 
@@ -54,11 +53,8 @@ class CaptureBox5FigureController @Inject() (mcc: MessagesControllerComponents,
       .fold(
         formWithErrors => Future.successful(BadRequest(view(formWithErrors, routes.CaptureBox5FigureController.submit(journeyId)))),
         box5Figure =>
-          storeKnownFactsService.storeKnownFactAnswer(box5Figure, Box5FigureKey, journeyId, request.userId) map {
-            case true => Redirect(routes.CaptureLastMonthSubmittedController.show(journeyId).url)
-            case _ =>
-              errorLog(s"[CaptureBox5FigureController][submit] - The box 5 figure could not be updated for journey $journeyId")
-              throw new InternalServerException(s"The box 5 figure could not be updated for journey $journeyId")
+          storeKnownFactsService.storeKnownFactAnswerOrHandleFailure(box5Figure, Box5FigureKey, journeyId, request.userId) {
+            Future.successful(Redirect(routes.CaptureLastMonthSubmittedController.show(journeyId).url))
           }
       )
   }

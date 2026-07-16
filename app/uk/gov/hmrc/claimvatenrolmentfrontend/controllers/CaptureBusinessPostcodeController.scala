@@ -57,23 +57,12 @@ class CaptureBusinessPostcodeController @Inject() (mcc: MessagesControllerCompon
       .fold(
         formWithErrors => {
           cveService.buildPostCodeFailureAuditEvent(formWithErrors)
-          Future.successful(
-            BadRequest(view(routes.CaptureBusinessPostcodeController.submit(journeyId), formWithErrors, journeyId))
-          )
+          Future.successful(BadRequest(view(routes.CaptureBusinessPostcodeController.submit(journeyId), formWithErrors, journeyId)))
         },
         businessPostcode =>
           storeKnownFactsService
-            .storeKnownFactAnswer[Postcode](
-              businessPostcode,
-              PostcodeKey,
-              journeyId,
-              request.userId
-            )
-            .map {
-              case true => Redirect(routes.CaptureSubmittedVatReturnController.show(journeyId).url)
-              case _ =>
-                errorLog(s"[CaptureBusinessPostcodeController][submit] - The VAT registration postcode could not be updated for journey $journeyId")
-                throw new InternalServerException(s"The VAT registration postcode could not be updated for journey $journeyId")
+            .storeKnownFactAnswerOrHandleFailure[Postcode](businessPostcode, PostcodeKey, journeyId, request.userId) {
+              Future.successful(Redirect(routes.CaptureSubmittedVatReturnController.show(journeyId).url))
             }
       )
   }

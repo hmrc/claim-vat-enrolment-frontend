@@ -18,13 +18,12 @@ package uk.gov.hmrc.claimvatenrolmentfrontend.controllers
 
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
-import uk.gov.hmrc.claimvatenrolmentfrontend.auth.{AuthenticatedIdentifierAction, IdentifierRequest, JourneyDataRetrievalAction}
+import uk.gov.hmrc.claimvatenrolmentfrontend.auth.{AuthenticatedIdentifierAction, JourneyDataRetrievalAction}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureSubmittedVatReturnForm
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.SubmittedVatReturnKey
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.{JourneyService, LockService, StoreKnownFactsService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_submitted_vat_return_page
-import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.LoggingUtil
 
@@ -51,15 +50,12 @@ class CaptureSubmittedVatReturnController @Inject() (mcc: MessagesControllerComp
 
   def submit(journeyId: String): Action[AnyContent] = identify.async { implicit request =>
     def handleSuccess(userAnswerIsYes: Boolean): Future[Result] =
-      for {
-        storeUserAnswerIsSuccessful <- storeKnownFactsService.storeKnownFactAnswer(userAnswerIsYes, SubmittedVatReturnKey, journeyId, request.userId)
-        clearOtherDataIsSuccessful  <- journeyService.removeOppositePagesDataForGatewayQuestion(userAnswerIsYes, journeyId, request.userId)
-        nextPage =
-          if (userAnswerIsYes) routes.CaptureBox5FigureController.show(journeyId) else routes.CaptureVatApplicationNumberController.show(journeyId)
-      } yield (storeUserAnswerIsSuccessful, clearOtherDataIsSuccessful) match {
-        case (true, true) => Redirect(nextPage.url)
-        case (false, _)   => throwError(s"Unable to store user's answer ($userAnswerIsYes) for CaptureSubmittedVatReturn page.", journeyId)
-        case (_, false)   => throwError("Unable to clear data for alternative journey pages.", journeyId)
+      storeKnownFactsService.storeKnownFactAnswerOrHandleFailure(userAnswerIsYes, SubmittedVatReturnKey, journeyId, request.userId) {
+        journeyService.removeOppositePagesDataForGatewayQuestionOrHandleFailure(userAnswerIsYes, journeyId, request.userId) {
+          val nextPage =
+            if (userAnswerIsYes) routes.CaptureBox5FigureController.show(journeyId) else routes.CaptureVatApplicationNumberController.show(journeyId)
+          Redirect(nextPage.url)
+        }
       }
 
     CaptureSubmittedVatReturnForm.form
@@ -68,11 +64,6 @@ class CaptureSubmittedVatReturnController @Inject() (mcc: MessagesControllerComp
         formWithErrors => Future.successful(BadRequest(view(journeyId, formWithErrors))),
         userAnswer => handleSuccess(userAnswer)
       )
-  }
-
-  private def throwError(errorMessage: String, journeyId: String)(implicit request: IdentifierRequest[_]): Nothing = {
-    errorLog(s"[CaptureSubmittedVatReturnController][submit] - $errorMessage JourneyID: $journeyId")
-    throw new InternalServerException(s"$errorMessage JourneyID: $journeyId")
   }
 
 }

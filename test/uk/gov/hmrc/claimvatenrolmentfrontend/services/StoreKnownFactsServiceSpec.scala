@@ -17,22 +17,37 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
 import com.mongodb.MongoException
+import org.mockito.Mockito.when
+import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{Json, Writes}
+import play.api.mvc.Results.{InternalServerError, Redirect}
+import play.api.mvc.{Call, Result}
+import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import play.twirl.api.Html
+import uk.gov.hmrc.claimvatenrolmentfrontend.config.ErrorHandler
 import uk.gov.hmrc.claimvatenrolmentfrontend.helpers.TestConstants.{testInternalId, testJourneyId}
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.Postcode
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.mocks.MockJourneyDataRepository
+import uk.gov.hmrc.play.bootstrap.tools.LogCapturing
+import utils.{LinkLogger, LoggingUtil}
 
 import java.time.{LocalDate, Month}
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class StoreKnownFactsServiceSpec extends AnyWordSpec with Matchers with MockJourneyDataRepository {
+class StoreKnownFactsServiceSpec extends AnyWordSpec with Matchers with MockJourneyDataRepository with LoggingUtil with LogCapturing {
 
-  object TestService extends StoreKnownFactsService(mockJourneyDataRepository)
+  private val mockErrorHandler: ErrorHandler = mock[ErrorHandler]
 
-  "storeKnownFactAnswer" should {
+  object TestService extends StoreKnownFactsService(mockJourneyDataRepository, mockErrorHandler)
+
+  private val continueOnSuccess: Result        = Redirect(Call("GET", "redirect-location"))
+  private implicit val request: FakeRequest[_] = FakeRequest()
+
+  "storeKnownFactAnswerOrHandleFailure" should {
     "call the JourneyDataRepository to update the data for a specific key, journeyId and authId" in {
       mockUpdateJourneyData(
         journeyId = testJourneyId,
@@ -41,7 +56,9 @@ class StoreKnownFactsServiceSpec extends AnyWordSpec with Matchers with MockJour
         authId = testInternalId
       )(Future.successful(true))
 
-      await(TestService.storeKnownFactAnswer("dataToUpdate", "dataKey", testJourneyId, testInternalId))
+      await(
+        TestService.storeKnownFactAnswerOrHandleFailure("dataToUpdate", "dataKey", testJourneyId, testInternalId)(
+          Future.successful(continueOnSuccess)))
 
       verifyUpdateJourneyData(
         journeyId = testJourneyId,
@@ -51,90 +68,68 @@ class StoreKnownFactsServiceSpec extends AnyWordSpec with Matchers with MockJour
       )
     }
 
-    "return 'true'" when {
-      "given a String value" when {
-        "the repository returns 'true', indicating it has updated the journey data" in {
-          mockUpdateJourneyData(
-            journeyId = testJourneyId,
-            dataKey = "dataKey",
-            data = Json.toJson("dataToUpdate"),
-            authId = testInternalId
-          )(Future.successful(true))
+    def mockUpdateJourneyDataForValue[A](value: A)(implicit writes: Writes[A]): OngoingStubbing[_] =
+      mockUpdateJourneyData(
+        journeyId = testJourneyId,
+        dataKey = "dataKey",
+        data = Json.toJson(value),
+        authId = testInternalId
+      )(Future.successful(true))
 
-          val result = await(TestService.storeKnownFactAnswer("dataToUpdate", "dataKey", testJourneyId, testInternalId))
+    def runTestForDataValue[A](value: A)(implicit writes: Writes[A]): Future[Result] =
+      TestService.storeKnownFactAnswerOrHandleFailure(value, "dataKey", testJourneyId, testInternalId)(Future.successful(continueOnSuccess))
 
-          result mustBe true
+    "return the 'continueOnSuccess' result" when {
+      "the repository returns 'true', indicating it has updated the journey data" when {
+        "given a String value" in {
+          mockUpdateJourneyDataForValue("dataToUpdate")
+
+          val result = await(runTestForDataValue("dataToUpdate"))
+
+          result mustBe continueOnSuccess
         }
-      }
 
-      "given a Boolean value" when {
-        "the repository returns 'true', indicating it has updated the journey data" in {
-          mockUpdateJourneyData(
-            journeyId = testJourneyId,
-            dataKey = "dataKey",
-            data = Json.toJson(true),
-            authId = testInternalId
-          )(Future.successful(true))
+        "given a Boolean value" in {
+          mockUpdateJourneyDataForValue(true)
 
-          val result = await(TestService.storeKnownFactAnswer(value = true, "dataKey", testJourneyId, testInternalId))
+          val result = await(runTestForDataValue(true))
 
-          result mustBe true
+          result mustBe continueOnSuccess
         }
-      }
 
-      "given a Postcode object to parse" when {
-        "parsed successfully and the repository returns 'true', indicating it has updated the journey data" in {
+        "given a Postcode object to parse" in {
           val dataToParseAndStore: Postcode = Postcode("AA1 1AA")
-          val parsedPostcode: JsValue       = Json.toJson("AA1 1AA")
-          mockUpdateJourneyData(
-            journeyId = testJourneyId,
-            dataKey = "dataKey",
-            data = parsedPostcode,
-            authId = testInternalId
-          )(Future.successful(true))
 
-          val result = await(TestService.storeKnownFactAnswer[Postcode](dataToParseAndStore, "dataKey", testJourneyId, testInternalId))
+          mockUpdateJourneyDataForValue(Json.toJson("AA1 1AA"))
 
-          result mustBe true
+          val result = await(runTestForDataValue(dataToParseAndStore))
+
+          result mustBe continueOnSuccess
         }
-      }
 
-      "given a Month's Int value to parse" when {
-        "parsed successfully and the repository returns 'true', indicating it has updated the journey data" in {
+        "given a Month's Int value to parse" in {
           val dataToParseAndStore: Int = Month.JULY.getValue
-          val parsedMonthInt: JsValue  = Json.toJson(7)
-          mockUpdateJourneyData(
-            journeyId = testJourneyId,
-            dataKey = "dataKey",
-            data = parsedMonthInt,
-            authId = testInternalId
-          )(Future.successful(true))
 
-          val result = await(TestService.storeKnownFactAnswer[Int](dataToParseAndStore, "dataKey", testJourneyId, testInternalId))
+          mockUpdateJourneyDataForValue(Json.toJson(7))
 
-          result mustBe true
+          val result = await(runTestForDataValue(dataToParseAndStore))
+
+          result mustBe continueOnSuccess
         }
-      }
 
-      "given a LocalDate object to parse" when {
-        "parsed successfully and the repository returns 'true', indicating it has updated the journey data" in {
+        "given a LocalDate object to parse" in {
           val dataToParseAndStore: LocalDate = LocalDate.of(2000, 2, 2)
-          val parsedLocalDate: JsValue       = Json.toJson("2000-02-02")
-          mockUpdateJourneyData(
-            journeyId = testJourneyId,
-            dataKey = "dataKey",
-            data = parsedLocalDate,
-            authId = testInternalId
-          )(Future.successful(true))
 
-          val result = await(TestService.storeKnownFactAnswer[LocalDate](dataToParseAndStore, "dataKey", testJourneyId, testInternalId))
+          mockUpdateJourneyDataForValue(Json.toJson("2000-02-02"))
 
-          result mustBe true
+          val result = await(runTestForDataValue(dataToParseAndStore))
+
+          result mustBe continueOnSuccess
         }
       }
     }
 
-    "return 'false'" when {
+    "return an InternalServerError to the error page and log error reason" when {
       "the repository returns 'false', indicating it has failed to update the journey data" in {
         mockUpdateJourneyData(
           journeyId = testJourneyId,
@@ -142,10 +137,19 @@ class StoreKnownFactsServiceSpec extends AnyWordSpec with Matchers with MockJour
           data = Json.toJson("dataToUpdate"),
           authId = testInternalId
         )(Future.successful(false))
+        when(mockErrorHandler.internalServerErrorTemplate)
+          .thenReturn(Html("error"))
 
-        val result = await(TestService.storeKnownFactAnswer("dataToUpdate", "dataKey", testJourneyId, testInternalId))
+        val expectedErrorLog = s"[StoreKnownFactsService] - Unable to store user's answer (dataToUpdate) for dataKey page. Journey ID: $testJourneyId"
 
-        result mustBe false
+        withCaptureOfLoggingFrom(LinkLogger) { logs =>
+          val result = await(runTestForDataValue("dataToUpdate"))
+
+          result mustBe InternalServerError(mockErrorHandler.internalServerErrorTemplate)
+
+          logs.exists(_.getMessage.contains(expectedErrorLog)) mustBe true
+
+        }
       }
     }
 
@@ -159,7 +163,7 @@ class StoreKnownFactsServiceSpec extends AnyWordSpec with Matchers with MockJour
         )(response = Future.failed(new MongoException("failed to update")))
 
         intercept[MongoException](
-          await(TestService.storeKnownFactAnswer("dataToUpdate", "dataKey", testJourneyId, testInternalId))
+          await(runTestForDataValue("dataToUpdate"))
         )
       }
     }

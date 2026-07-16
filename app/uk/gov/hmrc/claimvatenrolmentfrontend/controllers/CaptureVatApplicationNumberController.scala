@@ -24,7 +24,6 @@ import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureVatApplicationNumberFo
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.SubmittedVatApplicationNumberKey
 import uk.gov.hmrc.claimvatenrolmentfrontend.services.{LockService, StoreKnownFactsService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_vat_application_number_page
-import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import utils.LoggingUtil
 
@@ -54,12 +53,10 @@ class CaptureVatApplicationNumberController @Inject() (mcc: MessagesControllerCo
       .fold(
         formWithErrors => Future.successful(BadRequest(view(formWithErrors, routes.CaptureVatApplicationNumberController.submit(journeyId)))),
         vatApplicationNumber =>
-          storeKnownFactsService.storeKnownFactAnswer(vatApplicationNumber, SubmittedVatApplicationNumberKey, journeyId, request.userId) map {
-            case true => Redirect(routes.CheckYourAnswersController.show(journeyId).url)
-            case _ =>
-              errorLog(s"[CaptureVatApplicationNumberController][submit] - The date of Vat registration could not be updated for journey $journeyId")
-              throw new InternalServerException(s"The date of Vat registration could not be updated for journey $journeyId")
-          }
+          storeKnownFactsService
+            .storeKnownFactAnswerOrHandleFailure(vatApplicationNumber, SubmittedVatApplicationNumberKey, journeyId, request.userId) {
+              Future.successful(Redirect(routes.CheckYourAnswersController.show(journeyId).url))
+            }
       )
   }
 }

@@ -17,19 +17,27 @@
 package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
 import play.api.libs.json.{Json, Writes}
+import play.api.mvc.Results.InternalServerError
+import play.api.mvc.{Request, Result}
+import uk.gov.hmrc.claimvatenrolmentfrontend.config.ErrorHandler
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository
+import utils.LinkLogger.errorLog
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class StoreKnownFactsService @Inject() (journeyDataRepository: JourneyDataRepository) {
+class StoreKnownFactsService @Inject() (journeyDataRepository: JourneyDataRepository, errorHandler: ErrorHandler) {
 
-  def storeKnownFactAnswer[A](value: A, pageKey: String, journeyId: String, authInternalId: String)(implicit writes: Writes[A]): Future[Boolean] =
-    journeyDataRepository.updateJourneyData(
-      journeyId = journeyId,
-      dataKey = pageKey,
-      data = Json.toJson(value),
-      authInternalId = authInternalId
-    )
+  def storeKnownFactAnswerOrHandleFailure[A](value: A, pageKey: String, journeyId: String, authInternalId: String)(
+      continueOnSuccess: Future[Result])(implicit writes: Writes[A], request: Request[_], ec: ExecutionContext): Future[Result] =
+    journeyDataRepository
+      .updateJourneyData(journeyId = journeyId, dataKey = pageKey, data = Json.toJson(value), authInternalId = authInternalId)
+      .flatMap(if (_) continueOnSuccess else Future.successful(logFailureAndRedirectToErrorPage(value.toString, pageKey, journeyId)))
+
+  private def logFailureAndRedirectToErrorPage(value: String, pageKey: String, journeyId: String)(implicit request: Request[_]): Result = {
+    errorLog(s"[StoreKnownFactsService] - Unable to store user's answer ($value) for $pageKey page. Journey ID: $journeyId")
+    InternalServerError(errorHandler.internalServerErrorTemplate)
+  }
+
 }

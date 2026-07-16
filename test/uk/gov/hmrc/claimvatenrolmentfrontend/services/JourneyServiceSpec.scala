@@ -20,11 +20,15 @@ import org.mockito.Mockito.when
 import org.mongodb.scala.result.InsertOneResult
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.mvc.Request
+import play.api.mvc.{Call, Request}
+import play.api.mvc.Results.{InternalServerError, Redirect}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import play.twirl.api.Html
+import uk.gov.hmrc.claimvatenrolmentfrontend.config.ErrorHandler
 import uk.gov.hmrc.claimvatenrolmentfrontend.helpers.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.JourneyConfig
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{PostcodeKey, SubmittedVatApplicationNumberKey}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.mocks.{MockJourneyConfigRepository, MockJourneyDataRepository}
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -37,9 +41,10 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockJourneyConfi
 
   implicit val request: Request[_] = FakeRequest()
 
-  val mockJourneyIdGenerationService: JourneyIdGenerationService = mock[JourneyIdGenerationService]
+  private val mockJourneyIdGenerationService: JourneyIdGenerationService = mock[JourneyIdGenerationService]
+  private val mockErrorHandler: ErrorHandler = mock[ErrorHandler]
 
-  object TestService extends JourneyService(mockJourneyConfigRepository, mockJourneyDataRepository, mockJourneyIdGenerationService)
+  object TestService extends JourneyService(mockJourneyConfigRepository, mockJourneyDataRepository, mockJourneyIdGenerationService, mockErrorHandler)
 
   val testJourneyConfig: JourneyConfig = JourneyConfig(
     continueUrl = testContinueUrl
@@ -96,6 +101,50 @@ class JourneyServiceSpec extends AnyWordSpec with Matchers with MockJourneyConfi
           await(TestService.retrieveJourneyData(testJourneyId, testInternalId)) mustBe None
           verifyGetJourneyData(testJourneyId, testInternalId)
 
+      }
+    }
+  }
+
+  "removePostcodeField" should {
+    "call the 'removeJourneyDataFields' method using the PostcodeKey and return the response from the repository" in {
+      val response = true
+      mockRemoveJourneyDataFields(testJourneyId, testInternalId, Seq(PostcodeKey))(Future.successful(response))
+
+      val result = await(TestService.removePostcodeField(testJourneyId, testInternalId))
+
+      result mustBe response
+      verifyRemoveJourneyDataFields(testJourneyId, testInternalId, Seq(PostcodeKey))
+    }
+  }
+
+  "removeOppositePagesDataForGatewayQuestionOrHandleFailure" when {
+    val successLocation = Redirect(Call("GET", "continueLocation"))
+
+    "userAnswerIsYes = true" should {
+      "try to remove stored data for SubmittedVatApplicationNumber field and" should {
+        "continue to success location when removal succeeds" in {
+          val successfulRemovalValue = true
+          mockRemoveJourneyDataFields(testJourneyId, testInternalId, Seq(SubmittedVatApplicationNumberKey))(Future.successful(successfulRemovalValue))
+
+          val result = await(TestService.removeOppositePagesDataForGatewayQuestionOrHandleFailure(
+            userAnswerIsYes = true, testJourneyId, testInternalId)(successLocation))
+
+          result mustBe successLocation
+          verifyRemoveJourneyDataFields(testJourneyId, testInternalId, Seq(SubmittedVatApplicationNumberKey))
+        }
+
+        "return an InternalServerError when removal fails" in {
+          val failedRemovalValue = false
+          mockRemoveJourneyDataFields(testJourneyId, testInternalId, Seq(SubmittedVatApplicationNumberKey))(Future.successful(failedRemovalValue))
+          when(mockErrorHandler.internalServerErrorTemplate)
+            .thenReturn(Html("error"))
+
+          val result = await(TestService.removeOppositePagesDataForGatewayQuestionOrHandleFailure(
+            userAnswerIsYes = true, testJourneyId, testInternalId)(successLocation))
+
+          result mustBe InternalServerError(mockErrorHandler.internalServerErrorTemplate)
+          verifyRemoveJourneyDataFields(testJourneyId, testInternalId, Seq(SubmittedVatApplicationNumberKey))
+        }
       }
     }
   }

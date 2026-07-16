@@ -16,18 +16,24 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.models
 
+import play.api.libs.json.{JsString, Writes}
 import uk.gov.hmrc.http.InternalServerException
 
 case class Postcode(stringValue: String) {
   import Postcode._
 
   val sanitisedPostcode: String = stringValue.toUpperCase.replaceAll(" ", "") match {
-    case standardPostcodeFormat(outwardCode, inwardCode) => outwardCode + " " + inwardCode
-    case other => throw new InternalServerException(s"Invalid postcode format: $other") // should never happen as it is validated in the form
+    case standardPostcodeFormat(outwardCode, inwardCode) =>
+      outwardCode + " " + inwardCode
+    case other => // Value is validated in the form binder so this should never be possible
+      throw new InternalServerException(s"Invalid postcode format: $other")
   }
 
 }
 
 object Postcode {
   private[models] val standardPostcodeFormat = "([A-Z]{1,2}[0-9][0-9A-Z]?)([0-9][A-Z]{2})".r
+
+  implicit val writes: Writes[Postcode] =
+    Writes(postcode => JsString(postcode.sanitisedPostcode))
 }

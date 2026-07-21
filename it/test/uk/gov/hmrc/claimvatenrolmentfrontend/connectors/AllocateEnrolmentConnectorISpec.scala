@@ -22,7 +22,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.claimvatenrolmentfrontend.assets.TestConstants._
 import uk.gov.hmrc.claimvatenrolmentfrontend.featureswitch.core.config.{AllocateEnrolmentStub, FeatureSwitching}
-import uk.gov.hmrc.claimvatenrolmentfrontend.models.AllocateEnrolmentResponseHttpParser.InvalidKnownFactsKey
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.AllocateEnrolmentResponseHttpParser.IncorrectKnownFactsKey
 import uk.gov.hmrc.claimvatenrolmentfrontend.models._
 import uk.gov.hmrc.claimvatenrolmentfrontend.stubs.AllocationEnrolmentStub
 import uk.gov.hmrc.claimvatenrolmentfrontend.utils.ComponentSpecHelper
@@ -191,11 +191,11 @@ class AllocateEnrolmentConnectorISpec extends ComponentSpecHelper with Allocatio
         }
 
         "return EnrolmentFailure" in {
-          stubAllocateEnrolment(testVatKnownFacts, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj("code" -> InvalidKnownFactsKey))
+          stubAllocateEnrolment(testVatKnownFacts, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj("code" -> IncorrectKnownFactsKey))
 
           val result = await(allocateEnrolmentConnector.allocateEnrolment(testVatKnownFacts, testCredentialId, testGroupId))
 
-          result mustBe InvalidKnownFacts
+          result mustBe IncorrectKnownFacts
         }
       }
     }

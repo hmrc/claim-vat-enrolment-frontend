@@ -107,7 +107,7 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
         disable(KnownFactsCheckFlag)
         mockAuthorise()
         mockRetrieveJourneyData(testJourneyId, testInternalId)
-        mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(InvalidKnownFacts))
+        mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(IncorrectKnownFacts))
         mockGetUserIds(testVatNumber)(Future.successful(NoUsersFound))
 
         val result = await(TestService.claimVatEnrolment(testCredentialId, testGroupId, testInternalId, testJourneyId))
@@ -119,7 +119,7 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
         enable(KnownFactsCheckFlag)
         mockAuthorise()
         mockRetrieveJourneyData(testJourneyId, testInternalId)
-        mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(InvalidKnownFacts))
+        mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(IncorrectKnownFacts))
         mockGetUserIds(testVatNumber)(Future.successful(NoUsersFound))
         mockUpdateSubmissionData(testVatNumber, testInternalId)(Future.successful(testVrnLock()))
         mockIsVrnLocked(testVatNumber, testInternalId)(Future.successful(false))
@@ -132,7 +132,7 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
       "the enrolment cannot be claimed due to 3 consecutive invalid known facts with KnownFactsCheck is enabled" in {
         mockAuthorise()
         mockRetrieveJourneyData(testJourneyId, testInternalId)
-        mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(InvalidKnownFacts))
+        mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(IncorrectKnownFacts))
         mockGetUserIds(testVatNumber)(Future.successful(NoUsersFound))
         mockIsVrnLocked(testVatNumber, testInternalId)(Future.successful(true))
         mockUpdateSubmissionData(testVatNumber, testInternalId)(Future.successful(testVrnLock(3)))
@@ -148,7 +148,7 @@ class ClaimVatEnrolmentServiceSpec extends AnyWordSpec with GuiceOneAppPerSuite 
       "the enrolment cannot be claimed due to invalid known facts but enrolment store proxy returns existing user" in {
         mockAuthorise()
         mockRetrieveJourneyData(testJourneyId, testInternalId)
-        mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(InvalidKnownFacts))
+        mockAllocateEnrolment(testFullVatKnownFacts.get, testCredentialId, testGroupId)(Future.successful(IncorrectKnownFacts))
         mockGetUserIds(testVatNumber)(Future.successful(UsersFound))
         disable(KnownFactsCheckFlag)
 

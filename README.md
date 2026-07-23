@@ -66,6 +66,17 @@ A valid VRN and continueUrl must be sent in the URL
 At the end of the user journey, the user submits their known facts to validate their identity before claiming their VAT
 enrolment.
 
+### Submission Attempts & Lockout
+
+To avoid fraudulent activity of churning attempts to impersonate a user,
+restrictions have been added to the number of submission attempts.
+
+After 3 failed attempts, a user shall be locked out from the service for 24 hours.
+
+Their attempt data expires after 24h, and the 24h expiry is refreshed at every new attempt.
+This means if a user has 2 failed attempts and waits 24h before their 3rd failed attempt,
+the new attempt will be stored as their now 1st failed attempt.
+
 ### Known Facts Match - Request Body
 
 An example request body submitted from our service:
@@ -84,6 +95,12 @@ An example request body submitted from our service:
   ]
 }
 ```
+
+Note:
+
+- `Postcode` value is optional
+- Either `(BoxFiveValue && LastMonthLatestStagger) || FormBundleNumber` must be provided
+- 'FormBundleNumber' and 'VAN' (Vat Application Number) names are used interchangeably
 
 ### Known Facts Match - API Call Chain
 

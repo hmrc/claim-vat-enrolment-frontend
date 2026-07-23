@@ -29,14 +29,16 @@ case object MultipleEnrolmentsInvalid extends AllocateEnrolmentResponse {
   val message = "Only one MTDVAT enrolment can be applied to a credential, user attempted to claim a second."
 }
 
-case object InvalidKnownFacts extends AllocateEnrolmentResponse {
+case object IncorrectKnownFacts extends AllocateEnrolmentResponse {
   val message = "The provided known facts do not match those held by the downstream service"
 }
 
 object AllocateEnrolmentResponseHttpParser {
 
-  val CodeKey = "code"
+  private val CodeKey              = "code"
   val MultipleEnrolmentsInvalidKey = "MULTIPLE_ENROLMENTS_INVALID"
+  val IncorrectKnownFactsKey       = "INVALID_IDENTIFIERS"
+  // INVALID_IDENTIFIERS doesn't seem the correct code, but is. Check documentation in README.
 
   implicit object AllocateEnrolmentResponseReads extends HttpReads[AllocateEnrolmentResponse] {
     override def read(method: String, url: String, response: HttpResponse): AllocateEnrolmentResponse = {
@@ -44,10 +46,10 @@ object AllocateEnrolmentResponseHttpParser {
       def responseCode: collection.Seq[String] = (response.json \\ CodeKey).map(_.as[String])
 
       response.status match {
-        case CREATED => EnrolmentSuccess
+        case CREATED                                                        => EnrolmentSuccess
         case CONFLICT if responseCode contains MultipleEnrolmentsInvalidKey => MultipleEnrolmentsInvalid
-        case BAD_REQUEST => InvalidKnownFacts
-        case _ => EnrolmentFailure(response.body)
+        case BAD_REQUEST if responseCode contains IncorrectKnownFactsKey    => IncorrectKnownFacts
+        case _                                                              => EnrolmentFailure(response.body)
       }
     }
   }

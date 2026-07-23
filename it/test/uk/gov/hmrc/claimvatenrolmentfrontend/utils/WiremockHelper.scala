@@ -36,8 +36,12 @@ object WiremockHelper extends Eventually with IntegrationPatience {
       case Some(body) => uriMapping.withRequestBody(equalTo(body))
       case None => uriMapping
     }
-    println(s"verifyPost-->postRequest: ${postRequest.toString}")
     verify(postRequest)
+  }
+
+  def verifyNoPost(uri: String): Unit = {
+    val postRequest = postRequestedFor(urlEqualTo(uri))
+    verify(0, postRequest)
   }
 
   def verifyPut(uri: String, optBody: Option[String] = None): Unit = {

@@ -10,118 +10,116 @@
 3. [Using the Allocated Enrolment Call stub](TestREADME.md#Using-the-Allocated-Enrolment-Call-stub)
 4. [Using the query user Call stub](TestREADME.md#Using-the-query-user-Call-stub)
 
+---
 
 ### GET test-only/feature-switches
 
----
 Shows all feature switches:
 
 1. Claim Vat Enrolment
 
- - Use stub for allocate enrolment call
- - Use stub for query user call
- 
-### GET /enrolments/HMRC-MTD-VAT~VRN~:vatNumber/users
+- Use stub for allocate enrolment call
+- Use stub for query user call
 
 ---
 
-Stub to create an allocating enrollment call. This feature switch will need to be enabled.
+### GET /enrolments/HMRC-MTD-VAT~VRN~:vatNumber/users
+
+Stub to check a user's enrollment call.
+
+`QueryUserIdStub` must be enabled to use this stubbed endpoint.
 
 #### Request:
-A valid vatNumber must be sent in the URI or as a query parameter. Example of using the query parameter:
 
-`test-only/enrolments/HMRC-MTD-VAT~VRN~:123456782/users`
+Example URI with query parameter:
 
-#### Response:
-Status:
+`/claim-vat-enrolment/test-only/enrolments/HMRC-MTD-VAT~VRN~123456782/users`
 
-| Expected Response                       | Reason                          |
-|-----------------------------------------|---------------------------------|
-| ```CREATED(201)```                           | ```EnrolmentSuccess```          |
-| ```CONFLICT(409)```                    | ```MULTIPLE_ENROLMENTS_INVALID```   |
-| ```BAD_REQUEST(400)```                    | ```InvalidKnownFacts```   |
+#### Stubbed Responses:
 
-Example response body :
+| VRN             | Response                                                             |
+|-----------------|----------------------------------------------------------------------|
+| ```111111111``` | ```OK(200)```                                                        |
+| ```333333333``` | ```OK(200)```                                                        |
+| ```444444444``` | ```NO_CONTENT(204)```                                                |
+| ```555555555``` | ```NO_CONTENT(204)```                                                |
+| ```123456789``` | ```NO_CONTENT(204)```                                                |
+| ```968501689``` | ```NO_CONTENT(204)```                                                |
+| ```other```     | ```INTERNAL_SERVER_ERROR('Error in the QueryUsersStubController')``` |
+
+---
+
+### POST /groups/:groupId/enrolments/:enrolmentKey
+
+Stub to create an allocating enrollment call.
+
+`AllocateEnrolmentStub` must be enabled to use this stubbed endpoint.
+
+#### Request:
+
+Example URI with query parameters:
+
+`/claim-vat-enrolment/test-only/groups/6C59EE2E-BFD8-491A-A5EE-E7A01088D971/enrolments/HMRC-MTD-VAT~VRN~123456782`
+
+Example request body :
+
 ```
 {
     "userId": "123456",
     "friendlyName":"Making Tax Digital - VAT",
     "type": "principal",
     "verifiers": {
-        "VATRegistrationDate":"2021-1-1",
+        "VATRegistrationDate":"2021-01-01",
         "Postcode": "AA11AA",
         "BoxFiveValue": "1000.00",
         "LastMonthLatestStagger": "JANUARY"
    }
  }
-
 ```
 
-### POST /groups/:groupId/enrolments/:enrolmentKey
+- Group ID is never checked.
+- Stubbed VRNs (`111111111` - `444444444`) return a set success or failure response (see below) dependent on the number.
+- Unstubbed VRNs will return a CREATED(201), BAD_REQUEST(Invalid Json) or BAD_REQUEST(Incorrect Known Facts) depending
+  on the submission body.
 
----
+#### Responses:
 
-Stub to create an allocating enrollment call when the call is unsuccessful. This feature switch will need to be enabled.
+| Expected Response      | Reason                                                   |
+|------------------------|----------------------------------------------------------|
+| ```CREATED(201)```     | ```Enrolment was successful```                           |
+| ```BAD_REQUEST(400)``` | ```Submitted known facts are incorrect```                |
+| ```BAD_REQUEST(400)``` | ```Request body has an invalid Json format```            |
+| ```CONFLICT(409)```    | ```User credentials already have an MTD-VAT enrolment``` |
 
-#### Request:
-A valid group and enrollment key must be sent in the URI or as a query parameter. Example of using the query parameter:
+#### How to get the right response:
 
-`test-only/groups/1234567/enrolments/HMRC-MTD-VAT~VRN~:123456782`
+| VRN                                                         | Response                                                                |
+|-------------------------------------------------------------|-------------------------------------------------------------------------|
+| ```111111111```                                             | ```CREATED```                                                           |
+| ```222222222```                                             | ```CONFLICT('code' -> 'MULTIPLE_ENROLMENTS_INVALID')```                 |
+| ```333333333```                                             | ```INTERNAL_SERVER_ERROR('Error on the Allocate Enrolment call')```     |
+| ```444444444```                                             | ```BAD_REQUEST('code' -> 'INVALID_IDENTIFIERS')```                      |
+| ```other```                                                 | ```CREATED```                                                           |
+| ```other with invalid json body```                          | ```BAD_REQUEST('code' -> 'INVALID_JSON', 'details' -> 'the details')``` |
+| ```123456789 / 968501689 with answers that match (below)``` | ```CREATED```                                                           |
+| ```123456789 / 968501689  with incorrect answers```         | ```BAD_REQUEST('code' -> 'INVALID_IDENTIFIERS')```                      |
 
-#### Request:
-No body is required for this request
+```
+VRN: 123456789
+"VATRegistrationDate": "2025-01-01",
+"Postcode": "AA1 1AA",
+"BoxFiveValue": "123.45",
+"LastMonthLatestStagger": "01"
+```
 
-#### Response:
-
-| Expected Response                       | Reason                          |
-|-----------------------------------------|---------------------------------|
-| ```OK(200)```                           | ```UsersFound```          |
-| ```NoContent(204)```                    | ```UsersNotFound```   |
-
-
-### Using the Allocated Enrolment Call stub
-
----
-
-This stub returns different responses based on the VAT Registration Number.
-
-`1111111111` will return a known facts mismatch because the data the user provided does not match the details we have. Upon submitting CYA will redirect the user to an error page.
-
-`2222222222` will return a data mismatch which upon submitting CYA will redirect the user to an error page.
-
-`3333333333` will return a conflict error because the user has already registered for VAT and will be redirected to an error page upon submitting CYA.
-
-`4444444444` will redirect to a technical difficulties error page up upon submitting CYA. 
-
-Any other vatNumber will create an enrolment and redirect to Sign Up Complete page.
-
-| VAT Number                               | Response               |
-|-----------------------------------------|------------------------|
-| ```1111111111```                              | ```BAD_REQUEST```     |
-| ```2222222222```                          | ```FailedDependency``` |
-| ```3333333333```                          | ```CONFLICT```  |
-| ```4444444444```                          | ```Ok```   |
-| Any other vatNumber                     | ```CREATED```               |
-
-### Using the query user Call stub
-
----
-
-This stub returns different responses based on the VAT Registration Number.
-
-`3333333333` indicates that the enrolment could not be allocated as a user with the specified enrolment already applied to their credential has been found
-
-`4444444444` indicates that the enrolment could not be allocated but no other users have been found with the specified enrolment
-
-Any other vat number throws and InternalServerError.
-
-| VAT Number                               | Response               |
-|-----------------------------------------|------------------------|
-| ```3333333333```                              | ```Ok```     |
-| ```4444444444```                          | ```NoContent``` |
-| Any other vatNumber                           | ```InternalServerError```  |
-
+```
+VRN: 968501689
+"VATRegistrationDate": "2025-12-12",
+"Postcode": "BA1 1AB",
+"FormBundleNumber": "099123456789"
+```
 
 ### License
 
-This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
+This code is open source software licensed under
+the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").

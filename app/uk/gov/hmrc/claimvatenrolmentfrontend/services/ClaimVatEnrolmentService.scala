@@ -63,7 +63,7 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
           case MultipleEnrolmentsInvalid =>
             sendAuditEvent(journeyData, isSuccessful = false, Some(MultipleEnrolmentsInvalid.message))
             Future.successful(Left(CannotAssignMultipleMtdvatEnrolments))
-          case InvalidKnownFacts =>
+          case IncorrectKnownFacts =>
             callEnrolmentStoreProxy(internalId, journeyData)
           case EnrolmentFailure(_) =>
             callEnrolmentStoreProxy(internalId, journeyData, enrolmentFailure = true)
@@ -87,7 +87,7 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
         if (isEnabled(KnownFactsCheckFlag)) {
           callKnownFactsMismatchLogic(internalId, journeyData)
         } else {
-          sendAuditEvent(journeyData, isSuccessful = false, Some(InvalidKnownFacts.message))
+          sendAuditEvent(journeyData, isSuccessful = false, Some(IncorrectKnownFacts.message))
           Future.successful(Left(KnownFactsMismatchNotLocked))
         }
       case UsersFound =>
@@ -109,7 +109,7 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
             val lockedStatus: String = s"locked-${counts.collect { case (k,v) if v >= limit => k }.mkString("-and-")}"
 
             sendAuditEventKnownFactsCheck(
-              journeyData, limit, lockedStatus, InvalidKnownFacts.message
+              journeyData, limit, lockedStatus, IncorrectKnownFacts.message
             )
             warnLog(s"[ClaimVatEnrolmentService][callKnownFactsMismatchLogic] - " +
               s"User attempts: ${counts.getOrElse(userId,"N/A")} - " +
@@ -118,7 +118,7 @@ class ClaimVatEnrolmentService @Inject()(auditConnector: AuditConnector,
             Left(KnownFactsMismatchLocked)
           } else {
             sendAuditEventKnownFactsCheck(
-              journeyData, counts.values.max, "unlocked", InvalidKnownFacts.message
+              journeyData, counts.values.max, "unlocked", IncorrectKnownFacts.message
             )
             Left(KnownFactsMismatchNotLocked)
           }

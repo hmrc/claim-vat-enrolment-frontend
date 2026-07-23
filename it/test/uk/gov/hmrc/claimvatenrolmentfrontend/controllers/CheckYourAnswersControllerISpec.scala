@@ -183,7 +183,7 @@ class CheckYourAnswersControllerISpec
         stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         await(insertJourneyConfig(testJourneyId, testContinueUrl, testInternalId))
         createSavedJourneyData(fullJourneyData)
-        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(CREATED, Json.obj())
+        mockAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(CREATED, Json.obj())
         stubAudit
 
         lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
@@ -200,7 +200,7 @@ class CheckYourAnswersControllerISpec
       "the enrolment returns a BAD_REQUEST and enrolment store proxy ES0 returns NO_CONTENT" in {
         stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         createSavedJourneyData(fullJourneyData)
-        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj("code" -> IncorrectKnownFactsKey))
+        mockAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj("code" -> IncorrectKnownFactsKey))
         stubGetUserIds(testVatNumber)(NO_CONTENT)
         stubAudit
 
@@ -218,7 +218,7 @@ class CheckYourAnswersControllerISpec
       "the enrolment returns BAD_REQUEST for 3 invalid attempts consecutively" in {
         stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         createSavedJourneyData(fullJourneyData)
-        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj("code" -> IncorrectKnownFactsKey))
+        mockAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj("code" -> IncorrectKnownFactsKey))
         stubGetUserIds(testVatNumber)(NO_CONTENT)
         stubAudit
 
@@ -238,7 +238,7 @@ class CheckYourAnswersControllerISpec
       "the enrolment returns BAD_REQUEST with a non INVALID_IDENTIFIERS response" in {
         stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         createSavedJourneyData(fullJourneyData)
-        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj("code" -> "SERVICE_UNAVAILABLE"))
+        mockAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj("code" -> "SERVICE_UNAVAILABLE"))
         stubGetUserIds(testVatNumber)(NO_CONTENT)
         stubAudit
 
@@ -253,7 +253,7 @@ class CheckYourAnswersControllerISpec
       "the enrolment returns BAD_REQUEST and enrolment store proxy ES0 returns OK" in {
         stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         createSavedJourneyData(fullJourneyData)
-        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj("code" -> IncorrectKnownFactsKey))
+        mockAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj("code" -> IncorrectKnownFactsKey))
         stubGetUserIds(testVatNumber)(OK)
         stubAudit
 
@@ -271,7 +271,7 @@ class CheckYourAnswersControllerISpec
       "the user group already has a matching enrolment, but the user does not" in {
         stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         createSavedJourneyData(fullJourneyData)
-        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(
+        mockAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(
           CONFLICT,
           Json.obj("code" -> MultipleEnrolmentsInvalidKey))
         stubAudit
@@ -289,7 +289,7 @@ class CheckYourAnswersControllerISpec
     "redirect to the generic error page" when {
       "there is no journeyData" in {
         stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
-        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj())
+        mockAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(BAD_REQUEST, Json.obj())
         stubGetUserIds(testVatNumber)(NO_CONTENT)
         stubAudit
 
@@ -305,7 +305,7 @@ class CheckYourAnswersControllerISpec
         stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         createSavedJourneyData(fullJourneyData)
 
-        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(CREATED, Json.obj())
+        mockAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(CREATED, Json.obj())
         lazy val result = post(s"/$testJourneyId/check-your-answers-vat")()
 
         result must have(
@@ -328,7 +328,7 @@ class CheckYourAnswersControllerISpec
       "no userIds are connected with the vatNumber" in {
         stubAuth(OK, successfulAuthResponse(Some(testGroupId), Some(testInternalId)))
         createSavedJourneyData(fullJourneyData)
-        stubAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(INTERNAL_SERVER_ERROR, Json.obj())
+        mockAllocateEnrolment(fullJourneyData, testCredentialId, includeFormBundleReference = true, testGroupId)(INTERNAL_SERVER_ERROR, Json.obj())
         stubGetUserIds(testVatNumber)(NO_CONTENT)
         stubAudit
 

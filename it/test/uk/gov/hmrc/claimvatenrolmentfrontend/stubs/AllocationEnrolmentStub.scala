@@ -28,7 +28,7 @@ trait AllocationEnrolmentStub extends WireMockMethods {
   private def allocateEnrolmentUrl(groupId: String, enrolmentKey: String): String = s"/tax-enrolments/groups/$groupId/enrolments/$enrolmentKey"
   private def allocateEnrolmentUrlStub(groupId: String, enrolmentKey: String): String = s"/claim-vat-enrolment/test-only/groups/$groupId/enrolments/$enrolmentKey"
 
-  def stubAllocateEnrolment(claimVatEnrolmentInfo: VatKnownFacts,
+  def mockAllocateEnrolment(claimVatEnrolmentInfo: VatKnownFacts,
                             credentialId: String,
                             includeFormBundleReference: Boolean,
                             groupId: String)(status: Int, jsonBody: JsObject): StubMapping = {
@@ -93,7 +93,7 @@ trait AllocationEnrolmentStub extends WireMockMethods {
     )
   }
 
-  def stubAllocateEnrolmentForStub(claimVatEnrolmentInfo: VatKnownFacts,
+  def mockAllocateEnrolmentForStub(claimVatEnrolmentInfo: VatKnownFacts,
                                    credentialId: String,
                                    groupId: String)(status: Int, jsonBody: JsObject): StubMapping = {
     val enrolmentKey = s"HMRC-MTD-VAT~VRN~${claimVatEnrolmentInfo.vatNumber}"

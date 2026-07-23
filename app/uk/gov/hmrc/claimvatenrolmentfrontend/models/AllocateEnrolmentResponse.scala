@@ -35,9 +35,10 @@ case object IncorrectKnownFacts extends AllocateEnrolmentResponse {
 
 object AllocateEnrolmentResponseHttpParser {
 
-  val CodeKey                      = "code"
+  private val CodeKey              = "code"
   val MultipleEnrolmentsInvalidKey = "MULTIPLE_ENROLMENTS_INVALID"
   val IncorrectKnownFactsKey       = "INVALID_IDENTIFIERS"
+  // INVALID_IDENTIFIERS doesn't seem the correct code, but is. Check documentation in README.
 
   implicit object AllocateEnrolmentResponseReads extends HttpReads[AllocateEnrolmentResponse] {
     override def read(method: String, url: String, response: HttpResponse): AllocateEnrolmentResponse = {
@@ -48,7 +49,6 @@ object AllocateEnrolmentResponseHttpParser {
         case CREATED                                                        => EnrolmentSuccess
         case CONFLICT if responseCode contains MultipleEnrolmentsInvalidKey => MultipleEnrolmentsInvalid
         case BAD_REQUEST if responseCode contains IncorrectKnownFactsKey    => IncorrectKnownFacts
-        case BAD_REQUEST                                                    => EnrolmentFailure(response.body)
         case _                                                              => EnrolmentFailure(response.body)
       }
     }

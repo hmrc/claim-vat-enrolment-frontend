@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.claimvatenrolmentfrontend.services
 
-import play.api.mvc.Request
+import play.api.mvc.Results.InternalServerError
+import play.api.mvc.{Request, Result}
+import uk.gov.hmrc.claimvatenrolmentfrontend.config.ErrorHandler
 import uk.gov.hmrc.claimvatenrolmentfrontend.models.{JourneyConfig, VatKnownFacts}
 import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.{
   Box5FigureKey,
@@ -33,7 +35,8 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class JourneyService @Inject() (journeyConfigRepository: JourneyConfigRepository,
                                 journeyDataRepository: JourneyDataRepository,
-                                journeyIdGenerationService: JourneyIdGenerationService)(implicit ec: ExecutionContext)
+                                journeyIdGenerationService: JourneyIdGenerationService,
+                                errorHandler: ErrorHandler)(implicit ec: ExecutionContext)
     extends LoggingUtil {
 
   def createJourney(journeyConfig: JourneyConfig, vatNumber: String, authInternalId: String): Future[String] = {
@@ -67,13 +70,20 @@ class JourneyService @Inject() (journeyConfigRepository: JourneyConfigRepository
   def removePostcodeField(journeyId: String, authInternalId: String): Future[Boolean] =
     journeyDataRepository.removeJourneyDataFields(journeyId, authInternalId, Seq(PostcodeKey))
 
-  def removeOppositePagesDataForGatewayQuestion(userAnswerIsYes: Boolean, journeyId: String, authInternalId: String): Future[Boolean] =
-    if (userAnswerIsYes) removeFormBundleNumberFields(journeyId, authInternalId) else removeAdditionalVatReturnFields(journeyId, authInternalId)
+  def removeOppositePagesDataForGatewayQuestionOrHandleFailure(userAnswerIsYes: Boolean, journeyId: String, authInternalId: String)(
+      continueOnSuccess: Result)(implicit request: Request[_], ec: ExecutionContext): Future[Result] =
+    (if (userAnswerIsYes) removeFormBundleNumberFields(journeyId, authInternalId) else removeAdditionalVatReturnFields(journeyId, authInternalId))
+      .map(if (_) continueOnSuccess else logFailureAndRedirectToErrorPage(journeyId))
 
   private def removeAdditionalVatReturnFields(journeyId: String, authInternalId: String): Future[Boolean] =
     journeyDataRepository.removeJourneyDataFields(journeyId, authInternalId, Seq(Box5FigureKey, LastMonthSubmittedKey))
 
   private def removeFormBundleNumberFields(journeyId: String, authInternalId: String): Future[Boolean] =
     journeyDataRepository.removeJourneyDataFields(journeyId, authInternalId, Seq(SubmittedVatApplicationNumberKey))
+
+  private def logFailureAndRedirectToErrorPage(journeyId: String)(implicit request: Request[_]): Result = {
+    errorLog(s"[JourneyService] - Unable to clear data for alternative journey pages. Journey ID: $journeyId")
+    InternalServerError(errorHandler.internalServerErrorTemplate)
+  }
 
 }

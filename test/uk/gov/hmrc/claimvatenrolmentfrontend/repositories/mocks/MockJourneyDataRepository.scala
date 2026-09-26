@@ -37,69 +37,71 @@ trait MockJourneyDataRepository extends MockitoSugar with BeforeAndAfterEach {
     reset(mockJourneyDataRepository)
   }
 
-  def mockInsertJourneyData(journeyId: String,
-                            authId: String,
-                            vatNumber: String
-                           )(response: Future[String]): OngoingStubbing[_] =
-    when(mockJourneyDataRepository.insertJourneyVatNumber(
-      ArgumentMatchers.eq(journeyId),
-      ArgumentMatchers.eq(authId),
-      ArgumentMatchers.eq(vatNumber),
-    )).thenReturn(response)
+  def mockInsertJourneyData(journeyId: String, authId: String, vatNumber: String)(response: Future[String]): OngoingStubbing[_] =
+    when(
+      mockJourneyDataRepository.insertJourneyVatNumber(
+        ArgumentMatchers.eq(journeyId),
+        ArgumentMatchers.eq(authId),
+        ArgumentMatchers.eq(vatNumber)
+      )).thenReturn(response)
 
-  def mockGetJourneyData(journeyId: String,
-                         authId: String
-                        )(response: Future[Option[VatKnownFacts]]): OngoingStubbing[_] =
-    when(mockJourneyDataRepository.getJourneyData(
-      ArgumentMatchers.eq(journeyId),
-      ArgumentMatchers.eq(authId)
-    )).thenReturn(response)
+  def mockGetJourneyData(journeyId: String, authId: String)(response: Future[Option[VatKnownFacts]]): OngoingStubbing[_] =
+    when(
+      mockJourneyDataRepository.getJourneyData(
+        ArgumentMatchers.eq(journeyId),
+        ArgumentMatchers.eq(authId)
+      )).thenReturn(response)
 
-  def mockGetVrnInfo(journeyId: String,
-                     authId: String
-                    )(response: Future[Option[String]]): OngoingStubbing[_] =
-    when(mockJourneyDataRepository.getVRNInfo(
-      ArgumentMatchers.eq(journeyId),
-      ArgumentMatchers.eq(authId)
-    )).thenReturn(response)
+  def mockGetVrnInfo(journeyId: String, authId: String)(response: Future[Option[String]]): OngoingStubbing[_] =
+    when(
+      mockJourneyDataRepository.getVRNInfo(
+        ArgumentMatchers.eq(journeyId),
+        ArgumentMatchers.eq(authId)
+      )).thenReturn(response)
 
-  def mockUpdateJourneyData(journeyId: String,
-                            dataKey: String,
-                            data: JsValue,
-                            authId: String,
-                           )(response: Future[Boolean]): OngoingStubbing[_] =
-    when(mockJourneyDataRepository.updateJourneyData(
-      ArgumentMatchers.eq(journeyId),
-      ArgumentMatchers.eq(dataKey),
-      ArgumentMatchers.eq(data),
-      ArgumentMatchers.eq(authId)
-    )).thenReturn(response)
+  def mockUpdateJourneyData(journeyId: String, dataKey: String, data: JsValue, authId: String)(response: Future[Boolean]): OngoingStubbing[_] =
+    when(
+      mockJourneyDataRepository.updateJourneyData(
+        ArgumentMatchers.eq(journeyId),
+        ArgumentMatchers.eq(dataKey),
+        ArgumentMatchers.eq(data),
+        ArgumentMatchers.eq(authId)
+      )).thenReturn(response)
 
-  def verifyCreateJourney(journeyId: String,
-                          authId: String,
-                          vatNumber: String): Unit =
+  def mockRemoveJourneyDataFields(journeyId: String, authId: String, dataKeySeq: Seq[String])(response: Future[Boolean]): OngoingStubbing[_] =
+    when(
+      mockJourneyDataRepository.removeJourneyDataFields(
+        ArgumentMatchers.eq(journeyId),
+        ArgumentMatchers.eq(authId),
+        ArgumentMatchers.eq(dataKeySeq)
+      )).thenReturn(response)
+
+  def verifyCreateJourney(journeyId: String, authId: String, vatNumber: String): Unit =
     verify(mockJourneyDataRepository).insertJourneyVatNumber(
       ArgumentMatchers.eq(journeyId),
       ArgumentMatchers.eq(authId),
       ArgumentMatchers.eq(vatNumber)
     )
 
-  def verifyGetJourneyData(journeyId: String,
-                           authId: String): Unit =
+  def verifyGetJourneyData(journeyId: String, authId: String): Unit =
     verify(mockJourneyDataRepository).getJourneyData(
       ArgumentMatchers.eq(journeyId),
       ArgumentMatchers.eq(authId)
     )
 
-  def verifyUpdateJourneyData(journeyId: String,
-                              dataKey: String,
-                              data: JsValue,
-                              authId: String): Unit =
+  def verifyUpdateJourneyData(journeyId: String, dataKey: String, data: JsValue, authId: String): Unit =
     verify(mockJourneyDataRepository).updateJourneyData(
       ArgumentMatchers.eq(journeyId),
       ArgumentMatchers.eq(dataKey),
       ArgumentMatchers.eq(data),
       ArgumentMatchers.eq(authId)
+    )
+
+  def verifyRemoveJourneyDataFields(journeyId: String, authInternalId: String, dataKeySeq: Seq[String]): Unit =
+    verify(mockJourneyDataRepository).removeJourneyDataFields(
+      ArgumentMatchers.eq(journeyId),
+      ArgumentMatchers.eq(authInternalId),
+      ArgumentMatchers.eq(dataKeySeq)
     )
 
 }

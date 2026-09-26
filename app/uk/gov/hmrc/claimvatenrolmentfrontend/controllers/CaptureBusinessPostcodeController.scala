@@ -21,7 +21,9 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.claimvatenrolmentfrontend.auth.{AuthenticatedIdentifierAction, JourneyDataRetrievalAction}
 import uk.gov.hmrc.claimvatenrolmentfrontend.config.AppConfig
 import uk.gov.hmrc.claimvatenrolmentfrontend.forms.CaptureBusinessPostcodeForm
-import uk.gov.hmrc.claimvatenrolmentfrontend.services.{ClaimVatEnrolmentService, JourneyService, LockService, StoreBusinessPostcodeService}
+import uk.gov.hmrc.claimvatenrolmentfrontend.models.Postcode
+import uk.gov.hmrc.claimvatenrolmentfrontend.repositories.JourneyDataRepository.PostcodeKey
+import uk.gov.hmrc.claimvatenrolmentfrontend.services.{ClaimVatEnrolmentService, JourneyService, LockService, StoreKnownFactsService}
 import uk.gov.hmrc.claimvatenrolmentfrontend.views.html.capture_business_postcode_page
 import uk.gov.hmrc.http.InternalServerException
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -31,16 +33,17 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CaptureBusinessPostcodeController @Inject()(mcc: MessagesControllerComponents,
-                                                  view: capture_business_postcode_page,
-                                                  cveService: ClaimVatEnrolmentService,
-                                                  storeBusinessPostcodeService: StoreBusinessPostcodeService,
-                                                  journeyService: JourneyService,
-                                                  identify: AuthenticatedIdentifierAction,
-                                                  getData: JourneyDataRetrievalAction,
-                                                  lockService: LockService
-                                                 )(implicit val config: AppConfig, ec: ExecutionContext)
-  extends FrontendController(mcc) with I18nSupport with LoggingUtil{
+class CaptureBusinessPostcodeController @Inject() (mcc: MessagesControllerComponents,
+                                                   view: capture_business_postcode_page,
+                                                   cveService: ClaimVatEnrolmentService,
+                                                   storeKnownFactsService: StoreKnownFactsService,
+                                                   journeyService: JourneyService,
+                                                   identify: AuthenticatedIdentifierAction,
+                                                   getData: JourneyDataRetrievalAction,
+                                                   lockService: LockService)(implicit val config: AppConfig, ec: ExecutionContext)
+    extends FrontendController(mcc)
+    with I18nSupport
+    with LoggingUtil {
 
   def show(journeyId: String): Action[AnyContent] = (identify andThen getData).async { implicit request =>
     lockService.continueIfJourneyIsNotLocked(request.journeyData.vatNumber, request.userId)(
@@ -49,24 +52,19 @@ class CaptureBusinessPostcodeController @Inject()(mcc: MessagesControllerCompone
   }
 
   def submit(journeyId: String): Action[AnyContent] = identify.async { implicit request =>
-    CaptureBusinessPostcodeForm.form.bindFromRequest().fold(
-      formWithErrors => {
-        cveService.buildPostCodeFailureAuditEvent(formWithErrors)
-        Future.successful(
-          BadRequest(view(routes.CaptureBusinessPostcodeController.submit(journeyId), formWithErrors, journeyId))
-        )},
-      businessPostcode =>
-        storeBusinessPostcodeService.storeBusinessPostcodeService(
-          journeyId,
-          businessPostcode,
-          request.userId
-        ).map {
-          case true => Redirect(routes.CaptureSubmittedVatReturnController.show(journeyId).url)
-          case _ =>
-            errorLog(s"[CaptureBusinessPostcodeController][submit] - The VAT registration postcode could not be updated for journey $journeyId")
-            throw new InternalServerException(s"The VAT registration postcode could not be updated for journey $journeyId")
-        }
-    )
+    CaptureBusinessPostcodeForm.form
+      .bindFromRequest()
+      .fold(
+        formWithErrors => {
+          cveService.buildPostCodeFailureAuditEvent(formWithErrors)
+          Future.successful(BadRequest(view(routes.CaptureBusinessPostcodeController.submit(journeyId), formWithErrors, journeyId)))
+        },
+        businessPostcode =>
+          storeKnownFactsService
+            .storeKnownFactAnswerOrHandleFailure[Postcode](businessPostcode, PostcodeKey, journeyId, request.userId) {
+              Future.successful(Redirect(routes.CaptureSubmittedVatReturnController.show(journeyId).url))
+            }
+      )
   }
 
   def noPostcode(journeyId: String): Action[AnyContent] = identify.async { implicit request =>

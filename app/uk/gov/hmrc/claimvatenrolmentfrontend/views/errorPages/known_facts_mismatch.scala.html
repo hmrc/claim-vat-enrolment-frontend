@@ -50,7 +50,7 @@
   @if(appConfig.knownFactsCheckFlag){
     <div class="govuk-button-group">
         @govukButton(Button(
-            attributes = Map("id" -> "Try Again"),
+            attributes = Map("id" -> "try-again"),
             content = Text(messages("app.common.tryAgain")),
             href = Some(appConfig.addVatUrl)
         ))
@@ -58,7 +58,7 @@
   } else {
     <div class="govuk-button-group">
         @govukButton(Button(
-            attributes = Map("id" -> "Try Again"),
+            attributes = Map("id" -> "try-again"),
             content = Text(messages("app.common.tryAgain")),
             href = Some(appConfig.businessTaxAccountAddVatUrl)
         ))

@@ -74,7 +74,7 @@
                 )
             ),
             classes = "govuk-radios--inline",
-            errorMessage = form("vat_return").error.map(err => ErrorMessage(content = Text(messages(err.message, err.args:_*))))
+            errorMessage = form("vat_return").error.map(err => ErrorMessage.errorMessageWithDefaultStringsTranslated(content = Text(messages(err.message, err.args:_*))))
         ))
 
         @govukButton(Button(

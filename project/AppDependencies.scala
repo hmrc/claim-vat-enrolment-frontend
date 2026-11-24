@@ -5,9 +5,9 @@ import sbt.*
 object AppDependencies {
 
   private val playVersion     = "play-30"
-  val mongoDbVersion          = "2.12.0"
+  val mongoDbVersion          = "2.14.0"
   val bootstrapVersion        = "8.6.0"
-  val playHmrcFrontendVersion = "12.32.0"
+  val playHmrcFrontendVersion = "13.11.0"
 
   val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"       %% s"bootstrap-frontend-$playVersion" % bootstrapVersion,
@@ -23,7 +23,7 @@ object AppDependencies {
     "com.vladsch.flexmark"          %  "flexmark-all"                 % "0.64.8"          % Test,
     "org.scalatestplus.play"        %% "scalatestplus-play"           % "7.0.1"           % Test,
     "org.mockito"                   %  "mockito-core"                 % "5.11.0"          % Test,
-    "org.scalatestplus"             %% "mockito-3-4"                  % "3.2.10.0"        % Test,
+    "org.scalatestplus"             %% "mockito-4-11"                 % "3.2.18.0"        % Test,
     "com.fasterxml.jackson.module"  %% "jackson-module-scala"         % "2.17.0"
   )
 

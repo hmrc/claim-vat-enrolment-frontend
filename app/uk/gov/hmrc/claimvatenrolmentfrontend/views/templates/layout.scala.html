@@ -17,20 +17,20 @@
 @import uk.gov.hmrc.claimvatenrolmentfrontend.controllers.routes._
 @import uk.gov.hmrc.hmrcfrontend.views.config.StandardBetaBanner
 @import views.html.helper.CSPNonce
+@import uk.gov.hmrc.hmrcfrontend.views.viewmodels.hmrcstandardpage.{Banners, HmrcStandardPageParams, ServiceURLs, TemplateOverrides}
+@import uk.gov.hmrc.hmrcfrontend.views.html.helpers.HmrcStandardPage
+@import uk.gov.hmrc.govukfrontend.views.viewmodels.backlink.BackLink
 
-@this(
-        hmrcLayout: HmrcLayout,
+@this(hmrcStandardPage: HmrcStandardPage,
         hmrcTimeoutDialog: HmrcTimeoutDialog,
         hmrcReportTechnicalIssueHelper: HmrcReportTechnicalIssueHelper,
         standardBetaBanner: StandardBetaBanner,
         hmrcUserResearchBanner: HmrcUserResearchBanner
 )
-
-@(
-        pageTitle: Option[String] = None,
-        showSignOut: Boolean = true,
-        showBackLink: Boolean = true,
-        urBanner: Option[UserResearchBanner] = None
+@(pageTitle: Option[String] = None,
+  showSignOut: Boolean = true,
+  showBackLink: Boolean = true,
+  urBanner: Option[UserResearchBanner] = None
 )(contentBlock: Html)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 @headBlock = {
@@ -51,13 +51,16 @@
     @hmrcReportTechnicalIssueHelper()
 }
 
-@hmrcLayout(
+@hmrcStandardPage(HmrcStandardPageParams(
     pageTitle = pageTitle,
-    additionalHeadBlock = Some(headBlock),
-    signOutUrl = if (showSignOut) Some(SignInOutController.signOut.url) else None,
-    isWelshTranslationAvailable = appConfig.welshLanguageSupportEnabled,
+    banners = Banners(displayHmrcBanner = false,
+                      additionalBannersBlock = if (appConfig.urBannerEnabled) urBanner.map(hmrcUserResearchBanner(_)) else None),
+    templateOverrides = TemplateOverrides(
+        additionalHeadBlock = Some(headBlock)
+    ),
+    serviceURLs = ServiceURLs(
+        signOutUrl = if (showSignOut) Some(SignInOutController.signOut.url) else None
+    ),
     backLink = if (showBackLink) Some(BackLink.mimicsBrowserBackButtonViaJavaScript) else None,
-    displayHmrcBanner = false,
-    phaseBanner = None,
-    additionalBannersBlock = if (appConfig.urBannerEnabled) urBanner.map(hmrcUserResearchBanner(_)) else None
-)(content)
+    isWelshTranslationAvailable = true
+))(content)

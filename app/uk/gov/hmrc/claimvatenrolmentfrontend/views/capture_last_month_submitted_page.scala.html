@@ -126,7 +126,7 @@
                     value = Some("12")
                 )
             ),
-            errorMessage = form("return_date").error.map(err => ErrorMessage(content = Text(messages(err.message, err.args:_*))))
+            errorMessage = form("return_date").error.map(err => ErrorMessage.errorMessageWithDefaultStringsTranslated(content = Text(messages(err.message, err.args:_*))))
          ))
 
         @govukButton(Button(
